@@ -878,3 +878,58 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), select:focus:
 [data-theme="light"] input, [data-theme="light"] select, [data-theme="light"] textarea { border-color: #e0e0e5; background: #f8f8fa; }
 [data-theme="light"] input:focus, [data-theme="light"] select:focus, [data-theme="light"] textarea:focus { background: #fff; }
 [data-theme="light"] .insight { border: 1px solid rgba(0,0,0,0.04); }
+
+/* ========== FITONE EXTENSIONS ========== */
+.mini-banner {
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.78rem;
+  color: var(--text2);
+  margin-bottom: 10px;
+}
+.target-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  border: 1px solid var(--border);
+  margin-top: 4px;
+}
+.target-match { color: var(--green); border-color: rgba(76,175,80,0.4); }
+.target-below { color: var(--orange); border-color: rgba(255,152,0,0.4); }
+.target-above { color: var(--blue); border-color: rgba(33,150,243,0.4); }
+.swipe-hint { font-size: 0.7rem; color: var(--text2); margin-top: 4px; }
+.schema-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.74rem;
+}
+.schema-table td, .schema-table th {
+  border: 1px solid var(--border);
+  padding: 6px;
+}
+.schema-table th { text-align: left; color: var(--text2); font-weight: 600; }
+.telemetry-list li { margin-bottom: 6px; }
+.cooldown-list li { margin-bottom: 4px; }
+
+@media print {
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .tab-bar, .fab, .fab-menu, .fab-backdrop, .header {
+    display: none !important;
+  }
+  .app {
+    max-width: none;
+    padding: 0 !important;
+  }
+  .card {
+    box-shadow: none !important;
+    border: 1px solid #999 !important;
+    page-break-inside: avoid;
+  }
+}

@@ -256,6 +256,27 @@ function refreshReadiness() {
 function reorderTodayCards() {
   const panel = $("panel-today");
   if (!panel) return;
+  let banner = $("uxLockBanner");
+  if (!banner) {
+    banner = document.createElement("div");
+    banner.id = "uxLockBanner";
+    banner.className = "mini-banner";
+    panel.insertBefore(banner, panel.firstChild);
+  }
+  banner.innerHTML = settings.uxLockEnabled
+    ? "Classic layout locked. New layout available → Try & switch (coming soon)."
+    : 'New layout preview enabled. <button class="btn btn-outline btn-sm" id="restoreClassicLayoutBtn">Use classic layout</button>';
+  const restoreBtn = $("restoreClassicLayoutBtn");
+  if (restoreBtn) {
+    restoreBtn.addEventListener("click", () => {
+      const next = { ...settings, uxLockEnabled: true };
+      updateSettings(next);
+      localStorage.setItem(KEYS.settings, JSON.stringify(next));
+      refreshToday();
+      showToast("Classic layout restored");
+    });
+  }
+  if (settings.uxLockEnabled) return;
   const hour = new Date().getHours();
   let order;
   if (hour >= 5 && hour < 12) {

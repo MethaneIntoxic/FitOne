@@ -9,12 +9,18 @@ function refreshCurrentTab(tab) {
   else if (tab === "analytics") refreshAnalytics();
   else if (tab === "protocols") refreshProtocols();
 }
+let _navState = { tab: "today", at: Date.now() };
 
 // Expose for settings to call
 window._refreshCurrentTab = refreshCurrentTab;
 
 document.querySelectorAll(".tab-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
+    const now = Date.now();
+    if (_navState.tab && _navState.tab !== btn.dataset.tab && now - _navState.at < 2000) {
+      trackUXTelemetry("navigation.backWithin2sOfNavigate");
+    }
+    _navState = { tab: btn.dataset.tab, at: now };
     document.querySelectorAll(".tab-btn").forEach((b) => {
       b.classList.remove("active");
       b.setAttribute("aria-selected", "false");

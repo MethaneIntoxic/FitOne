@@ -78,11 +78,40 @@ function drawWorkoutChart() {
     return w.date >= localDateStr(ws);
   });
   const totalMin = workouts.reduce((a, w) => a + (w.duration || 0), 0);
+  const bw = getPrimaryBodyweight();
+  const allSets = loadData(KEYS.strengthSets);
+  let bestEffective = 0;
+  workouts.forEach((w) => {
+    (w.exercises || []).forEach((ex) => {
+      const eff = computeEffectiveLoad(ex, ex, bw);
+      if (eff > bestEffective) bestEffective = eff;
+    });
+  });
+  allSets.forEach((s) => {
+    const ex = { isAssistedBodyweight: String(s.is_assisted_bodyweight) === "true", weight: Number(s.weight_kg) || 0 };
+    bestEffective = Math.max(bestEffective, computeEffectiveLoad(ex, { weight: Number(s.weight_kg) || 0 }, bw));
+  });
+  let planned = 0;
+  let matched = 0;
+  workouts.forEach((w) => {
+    (w.exercises || []).forEach((ex) => {
+      if (ex.targetWeight == null || ex.targetWeight === "") return;
+      planned++;
+      const actual = Number(ex.weight) || 0;
+      const target = Number(ex.targetWeight) || 0;
+      if (!target) return;
+      const delta = Math.abs(actual - target) / target;
+      if (delta <= 0.1) matched++;
+    });
+  });
+  const adherence = planned ? Math.round((matched / planned) * 100) : 0;
   $("workoutStatsCard").innerHTML =
     '<div class="card-title">Workout Stats</div><div class="stat-row">' +
     '<div class="stat-box"><div class="val">' + workouts.length + '</div><div class="lbl">Total</div></div>' +
     '<div class="stat-box"><div class="val">' + thisWeek.length + '</div><div class="lbl">This Week</div></div>' +
-    '<div class="stat-box"><div class="val">' + totalMin + '</div><div class="lbl">Total Min</div></div></div>';
+    '<div class="stat-box"><div class="val">' + totalMin + '</div><div class="lbl">Total Min</div></div></div>' +
+    '<div class="stat-row mt-12"><div class="stat-box"><div class="val">' + bestEffective.toFixed(1) + '</div><div class="lbl">Best Effective Load</div></div>' +
+    '<div class="stat-box"><div class="val">' + adherence + '%</div><div class="lbl">Target Adherence (±10%)</div></div></div>';
 }
 
 // ========== WEEKLY SUMMARY ==========

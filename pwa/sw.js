@@ -1,5 +1,5 @@
 // FitOne Service Worker – offline-first caching strategy
-const CACHE_NAME = "fitone-cache-v1";
+const CACHE_NAME = "fitone-cache-v2";
 
 // App shell: all static assets needed for the app to work offline
 const APP_SHELL = [
@@ -9,6 +9,8 @@ const APP_SHELL = [
   "../src/main.js",
   "../src/ui.js",
   "../src/dataStore.js",
+  "../src/syncService.js",
+  "../src/wearableIntegration.js",
   "../src/views/todayView.js",
   "../src/views/logView.js",
   "../src/views/analyticsView.js",

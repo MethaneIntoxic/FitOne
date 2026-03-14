@@ -66,6 +66,16 @@ const KEYS = {
   workouts: "ft_workouts",
   body: "ft_body",
   protocols: "ft_protocols",
+  routines: "ft_routines",
+  machineSetups: "ft_machine_setups",
+  strengthSets: "ft_strength_sets",
+  cardios: "ft_cardios",
+  measurements: "ft_measurements",
+  photos: "ft_photos",
+  foodItems: "ft_food_items",
+  foodLogs: "ft_food_logs",
+  dayPlans: "ft_day_plans",
+  uxTelemetry: "ft_ux_telemetry",
   settings: "ft_settings",
   water: "ft_water",
   favorites: "ft_favorites",
@@ -92,6 +102,7 @@ function saveData(key, data) {
 }
 
 function defaultSettings() {
+  const nowIso = new Date().toISOString();
   return {
     calorieGoal: 2000,
     proteinGoal: 150,
@@ -103,6 +114,20 @@ function defaultSettings() {
     measureUnit: "cm",
     darkMode: true,
     bodyGoal: "maintain",
+    localOnlyMode: true,
+    localOnlyStrictMode: true,
+    uxLockEnabled: true,
+    subscriptionFreeForever: true,
+    monetizationNotes:
+      "Core tracking will remain free; if monetization is added, it will be optional and transparent.",
+    monetizationHistory: [
+      { date: nowIso, version: "1.0.0", note: "Initial release. No paid features." },
+    ],
+    uxTelemetryEnabled: false,
+    aiModulesEnabled: false,
+    socialEnabled: false,
+    disableCooldownSuggestions: false,
+    gyms: [],
   };
 }
 
@@ -137,6 +162,167 @@ function saveTDEEData(data) {
   } catch (e) {
     /* silent */
   }
+}
+
+function ensureRoutineMigrations() {
+  const protocols = loadData(KEYS.protocols);
+  let changed = false;
+  const migrated = protocols.map((p) => {
+    const next = { ...p };
+    if (typeof next.version !== "number") {
+      next.version = 1;
+      changed = true;
+    }
+    if (!next.createdAt) {
+      next.createdAt = next.timestamp || Date.now();
+      changed = true;
+    }
+    if (typeof next.baseRoutineId === "undefined") {
+      next.baseRoutineId = null;
+      changed = true;
+    }
+    if (!Array.isArray(next.plannedSets)) {
+      next.plannedSets = [];
+      changed = true;
+    }
+    return next;
+  });
+  if (changed) saveData(KEYS.protocols, migrated);
+}
+
+ensureRoutineMigrations();
+
+function getPrimaryBodyweight() {
+  const body = loadData(KEYS.body)
+    .filter((b) => typeof b.weight === "number")
+    .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+  return body.length ? body[0].weight : 0;
+}
+
+function computeEffectiveLoad(exercise, set, userBodyweight) {
+  const rawWeight = Number(set && set.weight) || 0;
+  if (!exercise || !exercise.isAssistedBodyweight) return rawWeight;
+  const bw = Number(userBodyweight) || 0;
+  return Math.max(0, bw - rawWeight);
+}
+
+function trackUXTelemetry(path) {
+  if (!settings.uxTelemetryEnabled || !path) return;
+  const telemetry = loadUXTelemetry();
+  const parts = path.split(".");
+  let ref = telemetry;
+  for (let i = 0; i < parts.length - 1; i++) {
+    const key = parts[i];
+    if (!ref[key] || typeof ref[key] !== "object") ref[key] = {};
+    ref = ref[key];
+  }
+  const leaf = parts[parts.length - 1];
+  ref[leaf] = (Number(ref[leaf]) || 0) + 1;
+  saveData(KEYS.uxTelemetry, telemetry);
+}
+
+function defaultUXTelemetry() {
+  return {
+    logging: {
+      undoCount: 0,
+      deletedEntryImmediately: 0,
+    },
+    navigation: {
+      backWithin2sOfNavigate: 0,
+    },
+  };
+}
+
+function loadUXTelemetry() {
+  const telemetry = loadData(KEYS.uxTelemetry);
+  if (Array.isArray(telemetry)) {
+    return defaultUXTelemetry();
+  }
+  return { ...defaultUXTelemetry(), ...(telemetry || {}) };
+}
+
+function resetUXTelemetry() {
+  saveData(KEYS.uxTelemetry, defaultUXTelemetry());
+}
+
+function getMachineSetupsByExercise(exerciseName) {
+  const normalized = (exerciseName || "").trim().toLowerCase();
+  if (!normalized) return [];
+  return loadData(KEYS.machineSetups)
+    .filter((s) => (s.exerciseId || "").toLowerCase() === normalized)
+    .sort((a, b) => (b.lastUsed || "").localeCompare(a.lastUsed || ""));
+}
+
+function upsertMachineSetup(exerciseName, gymName, notes) {
+  const normalized = (exerciseName || "").trim().toLowerCase();
+  if (!normalized || !notes.trim()) return null;
+  const setups = loadData(KEYS.machineSetups);
+  const idx = setups.findIndex(
+    (s) =>
+      (s.exerciseId || "").toLowerCase() === normalized &&
+      (s.gymName || "") === (gymName || "") &&
+      (s.notes || "").trim().toLowerCase() === notes.trim().toLowerCase()
+  );
+  const now = new Date().toISOString();
+  if (idx >= 0) {
+    setups[idx] = { ...setups[idx], lastUsed: now, notes: notes.trim() };
+    saveData(KEYS.machineSetups, setups);
+    return setups[idx];
+  }
+  const next = {
+    id: uid(),
+    exerciseId: normalized,
+    gymName: gymName || null,
+    notes: notes.trim(),
+    lastUsed: now,
+  };
+  setups.push(next);
+  saveData(KEYS.machineSetups, setups);
+  return next;
+}
+
+function updateRoutineWithWorkoutChanges(routineId, workoutExercises) {
+  const routines = loadData(KEYS.protocols);
+  const idx = routines.findIndex((r) => r.id === routineId);
+  if (idx < 0) return null;
+  const current = routines[idx];
+  const updated = {
+    ...current,
+    exercises: workoutExercises,
+    version: (current.version || 1) + 1,
+    updatedAt: Date.now(),
+  };
+  routines[idx] = updated;
+  saveData(KEYS.protocols, routines);
+  return updated;
+}
+
+function createRoutineVariantFromWorkout(routineId, workoutName, workoutExercises) {
+  const routines = loadData(KEYS.protocols);
+  const base = routines.find((r) => r.id === routineId);
+  if (!base) return null;
+  const variant = {
+    ...base,
+    id: uid(),
+    name: (workoutName || base.name || "Routine") + " (Variant)",
+    exercises: workoutExercises,
+    version: 1,
+    baseRoutineId: base.id,
+    createdAt: Date.now(),
+  };
+  routines.push(variant);
+  saveData(KEYS.protocols, routines);
+  return variant;
+}
+
+function estimateLocalStorageSize() {
+  let total = 0;
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    const value = localStorage.getItem(key) || "";
+    total += key.length + value.length;
+  }
+  return total;
 }
 
 // ========== STREAK ==========

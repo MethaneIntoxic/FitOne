@@ -3,6 +3,84 @@
 
 
 let exerciseRowCount = 0;
+let _lastNavigateAt = Date.now();
+
+function getGymOptions() {
+  return (settings.gyms || []).map((g) => '<option value="' + escAttr(g) + '">' + esc(g) + "</option>").join("");
+}
+
+function getSetupSelectOptions(exerciseName) {
+  const setups = getMachineSetupsByExercise(exerciseName);
+  const opts = setups.map((s) => {
+    const label = (s.gymName || "Gym") + " • " + (s.notes || "").slice(0, 42);
+    return '<option value="' + escAttr(s.id) + '">' + esc(label) + "</option>";
+  });
+  return ['<option value="">Last setup suggestion</option>'].concat(opts).join("");
+}
+
+function bindExerciseInputShortcuts(row) {
+  const numberInputs = row.querySelectorAll('input[type="number"]');
+  const fields = Array.from(numberInputs);
+  fields.forEach((input, idx) => {
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const next = fields[idx + 1];
+        if (next) next.focus();
+        else logWorkout();
+      } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+        const step = input.id.includes("wt_") || input.id.includes("targetwt_") ? 2.5 : 1;
+        const sign = e.key === "ArrowUp" ? 1 : -1;
+        const val = Number(input.value || 0) + sign * step;
+        input.value = String(Math.max(0, Math.round(val * 10) / 10));
+        e.preventDefault();
+      }
+    });
+  });
+
+  let startX = 0;
+  row.addEventListener("touchstart", (e) => {
+    startX = e.changedTouches[0].clientX;
+  }, { passive: true });
+  row.addEventListener("touchend", (e) => {
+    const dx = e.changedTouches[0].clientX - startX;
+    if (dx > 70) {
+      const prev = row.previousElementSibling;
+      if (prev) {
+        const prevName = prev.querySelector('[id^="exname_"]');
+        const thisName = row.querySelector('[id^="exname_"]');
+        const prevSets = prev.querySelector('[id^="exsets_"]');
+        const thisSets = row.querySelector('[id^="exsets_"]');
+        const prevReps = prev.querySelector('[id^="exreps_"]');
+        const thisReps = row.querySelector('[id^="exreps_"]');
+        const prevWt = prev.querySelector('[id^="exwt_"]');
+        const thisWt = row.querySelector('[id^="exwt_"]');
+        if (thisName && prevName) thisName.value = prevName.value;
+        if (thisSets && prevSets) thisSets.value = prevSets.value;
+        if (thisReps && prevReps) thisReps.value = prevReps.value;
+        if (thisWt && prevWt) thisWt.value = prevWt.value;
+        showToast("Set duplicated");
+      }
+    } else if (dx < -70) {
+      showConfirmModal("Delete set row", "🧹", "Delete this set row?", () => {
+        row.remove();
+        trackUXTelemetry("logging.deletedEntryImmediately");
+      });
+    }
+  }, { passive: true });
+}
+
+function renderTargetChip(exercise) {
+  const targets = [];
+  if (exercise.targetReps) targets.push("reps " + exercise.targetReps);
+  if (exercise.targetWeight) targets.push("wt " + exercise.targetWeight);
+  if (exercise.targetRPE) targets.push("RPE " + exercise.targetRPE);
+  if (!targets.length) return "";
+  let cls = "target-match";
+  if ((exercise.reps || 0) < (exercise.targetReps || 0) || (exercise.weight || 0) < (exercise.targetWeight || 0)) cls = "target-below";
+  else if ((exercise.reps || 0) > (exercise.targetReps || 0) || (exercise.weight || 0) > (exercise.targetWeight || 0)) cls = "target-above";
+  return '<div class="target-chip ' + cls + '">Target: ' + targets.join(" • ") + "</div>";
+}
 
 // ========== FAVORITES ==========
 function refreshFavorites() {
@@ -119,11 +197,13 @@ function deleteFood(id) {
   const data = loadData(KEYS.food);
   const item = data.find((f) => f.id === id);
   if (!item) return;
+  if (item.timestamp && Date.now() - item.timestamp < 2 * 60 * 1000) trackUXTelemetry("logging.deletedEntryImmediately");
   const filtered = data.filter((f) => f.id !== id);
   saveData(KEYS.food, filtered);
   refreshLog();
   refreshToday();
   showUndoToast("Food deleted", () => {
+    trackUXTelemetry("logging.undoCount");
     const current = loadData(KEYS.food);
     current.push(item);
     saveData(KEYS.food, current);
@@ -207,8 +287,34 @@ function addExerciseRow() {
     '<div class="form-group" style="flex:1"><input type="number" placeholder="Sets" id="exsets_' + exerciseRowCount + '"></div>' +
     '<div class="form-group" style="flex:1"><input type="number" placeholder="Reps" id="exreps_' + exerciseRowCount + '"></div>' +
     '<div class="form-group" style="flex:1"><input type="number" placeholder="Wt" id="exwt_' + exerciseRowCount + '"></div>' +
+    '<div class="form-group" style="flex:1"><input type="number" placeholder="RPE" id="exrpe_' + exerciseRowCount + '"></div>' +
+    '<div class="form-group" style="flex:1"><input type="number" placeholder="T.Reps" id="extargetreps_' + exerciseRowCount + '"></div>' +
+    '<div class="form-group" style="flex:1"><input type="number" placeholder="T.Wt" id="extargetwt_' + exerciseRowCount + '"></div>' +
+    '<div class="form-group" style="flex:1"><input type="number" placeholder="T.RPE" id="extargetrpe_' + exerciseRowCount + '"></div>' +
+    '<div class="form-group" style="flex:1;display:flex;align-items:center;gap:6px"><input type="checkbox" id="exassist_' + exerciseRowCount + '" style="width:auto"><label for="exassist_' + exerciseRowCount + '" class="text-xs">Assisted</label></div>' +
+    '<div class="form-group" style="flex:1"><select id="exgym_' + exerciseRowCount + '"><option value="">Gym (optional)</option>' + getGymOptions() + '</select></div>' +
+    '<div class="form-group" style="flex:1"><select id="exsetup_' + exerciseRowCount + '">' + getSetupSelectOptions("") + "</select></div>" +
+    '<div class="form-group" style="flex:2"><input type="text" placeholder="Machine setup notes (seat/pin/grip)" id="exsetupnotes_' + exerciseRowCount + '"></div>' +
     '<button class="btn btn-outline btn-sm" data-remove-row style="align-self:flex-end;margin-bottom:12px">✕</button>';
   $("exerciseRows").appendChild(row);
+  bindExerciseInputShortcuts(row);
+  const nameInput = $("exname_" + exerciseRowCount);
+  if (nameInput) {
+    nameInput.addEventListener("change", () => {
+      const setupSel = $("exsetup_" + exerciseRowCount);
+      if (setupSel) setupSel.innerHTML = getSetupSelectOptions(nameInput.value);
+    });
+  }
+  const setupSel = $("exsetup_" + exerciseRowCount);
+  if (setupSel) {
+    setupSel.addEventListener("change", () => {
+      const setupId = setupSel.value;
+      if (!setupId) return;
+      const setup = loadData(KEYS.machineSetups).find((s) => s.id === setupId);
+      const notes = $("exsetupnotes_" + exerciseRowCount);
+      if (setup && notes) notes.value = setup.notes || "";
+    });
+  }
 }
 
 function logWorkout() {
@@ -221,17 +327,29 @@ function logWorkout() {
 
   const date = $("workoutDate").value || today();
   const exercises = [];
+  const userBodyweight = getPrimaryBodyweight();
   for (let i = 1; i <= exerciseRowCount; i++) {
     const el = $("exname_" + i);
     if (!el) continue;
     const eName = el.value.trim();
     if (!eName) continue;
-    exercises.push({
+    const exObj = {
       name: eName,
       sets: parseInt($("exsets_" + i).value) || 0,
       reps: parseInt($("exreps_" + i).value) || 0,
       weight: parseFloat($("exwt_" + i).value) || 0,
-    });
+      rpe: parseFloat($("exrpe_" + i).value) || null,
+      targetReps: $("extargetreps_" + i) ? parseFloat($("extargetreps_" + i).value) || null : null,
+      targetWeight: $("extargetwt_" + i) ? parseFloat($("extargetwt_" + i).value) || null : null,
+      targetRPE: $("extargetrpe_" + i) ? parseFloat($("extargetrpe_" + i).value) || null : null,
+      isAssistedBodyweight: !!($("exassist_" + i) && $("exassist_" + i).checked),
+      gymName: $("exgym_" + i) ? $("exgym_" + i).value || null : null,
+      machineSetupId: $("exsetup_" + i) ? $("exsetup_" + i).value || null : null,
+      machineSetupNotes: $("exsetupnotes_" + i) ? $("exsetupnotes_" + i).value.trim() : "",
+    };
+    exObj.effectiveLoad = computeEffectiveLoad(exObj, exObj, userBodyweight);
+    exercises.push(exObj);
+    if (exObj.machineSetupNotes) upsertMachineSetup(eName, exObj.gymName, exObj.machineSetupNotes);
   }
 
   const entry = {
@@ -246,6 +364,25 @@ function logWorkout() {
   const data = loadData(KEYS.workouts);
   data.push(entry);
   saveData(KEYS.workouts, data);
+  const flatSets = loadData(KEYS.strengthSets);
+  exercises.forEach((ex, idx) => {
+    flatSets.push({
+      id: uid(),
+      timestamp: entry.timestamp,
+      date,
+      workout_id: entry.id,
+      exercise_name: ex.name,
+      set_index: idx + 1,
+      reps: ex.reps || 0,
+      weight_kg: ex.weight || 0,
+      target_reps: ex.targetReps || null,
+      target_weight: ex.targetWeight || null,
+      target_rpe: ex.targetRPE || null,
+      is_assisted_bodyweight: ex.isAssistedBodyweight ? "true" : "false",
+      effective_load: ex.effectiveLoad || 0,
+    });
+  });
+  saveData(KEYS.strengthSets, flatSets);
   ["workoutName", "workoutDuration", "workoutCalories", "workoutNotes"].forEach((id) => ($(id).value = ""));
   $("workoutDate").value = today();
   $("exerciseRows").innerHTML = "";
@@ -255,6 +392,63 @@ function logWorkout() {
   refreshLog();
   refreshToday();
   showToast("Workout logged! 💪");
+  if (entry.protocolId) {
+    const base = loadData(KEYS.protocols).find((p) => p.id === entry.protocolId);
+    if (base && JSON.stringify((base.exercises || []).map((e) => e.name + "|" + e.sets + "|" + e.reps + "|" + e.weight)) !== JSON.stringify(exercises.map((e) => e.name + "|" + e.sets + "|" + e.reps + "|" + e.weight))) {
+      $("modalContainer").innerHTML =
+        '<div class="modal-overlay"><div class="modal"><div class="modal-title">Routine change detected</div><p class="text-sm mb-12">How should FitOne handle these workout changes?</p>' +
+        '<button class="btn btn-primary btn-block mb-8" id="routineUpdateBaseBtn">Update base routine</button>' +
+        '<button class="btn btn-outline btn-block mb-8" id="routineVariantBtn">Save as new variant</button>' +
+        '<button class="btn btn-outline btn-block" id="routineUseOnceBtn">Use once</button></div></div>';
+      $("routineUpdateBaseBtn").addEventListener("click", () => {
+        updateRoutineWithWorkoutChanges(base.id, exercises);
+        closeModal();
+        refreshProtocols();
+        showToast("Base routine updated");
+      });
+      $("routineVariantBtn").addEventListener("click", () => {
+        createRoutineVariantFromWorkout(base.id, entry.name, exercises);
+        closeModal();
+        refreshProtocols();
+        showToast("Routine variant created");
+      });
+      $("routineUseOnceBtn").addEventListener("click", () => closeModal());
+    }
+  }
+  if (!settings.disableCooldownSuggestions && exercises.length) {
+    const groups = {
+      legs: ["squat", "lunge", "leg press", "deadlift"],
+      push: ["bench", "press", "dip"],
+      pull: ["row", "pull-up", "lat pull"],
+    };
+    const recs = new Set();
+    exercises.forEach((ex) => {
+      const n = ex.name.toLowerCase();
+      if (groups.legs.some((k) => n.includes(k))) {
+        recs.add("Hip flexor stretch");
+        recs.add("Hamstring stretch");
+      }
+      if (groups.push.some((k) => n.includes(k))) {
+        recs.add("Chest doorway stretch");
+        recs.add("Thoracic spine rotation");
+      }
+      if (groups.pull.some((k) => n.includes(k))) {
+        recs.add("Lat stretch");
+        recs.add("Scapular wall slides");
+      }
+    });
+    const list = Array.from(recs);
+    if (list.length) {
+      $("modalContainer").innerHTML =
+        '<div class="modal-overlay"><div class="modal"><div class="modal-title">Cooldown suggestions</div><ul class="cooldown-list">' +
+        list.map((r) => '<li><label><input type="checkbox" style="width:auto"> ' + esc(r) + "</label></li>").join("") +
+        '</ul><button class="btn btn-primary btn-block mt-12" id="cooldownDoneBtn">Mark complete</button></div></div>';
+      $("cooldownDoneBtn").addEventListener("click", () => {
+        closeModal();
+        showToast("Cooldown logged");
+      });
+    }
+  }
   setTimeout(() => { if ($("workoutName")) $("workoutName").focus(); }, 300);
 }
 
@@ -262,11 +456,13 @@ function deleteWorkout(id) {
   const data = loadData(KEYS.workouts);
   const item = data.find((w) => w.id === id);
   if (!item) return;
+  if (item.timestamp && Date.now() - item.timestamp < 2 * 60 * 1000) trackUXTelemetry("logging.deletedEntryImmediately");
   const filtered = data.filter((w) => w.id !== id);
   saveData(KEYS.workouts, filtered);
   refreshLog();
   refreshToday();
   showUndoToast("Workout deleted", () => {
+    trackUXTelemetry("logging.undoCount");
     const current = loadData(KEYS.workouts);
     current.push(item);
     saveData(KEYS.workouts, current);
@@ -306,10 +502,12 @@ function deleteBody(id) {
   const data = loadData(KEYS.body);
   const item = data.find((b) => b.id === id);
   if (!item) return;
+  if (item.timestamp && Date.now() - item.timestamp < 2 * 60 * 1000) trackUXTelemetry("logging.deletedEntryImmediately");
   const filtered = data.filter((b) => b.id !== id);
   saveData(KEYS.body, filtered);
   refreshLog();
   showUndoToast("Measurement deleted", () => {
+    trackUXTelemetry("logging.undoCount");
     const current = loadData(KEYS.body);
     current.push(item);
     saveData(KEYS.body, current);
@@ -409,7 +607,8 @@ function refreshLog() {
     $("recentWorkouts").innerHTML = workouts
       .map((w) => {
         const time = w.timestamp ? fmtTime(w.timestamp) : "";
-        return '<div class="list-item"><div class="list-item-main"><div class="list-item-title">' + esc(w.name) + '<span class="entry-time">' + time + '</span></div><div class="list-item-sub">' + fmtDate(w.date) + " • " + w.type + " • " + (w.duration || 0) + " min • " + (w.exercises || []).length + ' ex</div></div><div class="list-item-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span class="tag tag-blue">' + (w.caloriesBurned || 0) + ' cal</span><button class="btn-delete" data-delete-workout="' + w.id + '" title="Delete">✕</button></div></div>';
+        const targetHints = (w.exercises || []).map((ex) => renderTargetChip(ex)).filter(Boolean).slice(0, 2).join("");
+        return '<div class="list-item"><div class="list-item-main"><div class="list-item-title">' + esc(w.name) + '<span class="entry-time">' + time + '</span></div><div class="list-item-sub">' + fmtDate(w.date) + " • " + w.type + " • " + (w.duration || 0) + " min • " + (w.exercises || []).length + ' ex</div>' + targetHints + '</div><div class="list-item-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span class="tag tag-blue">' + (w.caloriesBurned || 0) + ' cal</span><button class="btn-delete" data-delete-workout="' + w.id + '" title="Delete">✕</button></div></div>';
       })
       .join("");
   } else {
@@ -492,6 +691,35 @@ function initLogEvents() {
   if (searchFood) searchFood.addEventListener("input", filterRecentFood);
   const searchWorkout = $("searchWorkout");
   if (searchWorkout) searchWorkout.addEventListener("input", filterRecentWorkouts);
+
+  const protocolSel = $("workoutProtocol");
+  if (protocolSel) {
+    protocolSel.addEventListener("change", () => {
+      const id = protocolSel.value;
+      if (!id) return;
+      const proto = loadData(KEYS.protocols).find((p) => p.id === id);
+      if (!proto) return;
+      const planned = proto.plannedSets || [];
+      for (let i = 1; i <= exerciseRowCount; i++) {
+        const nameEl = $("exname_" + i);
+        if (!nameEl) continue;
+        const ps = planned.find((p) => (p.exerciseName || "").toLowerCase() === nameEl.value.trim().toLowerCase());
+        if (!ps) continue;
+        if ($("extargetreps_" + i) && ps.targetReps != null) $("extargetreps_" + i).value = ps.targetReps;
+        if ($("extargetwt_" + i) && ps.targetWeight != null) $("extargetwt_" + i).value = ps.targetWeight;
+        if ($("extargetrpe_" + i) && ps.targetRPE != null) $("extargetrpe_" + i).value = ps.targetRPE;
+      }
+    });
+  }
+
+  const workoutPanel = $("log-workout");
+  if (workoutPanel && !$("shortcutHelp")) {
+    const note = document.createElement("div");
+    note.id = "shortcutHelp";
+    note.className = "mini-banner";
+    note.innerHTML = "Shortcuts: Enter = next field/submit. ArrowUp/Down adjusts values. Swipe set row right = duplicate, left = delete.";
+    workoutPanel.insertBefore(note, workoutPanel.firstChild);
+  }
 }
 
 // Give access to exerciseRowCount for protocols

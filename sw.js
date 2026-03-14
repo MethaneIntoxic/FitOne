@@ -1,9 +1,11 @@
-const CACHE_NAME = 'fitone-v4';
+const CACHE_NAME = 'fitone-v5';
 const ASSETS = [
   './',
   './index.html',
   './styles/main.css',
   './src/dataStore.js',
+  './src/syncService.js',
+  './src/wearableIntegration.js',
   './src/ui.js',
   './src/main.js',
   './src/views/todayView.js',

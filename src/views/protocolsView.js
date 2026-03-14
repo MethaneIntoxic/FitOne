@@ -11,18 +11,19 @@ function refreshProtocols() {
   $("protocolList").innerHTML = protocols
     .map(
       (p) =>
-        '<div class="card"><div class="flex-between mb-8"><span style="font-weight:600;font-size:1rem">' +
+        '<div class="card"' + (window._highlightRoutineIds && window._highlightRoutineIds.includes(p.id) ? ' style="border-color:var(--accent)"' : "") + '><div class="flex-between mb-8"><span style="font-weight:600;font-size:1rem">' +
         esc(p.name) +
-        '</span><div><button class="btn btn-outline btn-sm" data-use-protocol="' + p.id + '">Use</button> <button class="btn btn-outline btn-sm" data-delete-protocol="' + p.id + '">✕</button></div></div><div class="text-xs mb-8">' +
-        esc(p.description || "") + "</div>" +
+        ' <span class="text-xs">v' + (p.version || 1) + "</span></span><div><button class=\"btn btn-outline btn-sm\" data-use-protocol=\"" + p.id + '">Use</button> <button class="btn btn-outline btn-sm" data-delete-protocol="' + p.id + '">✕</button></div></div><div class="text-xs mb-8">' +
+        esc(p.description || "") + (p.baseRoutineId ? " • variant" : "") + "</div>" +
         (p.exercises || [])
           .map(
             (e) =>
               '<div class="list-item" style="padding:6px 0"><div class="list-item-main"><div class="list-item-title text-sm">' +
               esc(e.name) + '</div></div><div class="list-item-right text-xs">' +
-              e.sets + "×" + e.reps + (e.weight ? " @ " + e.weight + settings.weightUnit : "") + "</div></div>"
+               e.sets + "×" + e.reps + (e.weight ? " @ " + e.weight + settings.weightUnit : "") + "</div></div>"
           )
-          .join("") + "</div>"
+          .join("") +
+        '<div class="text-xs mt-8">Planned sets: ' + ((p.plannedSets || []).length || 0) + "</div></div>"
     )
     .join("");
 }
@@ -62,8 +63,9 @@ function addProtoExercise() {
     '<div class="form-group" style="flex:2"><input type="text" placeholder="Exercise" id="pexname_' + n + '"></div>' +
     '<div class="form-group" style="flex:1"><input type="number" placeholder="Sets" id="pexsets_' + n + '"></div>' +
     '<div class="form-group" style="flex:1"><input type="number" placeholder="Reps" id="pexreps_' + n + '"></div>' +
-    '<div class="form-group" style="flex:1"><input type="number" placeholder="Wt" id="pexwt_' + n + '"></div>' +
-    '<button class="btn btn-outline btn-sm" data-remove-row style="align-self:flex-end;margin-bottom:12px">✕</button>';
+      '<div class="form-group" style="flex:1"><input type="number" placeholder="Wt" id="pexwt_' + n + '"></div>' +
+      '<div class="form-group" style="flex:1"><input type="number" placeholder="RPE" id="pexrpe_' + n + '"></div>' +
+      '<button class="btn btn-outline btn-sm" data-remove-row style="align-self:flex-end;margin-bottom:12px">✕</button>';
   $("protoExercises").appendChild(row);
   row.querySelector("[data-remove-row]").addEventListener("click", () => row.remove());
 }
@@ -72,22 +74,40 @@ function saveProtocol() {
   const name = $("protoName").value.trim();
   if (!name) { showToast("Enter a protocol name", "error"); return; }
   const exercises = [];
+  const plannedSets = [];
   for (let i = 1; i <= window._protoExCount; i++) {
     const el = $("pexname_" + i);
     if (!el) continue;
     const n = el.value.trim();
     if (!n) continue;
+    const sets = parseInt($("pexsets_" + i).value) || 0;
+    const reps = parseInt($("pexreps_" + i).value) || 0;
+    const weight = parseFloat($("pexwt_" + i).value) || 0;
+    const rpe = parseFloat($("pexrpe_" + i).value);
     exercises.push({
       name: n,
-      sets: parseInt($("pexsets_" + i).value) || 0,
-      reps: parseInt($("pexreps_" + i).value) || 0,
-      weight: parseFloat($("pexwt_" + i).value) || 0,
+      sets,
+      reps,
+      weight,
+    });
+    plannedSets.push({
+      id: uid(),
+      exerciseId: n.toLowerCase(),
+      exerciseName: n,
+      setIndex: i,
+      targetReps: reps || null,
+      targetWeight: weight || null,
+      targetRPE: Number.isFinite(rpe) ? rpe : null,
     });
   }
   const proto = {
     id: uid(), name,
     description: $("protoDesc").value.trim(),
-    exercises, createdAt: Date.now(),
+    exercises,
+    plannedSets,
+    createdAt: Date.now(),
+    version: 1,
+    baseRoutineId: null,
   };
   const data = loadData(KEYS.protocols);
   data.push(proto);
@@ -129,11 +149,20 @@ function useProtocol(id) {
     const row = document.createElement("div");
     row.className = "stat-row mb-8";
     row.id = "exrow_" + n;
+    const planned = (proto.plannedSets || []).find((ps) => ps.exerciseName === ex.name) || {};
     row.innerHTML =
       '<div class="form-group" style="flex:2"><input type="text" placeholder="Exercise name" id="exname_' + n + '" value="' + escAttr(ex.name) + '"></div>' +
       '<div class="form-group" style="flex:1"><input type="number" placeholder="Sets" id="exsets_' + n + '" value="' + (ex.sets || "") + '"></div>' +
       '<div class="form-group" style="flex:1"><input type="number" placeholder="Reps" id="exreps_' + n + '" value="' + (ex.reps || "") + '"></div>' +
       '<div class="form-group" style="flex:1"><input type="number" placeholder="Wt" id="exwt_' + n + '" value="' + (ex.weight || "") + '"></div>' +
+      '<div class="form-group" style="flex:1"><input type="number" placeholder="RPE" id="exrpe_' + n + '" value="' + (planned.targetRPE || "") + '"></div>' +
+      '<div class="form-group" style="flex:1"><input type="number" placeholder="T.Reps" id="extargetreps_' + n + '" value="' + (planned.targetReps || "") + '"></div>' +
+      '<div class="form-group" style="flex:1"><input type="number" placeholder="T.Wt" id="extargetwt_' + n + '" value="' + (planned.targetWeight || "") + '"></div>' +
+      '<div class="form-group" style="flex:1"><input type="number" placeholder="T.RPE" id="extargetrpe_' + n + '" value="' + (planned.targetRPE || "") + '"></div>' +
+      '<div class="form-group" style="flex:1;display:flex;align-items:center;gap:6px"><input type="checkbox" id="exassist_' + n + '" style="width:auto"><label for="exassist_' + n + '" class="text-xs">Assisted</label></div>' +
+      '<div class="form-group" style="flex:1"><select id="exgym_' + n + '"><option value="">Gym (optional)</option>' + getGymOptions() + '</select></div>' +
+      '<div class="form-group" style="flex:1"><select id="exsetup_' + n + '"><option value="">Last setup suggestion</option></select></div>' +
+      '<div class="form-group" style="flex:2"><input type="text" placeholder="Machine setup notes" id="exsetupnotes_' + n + '"></div>' +
       '<button class="btn btn-outline btn-sm" data-remove-row style="align-self:flex-end;margin-bottom:12px">✕</button>';
     $("exerciseRows").appendChild(row);
     row.querySelector("[data-remove-row]").addEventListener("click", () => row.remove());

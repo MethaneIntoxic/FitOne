@@ -392,20 +392,51 @@
   <!-- ========== TAB: EXPORT/IMPORT ========== -->
   <div class="tab-panel" id="panel-data">
     <div class="card">
-      <div class="card-title">Export Data</div>
-      <p class="text-sm mb-12" style="color:var(--text2)">Download all your fitness data as a JSON file.</p>
-      <button class="btn btn-primary btn-block">📥 Export JSON</button>
+      <div class="card-title">Data Studio</div>
+      <p class="text-sm mb-12" style="color:var(--text2)">Export or import FitOne data in stable CSV/JSON schemas, entirely local and offline.</p>
+      <button class="btn btn-primary btn-block" id="exportGlobalJsonBtn">📥 Export Global JSON</button>
+      <button class="btn btn-outline btn-block mt-8" id="exportGlobalCsvBtn">📄 Export All CSV Files</button>
     </div>
     <div class="card">
-      <div class="card-title">Import Data</div>
-      <p class="text-sm mb-12" style="color:var(--text2)">Import data from a previously exported JSON file. This will merge with existing data.</p>
-      <input type="file" id="importFile" accept=".json" style="display:none">
-      <button class="btn btn-outline btn-block">📤 Import JSON</button>
+      <div class="card-title">Import (CSV / JSON)</div>
+      <div class="form-group">
+        <label>Entity Type</label>
+        <select id="dataImportType"></select>
+      </div>
+      <div class="form-group">
+        <label>Merge Mode</label>
+        <select id="dataImportMode">
+          <option value="merge">Merge (append new IDs)</option>
+          <option value="replace">Replace existing entity data</option>
+        </select>
+      </div>
+      <input type="file" id="importFile" accept=".json,.csv" style="display:none">
+      <button class="btn btn-outline btn-block" id="importDataBtn">📤 Choose File to Import</button>
+      <div id="importMappingArea" class="mt-12"></div>
+      <div id="importSummary" class="text-xs mt-8" style="color:var(--text2)"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Program Importer (CSV)</div>
+      <p class="text-sm mb-12" style="color:var(--text2)">Expected columns: ProgramName, Week, Day, Exercise, Set, Reps, RPE, Weight.</p>
+      <input type="file" id="programImportFile" accept=".csv" style="display:none">
+      <button class="btn btn-outline btn-block" id="programImportBtn">🧭 Import Program CSV</button>
+      <div id="programImportPreview" class="mt-8"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Print Templates (Paper Backup)</div>
+      <button class="btn btn-outline btn-block" id="printWorkoutTemplateBtn">🖨️ Blank Workout Log</button>
+      <button class="btn btn-outline btn-block mt-8" id="printNutritionTemplateBtn">🖨️ Blank Nutrition Diary</button>
+    </div>
+    <div class="card">
+      <details>
+        <summary class="card-title" style="cursor:pointer">Schema</summary>
+        <div id="schemaDocs" class="text-xs mt-8"></div>
+      </details>
     </div>
     <div class="card">
       <div class="card-title">Danger Zone</div>
       <p class="text-sm mb-12" style="color:var(--text2)">Permanently delete all stored data. This cannot be undone.</p>
-      <button class="btn btn-danger btn-block">🗑️ Delete All Data</button>
+      <button class="btn btn-danger btn-block" id="deleteAllDataBtn">🗑️ Delete All Data</button>
     </div>
   </div>
 
@@ -474,6 +505,14 @@
         </select>
       </div>
     </div>
+    <div class="card" id="settingsDataPrivacyCard"></div>
+    <div class="card" id="settingsDiagnosticsCard"></div>
+    <div class="card" id="settingsUXDiagnosticsCard"></div>
+    <div class="card" id="settingsMigrationCard"></div>
+    <div class="card" id="settingsGymProfilesCard"></div>
+    <div class="card" id="settingsWearablesCard"></div>
+    <div class="card" id="settingsSocialCard"></div>
+    <div class="card" id="settingsAboutCard"></div>
     <div class="card">
       <div class="text-xs text-center">FitOne v3.0 • All data stored locally in your browser</div>
     </div>
@@ -524,6 +563,8 @@
 <div id="modalContainer"></div>
 
 <script src="src/dataStore.js"></script>
+<script src="src/syncService.js"></script>
+<script src="src/wearableIntegration.js"></script>
 <script src="src/ui.js"></script>
 <script src="src/views/todayView.js"></script>
 <script src="src/views/logView.js"></script>
