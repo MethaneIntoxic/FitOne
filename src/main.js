@@ -217,7 +217,7 @@ init();
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./sw.js")
+      .register("/FitOne/sw.js", { scope: "/FitOne/" })
       .then((reg) => {
         console.log("FitOne service worker registered", reg);
       })
