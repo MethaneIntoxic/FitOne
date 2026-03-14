@@ -1,5 +1,20 @@
-const CACHE_NAME = 'fitone-v3';
-const ASSETS = ['./index.html'];
+const CACHE_NAME = 'fitone-v4';
+const ASSETS = [
+  './',
+  './index.html',
+  './styles/main.css',
+  './src/dataStore.js',
+  './src/ui.js',
+  './src/main.js',
+  './src/views/todayView.js',
+  './src/views/logView.js',
+  './src/views/settingsView.js',
+  './src/views/protocolsView.js',
+  './src/views/analyticsView.js',
+  './src/views/exportView.js',
+  './icons/icon-192.png',
+  './icons/icon-512.png'
+];
 
 self.addEventListener('install', event => {
   event.waitUntil(
@@ -18,6 +33,7 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
   event.respondWith(
     caches.match(event.request).then(cached => {
       const fetchPromise = fetch(event.request).then(response => {
