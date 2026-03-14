@@ -1,14 +1,16 @@
 # FitOne
 
-FitOne is a fast, privacy-first fitness and nutrition tracker built as a single-page Progressive Web App (PWA). It helps you log food, workouts, body metrics, hydration, and wellness check-ins while generating practical insights from your daily data.
+FitOne is a performance-focused, privacy-first fitness companion built as a single-page Progressive Web App (PWA). It helps lifters, athletes, and health-conscious users track nutrition, training, body composition, hydration, and readiness in one streamlined workflow.
+
+Train with intent, recover smarter, and stay consistent with analytics that turn daily logs into actionable decisions.
 
 ## Why FitOne
 
 - **All-in-one tracking**: food, macros, workouts, body measurements, and water intake
-- **Actionable analytics**: calorie, macro, weight, workout, meal timing, readiness, and adaptive TDEE views
+- **Actionable performance analytics**: calorie, macro, weight, workout, meal timing, readiness, and adaptive TDEE views
 - **PWA-ready**: installable, mobile-optimized, and offline-capable with service worker caching
 - **Privacy-first**: all data is stored locally in your browser via `localStorage`
-- **Fast UX**: no backend setup required, open `index.html` and start logging
+- **Fast training workflow**: no backend setup required, open `index.html` and start logging
 
 ## Features
 
@@ -49,4 +51,4 @@ FitOne is a fast, privacy-first fitness and nutrition tracker built as a single-
 
 ## License
 
-No license file is currently included. Add one if you plan to open-source this project publicly.
+This project is licensed under the MIT License. See `LICENSE` for details.
