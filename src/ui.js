@@ -123,13 +123,11 @@ function drawRing(canvas, pct, color) {
       r = size / 2 - size * 0.14,
       lw = size * 0.1;
     ctx.clearRect(0, 0, size, size);
+    const cs = getComputedStyle(document.documentElement);
 
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.strokeStyle =
-      getComputedStyle(document.documentElement)
-        .getPropertyValue("--bg3")
-        .trim() || "#252836";
+    ctx.strokeStyle = cs.getPropertyValue("--bg3").trim() || "#252836";
     ctx.lineWidth = lw;
     ctx.stroke();
 
@@ -149,10 +147,7 @@ function drawRing(canvas, pct, color) {
       ctx.stroke();
     }
 
-    ctx.fillStyle =
-      getComputedStyle(document.documentElement)
-        .getPropertyValue("--text")
-        .trim() || "#e4e6eb";
+    ctx.fillStyle = cs.getPropertyValue("--text").trim() || "#e4e6eb";
     ctx.font =
       "bold " + Math.round(size * 0.28) + "px -apple-system, sans-serif";
     ctx.textAlign = "center";
@@ -209,10 +204,9 @@ function drawBarChart(canvas, labels, values, color, goalLine) {
     cH = H - pad.t - pad.b;
 
   ctx.clearRect(0, 0, W, H);
-  const textColor =
-    getComputedStyle(document.documentElement)
-      .getPropertyValue("--text2")
-      .trim() || "#a0a3b1";
+  const cs = getComputedStyle(document.documentElement);
+  const textColor = cs.getPropertyValue("--text2").trim() || "#a0a3b1";
+  const borderColor = cs.getPropertyValue("--border").trim() || "#2e3141";
 
   const maxVal = Math.max(...values, goalLine || 0, 1);
   const barW = (cW / labels.length) * 0.6;
@@ -225,10 +219,7 @@ function drawBarChart(canvas, labels, values, color, goalLine) {
     const y = pad.t + cH - (cH * i) / 4;
     const v = Math.round((maxVal * i) / 4);
     ctx.fillText(v, pad.l - 5, y + 3);
-    ctx.strokeStyle =
-      getComputedStyle(document.documentElement)
-        .getPropertyValue("--border")
-        .trim() || "#2e3141";
+    ctx.strokeStyle = borderColor;
     ctx.lineWidth = 0.5;
     ctx.beginPath();
     ctx.moveTo(pad.l, y);
@@ -298,10 +289,9 @@ function drawLineChart(canvas, labels, values, color) {
     cH = H - pad.t - pad.b;
 
   ctx.clearRect(0, 0, W, H);
-  const textColor =
-    getComputedStyle(document.documentElement)
-      .getPropertyValue("--text2")
-      .trim() || "#a0a3b1";
+  const cs = getComputedStyle(document.documentElement);
+  const textColor = cs.getPropertyValue("--text2").trim() || "#a0a3b1";
+  const borderColor = cs.getPropertyValue("--border").trim() || "#2e3141";
 
   const minV = Math.min(...values);
   const maxV = Math.max(...values);
@@ -318,9 +308,7 @@ function drawLineChart(canvas, labels, values, color) {
     const y = pad.t + cH - (cH * i) / 4;
     const v = (yMin + (yRange * i) / 4).toFixed(1);
     ctx.fillText(v, pad.l - 5, y + 3);
-    ctx.strokeStyle = getComputedStyle(document.documentElement)
-      .getPropertyValue("--border")
-      .trim();
+    ctx.strokeStyle = borderColor;
     ctx.lineWidth = 0.5;
     ctx.beginPath();
     ctx.moveTo(pad.l, y);
@@ -401,13 +389,9 @@ function drawStackedBar(canvas, labels, macros) {
     cH = H - pad.t - pad.b;
 
   ctx.clearRect(0, 0, W, H);
-  const textColor = getComputedStyle(document.documentElement)
-    .getPropertyValue("--text2")
-    .trim();
-  const borderColor =
-    getComputedStyle(document.documentElement)
-      .getPropertyValue("--border")
-      .trim() || "#2e3141";
+  const cs = getComputedStyle(document.documentElement);
+  const textColor = cs.getPropertyValue("--text2").trim();
+  const borderColor = cs.getPropertyValue("--border").trim() || "#2e3141";
 
   const totals = labels.map(
     (_, i) => macros.protein[i] + macros.carbs[i] + macros.fat[i]
@@ -508,13 +492,11 @@ function drawReadinessGauge(score) {
       r = 62,
       lw = 10;
     ctx.clearRect(0, 0, 160, 160);
+    const cs = getComputedStyle(document.documentElement);
 
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0.75 * Math.PI, 2.25 * Math.PI);
-    ctx.strokeStyle =
-      getComputedStyle(document.documentElement)
-        .getPropertyValue("--bg3")
-        .trim() || "#252836";
+    ctx.strokeStyle = cs.getPropertyValue("--bg3").trim() || "#252836";
     ctx.lineWidth = lw;
     ctx.lineCap = "round";
     ctx.stroke();
@@ -540,10 +522,7 @@ function drawReadinessGauge(score) {
     ctx.textBaseline = "middle";
     ctx.fillText(currentScore, cx, cy - 4);
 
-    ctx.fillStyle =
-      getComputedStyle(document.documentElement)
-        .getPropertyValue("--text2")
-        .trim() || "#a0a3b1";
+    ctx.fillStyle = cs.getPropertyValue("--text2").trim() || "#a0a3b1";
     ctx.font = "10px -apple-system, sans-serif";
     ctx.fillText("READINESS", cx, cy + 18);
 

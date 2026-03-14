@@ -3,7 +3,6 @@
 
 
 let exerciseRowCount = 0;
-let _lastNavigateAt = Date.now();
 
 function getGymOptions() {
   return (settings.gyms || []).map((g) => '<option value="' + escAttr(g) + '">' + esc(g) + "</option>").join("");

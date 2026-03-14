@@ -1,11 +1,6 @@
 // ========== TODAY VIEW ==========
 // Rendering and event binding for the Today tab
 
-// Calls refreshLog directly (no longer a circular dependency with modules removed)
-function callRefreshLog() {
-  refreshLog();
-}
-
 // Forward declarations for cross-view navigation (set by main.js)
 let _goToLog = null;
 let _goToLogWorkout = null;
@@ -419,7 +414,7 @@ function refreshToday() {
   // Streak
   const streak = calculateStreak();
   const longestStreak = calculateLongestStreak();
-  const hasActivityToday = loadData(KEYS.food).some((f) => f.date === d) || loadData(KEYS.workouts).some((w) => w.date === d);
+  const hasActivityToday = food.length > 0 || workouts.length > 0;
   $("streakNumber").textContent = streak;
   const streakLabel = $("streakLabel");
   if (streakLabel) {
