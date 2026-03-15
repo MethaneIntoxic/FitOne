@@ -49,7 +49,7 @@ function toggleTheme() {
   updateSettings(newSettings);
   document.documentElement.setAttribute("data-theme", newSettings.darkMode ? "" : "light");
   const tc = document.querySelector('meta[name="theme-color"]');
-  if (tc) tc.content = newSettings.darkMode ? "#0f1117" : "#f5f5f7";
+  if (tc) tc.content = newSettings.darkMode ? "#6366f1" : "#4f46e5";
   saveSettingsFromUI();
 }
 
@@ -204,7 +204,7 @@ function loadSettingsUI() {
   $("settingTheme").checked = settings.darkMode;
   document.documentElement.setAttribute("data-theme", settings.darkMode ? "" : "light");
   const tc = document.querySelector('meta[name="theme-color"]');
-  if (tc) tc.content = settings.darkMode ? "#0f1117" : "#f5f5f7";
+  if (tc) tc.content = settings.darkMode ? "#6366f1" : "#4f46e5";
   updateBodyLabels();
   document.querySelectorAll(".goal-option").forEach((b) => {
     b.classList.toggle("active", b.dataset.goal === (settings.bodyGoal || "maintain"));

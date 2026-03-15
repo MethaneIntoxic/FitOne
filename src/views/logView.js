@@ -175,6 +175,7 @@ function logFood() {
   ["foodName", "foodCalories", "foodProtein", "foodCarbs", "foodFat", "foodServing"].forEach((id) => ($(id).value = ""));
   $("foodDate").value = today();
   $("autoCalcHint").textContent = "";
+  $("foodCalories").dataset.manualEntry = "";
   const card = $("foodFormCard");
   if (card) { card.classList.add("log-success"); setTimeout(() => card.classList.remove("log-success"), 600); }
   refreshLog();
@@ -216,6 +217,7 @@ function editFood(id) {
   if (!food) return;
   $("foodName").value = food.name;
   $("foodCalories").value = food.calories || "";
+  $("foodCalories").dataset.manualEntry = food.calories ? "1" : "";
   $("foodProtein").value = food.protein || "";
   $("foodCarbs").value = food.carbs || "";
   $("foodFat").value = food.fat || "";
@@ -242,6 +244,7 @@ function cancelEditFood() {
   ["foodName", "foodCalories", "foodProtein", "foodCarbs", "foodFat", "foodServing"].forEach((id) => ($(id).value = ""));
   $("foodDate").value = today();
   $("autoCalcHint").textContent = "";
+  $("foodCalories").dataset.manualEntry = "";
 }
 
 function duplicateFood(id) {
@@ -269,9 +272,13 @@ function autoCalcCalories() {
   const f = parseInt($("foodFat").value) || 0;
   const est = p * 4 + c * 4 + f * 9;
   const hint = $("autoCalcHint");
-  if (hint) {
-    if (p || c || f) hint.textContent = "(est. " + est + ")";
-    else hint.textContent = "";
+  const calInput = $("foodCalories");
+  if (p || c || f) {
+    if (hint) hint.textContent = "(auto: " + est + " kcal)";
+    if (calInput && !calInput.dataset.manualEntry) calInput.value = est;
+  } else {
+    if (hint) hint.textContent = "";
+    if (calInput && !calInput.dataset.manualEntry) calInput.value = "";
   }
 }
 
@@ -684,6 +691,10 @@ function initLogEvents() {
   $("foodProtein").addEventListener("input", autoCalcCalories);
   $("foodCarbs").addEventListener("input", autoCalcCalories);
   $("foodFat").addEventListener("input", autoCalcCalories);
+  // Track manual calorie entry so auto-calc doesn't overwrite
+  $("foodCalories").addEventListener("input", function () {
+    this.dataset.manualEntry = this.value ? "1" : "";
+  });
 
   // Search
   const searchFood = $("searchFood");

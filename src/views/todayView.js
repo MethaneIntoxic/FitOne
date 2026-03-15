@@ -181,8 +181,8 @@ function drawReadinessSparkline() {
   }));
 
   const gradient = ctx.createLinearGradient(0, 0, 0, H);
-  gradient.addColorStop(0, "rgba(108,99,255,0.18)");
-  gradient.addColorStop(1, "rgba(108,99,255,0.02)");
+  gradient.addColorStop(0, "rgba(99,102,241,0.18)");
+  gradient.addColorStop(1, "rgba(99,102,241,0.02)");
   ctx.fillStyle = gradient;
   ctx.beginPath();
   points.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));

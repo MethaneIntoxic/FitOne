@@ -224,7 +224,7 @@ function drawMealTimeline(analysis) {
       const hours = meals.map((m) => m.hour).sort((a, b) => a - b);
       const x1 = pad.l + ((Math.max(hours[0], timeMin) - timeMin) / (timeMax - timeMin)) * timeW;
       const x2 = pad.l + ((Math.min(hours[hours.length - 1], timeMax) - timeMin) / (timeMax - timeMin)) * timeW;
-      ctx.fillStyle = "rgba(108,99,255,0.08)";
+      ctx.fillStyle = "rgba(99,102,241,0.08)";
       ctx.fillRect(x1, y + 2, Math.max(x2 - x1, 2), rowH - 4);
       meals.forEach((m) => {
         const clampedH = Math.max(timeMin, Math.min(timeMax, m.hour));
