@@ -239,11 +239,21 @@ function drawBarChart(canvas, labels, values, color, goalLine) {
     const y = pad.t + cH - h;
 
     let barColor = color;
+    let statusGlyph = "";
     if (goalLine && values[i] > 0) {
       const ratio = values[i] / goalLine;
-      if (ratio > 1.1) barColor = brandColor("--brand-danger");
-      else if (ratio > 0.9) barColor = brandColor("--brand-success");
-      else if (ratio > 0.7) barColor = brandColor("--brand-warning");
+      if (ratio > 1.1) {
+        barColor = brandColor("--brand-danger");
+        statusGlyph = "▲";
+      }
+      else if (ratio > 0.9) {
+        barColor = brandColor("--brand-success");
+        statusGlyph = "✓";
+      }
+      else if (ratio > 0.7) {
+        barColor = brandColor("--brand-warning");
+        statusGlyph = "•";
+      }
     }
     ctx.fillStyle = barColor;
     ctx.beginPath();
@@ -255,6 +265,10 @@ function drawBarChart(canvas, labels, values, color, goalLine) {
       ctx.font = "8px sans-serif";
       ctx.textAlign = "center";
       ctx.fillText(values[i], x + barW / 2, y - 4);
+      if (statusGlyph) {
+        ctx.font = "9px sans-serif";
+        ctx.fillText(statusGlyph, x + barW / 2, y - 13);
+      }
     }
 
     ctx.fillStyle = textColor;
@@ -278,6 +292,10 @@ function drawBarChart(canvas, labels, values, color, goalLine) {
     ctx.font = "9px sans-serif";
     ctx.textAlign = "left";
     ctx.fillText("Goal", W - pad.r - 24, gy - 4);
+
+    ctx.fillStyle = textColor;
+    ctx.textAlign = "right";
+    ctx.fillText("▲ above  ✓ on target  • near", W - pad.r, pad.t - 6);
   }
 }
 
@@ -447,9 +465,9 @@ function drawStackedBar(canvas, labels, macros) {
   });
 
   const legend = [
-    ["Protein", colors.protein],
-    ["Carbs", colors.carbs],
-    ["Fat", colors.fat],
+    ["Protein (P)", colors.protein],
+    ["Carbs (C)", colors.carbs],
+    ["Fat (F)", colors.fat],
   ];
   let lx = pad.l;
   legend.forEach(([name, c]) => {
@@ -546,3 +564,10 @@ function drawReadinessGauge(score) {
 function closeModal() {
   $("modalContainer").innerHTML = "";
 }
+
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  const mc = $("modalContainer");
+  if (!mc || !mc.firstElementChild) return;
+  closeModal();
+});

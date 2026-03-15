@@ -114,6 +114,9 @@ function saveProtocol() {
   saveData(KEYS.protocols, data);
   closeModal();
   refreshProtocols();
+  if (typeof window.notifyDataChanged === "function") {
+    window.notifyDataChanged({ source: "protocols", reason: "saveProtocol" });
+  }
   showToast("Protocol saved! 📋");
 }
 
@@ -122,6 +125,9 @@ function deleteProtocol(id) {
     const data = loadData(KEYS.protocols).filter((p) => p.id !== id);
     saveData(KEYS.protocols, data);
     refreshProtocols();
+    if (typeof window.notifyDataChanged === "function") {
+      window.notifyDataChanged({ source: "protocols", reason: "deleteProtocol" });
+    }
     showToast("Protocol deleted");
   });
 }
@@ -129,15 +135,28 @@ function deleteProtocol(id) {
 function useProtocol(id) {
   const proto = loadData(KEYS.protocols).find((p) => p.id === id);
   if (!proto) return;
-  document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
-  document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
-  document.querySelector('[data-tab="log"]').classList.add("active");
-  $("panel-log").classList.add("active");
+  if (typeof window.activateMainTab === "function") {
+    window.activateMainTab("log", { scroll: false });
+  } else {
+    document.querySelectorAll(".tab-btn").forEach((b) => {
+      b.classList.remove("active");
+      b.setAttribute("aria-selected", "false");
+    });
+    document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
+    const logBtn = document.querySelector('[data-tab="log"]');
+    if (logBtn) {
+      logBtn.classList.add("active");
+      logBtn.setAttribute("aria-selected", "true");
+    }
+    const logPanel = $("panel-log");
+    if (logPanel) logPanel.classList.add("active");
+  }
   document.querySelectorAll("#panel-log .sub-tab").forEach((b) => b.classList.remove("active"));
   document.querySelectorAll("#panel-log .sub-panel").forEach((p) => p.classList.remove("active"));
   document.querySelector('[data-subtab="log-workout"]').classList.add("active");
   $("log-workout").classList.add("active");
   $("fabBtn").classList.add("fab-hidden");
+  window.scrollTo({ top: 0, behavior: "smooth" });
 
   $("workoutName").value = proto.name;
   $("workoutProtocol").value = proto.id;
@@ -150,22 +169,29 @@ function useProtocol(id) {
     row.className = "stat-row stat-row-dense mb-8";
     row.id = "exrow_" + n;
     const planned = (proto.plannedSets || []).find((ps) => ps.exerciseName === ex.name) || {};
-    row.innerHTML =
-      '<div class="form-group dense-col-6"><input type="text" placeholder="Exercise name" id="exname_' + n + '" value="' + escAttr(ex.name) + '"></div>' +
-      '<div class="form-group dense-col-2"><input type="number" placeholder="Sets" id="exsets_' + n + '" value="' + (ex.sets || "") + '"></div>' +
-      '<div class="form-group dense-col-2"><input type="number" placeholder="Reps" id="exreps_' + n + '" value="' + (ex.reps || "") + '"></div>' +
-      '<div class="form-group dense-col-2"><input type="number" placeholder="Wt" id="exwt_' + n + '" value="' + (ex.weight || "") + '"></div>' +
-      '<div class="form-group dense-col-2"><input type="number" placeholder="RPE" id="exrpe_' + n + '" value="' + (planned.targetRPE || "") + '"></div>' +
-      '<div class="form-group dense-col-2"><input type="number" placeholder="T.Reps" id="extargetreps_' + n + '" value="' + (planned.targetReps || "") + '"></div>' +
-      '<div class="form-group dense-col-2"><input type="number" placeholder="T.Wt" id="extargetwt_' + n + '" value="' + (planned.targetWeight || "") + '"></div>' +
-      '<div class="form-group dense-col-2"><input type="number" placeholder="T.RPE" id="extargetrpe_' + n + '" value="' + (planned.targetRPE || "") + '"></div>' +
-      '<div class="form-group dense-col-3" style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="exassist_' + n + '" style="width:auto"><label for="exassist_' + n + '" class="text-xs">Assisted</label></div>' +
-      '<div class="form-group dense-col-3"><select id="exgym_' + n + '"><option value="">Gym (optional)</option>' + getGymOptions() + '</select></div>' +
-      '<div class="form-group dense-col-3"><select id="exsetup_' + n + '"><option value="">Last setup suggestion</option></select></div>' +
-      '<div class="form-group dense-col-6"><input type="text" placeholder="Machine setup notes" id="exsetupnotes_' + n + '"></div>' +
-      '<button class="btn btn-outline btn-sm dense-col-2" data-remove-row>✕</button>';
+    if (typeof getExerciseRowHtml === "function") {
+      row.innerHTML = getExerciseRowHtml(n, ex, planned);
+    } else {
+      row.innerHTML =
+        '<div class="form-group dense-col-6"><input type="text" placeholder="Exercise name" id="exname_' + n + '" value="' + escAttr(ex.name) + '"></div>' +
+        '<div class="form-group dense-col-2"><input type="number" placeholder="Sets" id="exsets_' + n + '" value="' + (ex.sets || "") + '"></div>' +
+        '<div class="form-group dense-col-2"><input type="number" placeholder="Reps" id="exreps_' + n + '" value="' + (ex.reps || "") + '"></div>' +
+        '<div class="form-group dense-col-2"><input type="number" placeholder="Wt" id="exwt_' + n + '" value="' + (ex.weight || "") + '"></div>' +
+        '<div class="form-group dense-col-2"><input type="number" placeholder="RPE" id="exrpe_' + n + '" value="' + (planned.targetRPE || "") + '"></div>' +
+        '<div class="form-group dense-col-2"><input type="number" placeholder="T.Reps" id="extargetreps_' + n + '" value="' + (planned.targetReps || "") + '"></div>' +
+        '<div class="form-group dense-col-2"><input type="number" placeholder="T.Wt" id="extargetwt_' + n + '" value="' + (planned.targetWeight || "") + '"></div>' +
+        '<div class="form-group dense-col-2"><input type="number" placeholder="T.RPE" id="extargetrpe_' + n + '" value="' + (planned.targetRPE || "") + '"></div>' +
+        '<div class="form-group dense-col-3" style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="exassist_' + n + '" style="width:auto"><label for="exassist_' + n + '" class="text-xs">Assisted</label></div>' +
+        '<div class="form-group dense-col-3"><select id="exgym_' + n + '"><option value="">Gym (optional)</option>' + getGymOptions() + '</select></div>' +
+        '<div class="form-group dense-col-3"><select id="exsetup_' + n + '"><option value="">Last setup suggestion</option></select></div>' +
+        '<div class="form-group dense-col-6"><input type="text" placeholder="Machine setup notes" id="exsetupnotes_' + n + '"></div>' +
+        '<button class="btn btn-outline btn-sm dense-col-2" data-remove-row>✕</button>';
+    }
     $("exerciseRows").appendChild(row);
     row.querySelector("[data-remove-row]").addEventListener("click", () => row.remove());
+    if (typeof bindExerciseInputShortcuts === "function") bindExerciseInputShortcuts(row);
+    if (typeof bindExerciseRowAdvancedToggle === "function") bindExerciseRowAdvancedToggle(row, n);
+    if (typeof bindExerciseRowSetupHandlers === "function") bindExerciseRowSetupHandlers(n);
   });
   setExerciseRowCount(exerciseRowCount);
 }

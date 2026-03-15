@@ -345,8 +345,12 @@ function commitImport(entity, mappedRows) {
     " (" + mode + ")" +
     (validation.errors.length ? "; skipped " + validation.errors.length + " invalid rows." : ".");
   if ($("importSummary")) $("importSummary").textContent = summary;
-  refreshToday();
-  refreshLog();
+  if (typeof window.notifyDataChanged === "function") {
+    window.notifyDataChanged({ source: "data", reason: "commitImport", entity, mode });
+  } else {
+    refreshToday();
+    refreshLog();
+  }
   showToast(summary);
 }
 
@@ -527,8 +531,12 @@ function clearAllData() {
       Object.values(KEYS).forEach((k) => localStorage.removeItem(k));
       updateSettings(defaultSettings());
       if (_loadSettingsUICallback) _loadSettingsUICallback();
-      refreshToday();
-      refreshLog();
+      if (typeof window.notifyDataChanged === "function") {
+        window.notifyDataChanged({ source: "data", reason: "clearAllData" });
+      } else {
+        refreshToday();
+        refreshLog();
+      }
       showToast("All data deleted");
     }
   );

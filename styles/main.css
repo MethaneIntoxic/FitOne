@@ -1090,6 +1090,12 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), select:focus:
 }
 .telemetry-list li { margin-bottom: 6px; }
 .cooldown-list li { margin-bottom: 4px; }
+.exercise-advanced-toggle-wrap { display: flex; justify-content: flex-start; }
+.exercise-advanced-toggle { min-height: 36px; }
+.exercise-advanced { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 8px; }
+.exercise-advanced-grid { margin-bottom: 0; }
+.exercise-advanced .form-group label,
+.exercise-advanced .text-xs { font-size: 0.78rem; }
 
 /* ========== DENSE STACK LAYOUTS ========== */
 .stat-row.stat-row-dense {
@@ -1103,8 +1109,15 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), select:focus:
   margin-bottom: 0;
 }
 
+.stat-row.stat-row-dense input,
+.stat-row.stat-row-dense select,
+.stat-row.stat-row-dense textarea,
+.stat-row.stat-row-dense button {
+  min-height: 44px;
+}
+
 .stat-row.stat-row-dense .btn {
-  min-height: 40px;
+  min-height: 44px;
 }
 
 .dense-col-1 { grid-column: span 1; }

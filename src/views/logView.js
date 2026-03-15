@@ -19,9 +19,10 @@ function getSetupSelectOptions(exerciseName) {
 
 function bindExerciseInputShortcuts(row) {
   const numberInputs = row.querySelectorAll('input[type="number"]');
-  const fields = Array.from(numberInputs);
-  fields.forEach((input, idx) => {
+  Array.from(numberInputs).forEach((input) => {
     input.addEventListener("keydown", (e) => {
+      const fields = Array.from(row.querySelectorAll('input[type="number"]')).filter((el) => el.offsetParent !== null);
+      const idx = fields.indexOf(input);
       if (e.key === "Enter") {
         e.preventDefault();
         const next = fields[idx + 1];
@@ -81,6 +82,71 @@ function renderTargetChip(exercise) {
   return '<div class="target-chip ' + cls + '">Target: ' + targets.join(" • ") + "</div>";
 }
 
+function notifyDataChangedFromLog(reason) {
+  if (typeof window.notifyDataChanged === "function") {
+    window.notifyDataChanged({ source: "log", reason: reason || "mutation" });
+    return;
+  }
+  refreshLog();
+  refreshToday();
+}
+
+function getExerciseRowHtml(index, seed, planned) {
+  const ex = seed || {};
+  const ps = planned || {};
+  return '' +
+    '<div class="form-group dense-col-5"><input type="text" placeholder="Exercise name" id="exname_' + index + '" value="' + escAttr(ex.name || "") + '"></div>' +
+    '<div class="form-group dense-col-2"><input type="number" placeholder="Sets" id="exsets_' + index + '" value="' + (ex.sets || "") + '"></div>' +
+    '<div class="form-group dense-col-2"><input type="number" placeholder="Reps" id="exreps_' + index + '" value="' + (ex.reps || "") + '"></div>' +
+    '<div class="form-group dense-col-2"><input type="number" placeholder="Wt" id="exwt_' + index + '" value="' + (ex.weight || "") + '"></div>' +
+    '<button class="btn btn-outline btn-sm dense-col-1" data-remove-row aria-label="Remove exercise row">✕</button>' +
+    '<div class="dense-col-12 exercise-advanced-toggle-wrap"><button class="btn btn-outline btn-sm exercise-advanced-toggle" data-action="toggle-ex-advanced" aria-expanded="false">Advanced targets & setup</button></div>' +
+    '<div class="dense-col-12 exercise-advanced hidden" id="exadv_' + index + '">' +
+      '<div class="stat-row stat-row-dense exercise-advanced-grid">' +
+        '<div class="form-group dense-col-2"><input type="number" placeholder="RPE" id="exrpe_' + index + '" value="' + (ex.rpe || ps.targetRPE || "") + '"></div>' +
+        '<div class="form-group dense-col-2"><input type="number" placeholder="T.Reps" id="extargetreps_' + index + '" value="' + (ex.targetReps || ps.targetReps || "") + '"></div>' +
+        '<div class="form-group dense-col-2"><input type="number" placeholder="T.Wt" id="extargetwt_' + index + '" value="' + (ex.targetWeight || ps.targetWeight || "") + '"></div>' +
+        '<div class="form-group dense-col-2"><input type="number" placeholder="T.RPE" id="extargetrpe_' + index + '" value="' + (ex.targetRPE || ps.targetRPE || "") + '"></div>' +
+        '<div class="form-group dense-col-3" style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="exassist_' + index + '" style="width:auto"' + (ex.isAssistedBodyweight ? " checked" : "") + '><label for="exassist_' + index + '" class="text-xs">Assisted</label></div>' +
+        '<div class="form-group dense-col-3"><select id="exgym_' + index + '"><option value="">Gym (optional)</option>' + getGymOptions() + '</select></div>' +
+        '<div class="form-group dense-col-3"><select id="exsetup_' + index + '">' + getSetupSelectOptions(ex.name || "") + '</select></div>' +
+        '<div class="form-group dense-col-6"><input type="text" placeholder="Machine setup notes (seat/pin/grip)" id="exsetupnotes_' + index + '" value="' + escAttr(ex.machineSetupNotes || "") + '"></div>' +
+      '</div>' +
+    '</div>';
+}
+
+function bindExerciseRowAdvancedToggle(row, index) {
+  const toggleBtn = row.querySelector('[data-action="toggle-ex-advanced"]');
+  const advanced = $("exadv_" + index);
+  if (!toggleBtn || !advanced) return;
+  toggleBtn.addEventListener("click", () => {
+    const isHidden = advanced.classList.contains("hidden");
+    advanced.classList.toggle("hidden", !isHidden);
+    toggleBtn.setAttribute("aria-expanded", isHidden ? "true" : "false");
+    toggleBtn.textContent = isHidden ? "Hide advanced" : "Advanced targets & setup";
+  });
+}
+
+function bindExerciseRowSetupHandlers(index) {
+  const nameInput = $("exname_" + index);
+  if (nameInput) {
+    nameInput.addEventListener("change", () => {
+      const setupSel = $("exsetup_" + index);
+      if (setupSel) setupSel.innerHTML = getSetupSelectOptions(nameInput.value);
+    });
+  }
+  const setupSel = $("exsetup_" + index);
+  if (setupSel) {
+    setupSel.addEventListener("change", () => {
+      const setupId = setupSel.value;
+      if (!setupId) return;
+      const setup = loadData(KEYS.machineSetups).find((s) => s.id === setupId);
+      const notes = $("exsetupnotes_" + index);
+      if (setup && notes) notes.value = setup.notes || "";
+    });
+  }
+}
+
 // ========== FAVORITES ==========
 function refreshFavorites() {
   const favs = loadData(KEYS.favorites);
@@ -129,8 +195,7 @@ function quickAddFavorite(id) {
   const data = loadData(KEYS.food);
   data.push(entry);
   saveData(KEYS.food, data);
-  refreshLog();
-  refreshToday();
+  notifyDataChangedFromLog("quickAddFavorite");
   showToast(esc(fav.name) + " added! ⭐");
 }
 
@@ -174,12 +239,11 @@ function logFood() {
   saveData(KEYS.food, data);
   ["foodName", "foodCalories", "foodProtein", "foodCarbs", "foodFat", "foodServing"].forEach((id) => ($(id).value = ""));
   $("foodDate").value = today();
-  $("autoCalcHint").textContent = "";
   $("foodCalories").dataset.manualEntry = "";
+  refreshCalorieGuidance();
   const card = $("foodFormCard");
   if (card) { card.classList.add("log-success"); setTimeout(() => card.classList.remove("log-success"), 600); }
-  refreshLog();
-  refreshToday();
+  notifyDataChangedFromLog("logFood");
   setTimeout(() => { if ($("foodName")) $("foodName").focus(); }, 300);
 }
 
@@ -187,8 +251,7 @@ function clearTodayFood() {
   showConfirmModal("Clear Today's Food", "⚠️", "This will remove all food entries for today. You can always log them again.", () => {
     const data = loadData(KEYS.food).filter((f) => f.date !== today());
     saveData(KEYS.food, data);
-    refreshLog();
-    refreshToday();
+    notifyDataChangedFromLog("clearTodayFood");
     showToast("Today's food cleared");
   });
 }
@@ -200,15 +263,13 @@ function deleteFood(id) {
   if (item.timestamp && Date.now() - item.timestamp < 2 * 60 * 1000) trackUXTelemetry("logging.deletedEntryImmediately");
   const filtered = data.filter((f) => f.id !== id);
   saveData(KEYS.food, filtered);
-  refreshLog();
-  refreshToday();
+  notifyDataChangedFromLog("deleteFood");
   showUndoToast("Food deleted", () => {
     trackUXTelemetry("logging.undoCount");
     const current = loadData(KEYS.food);
     current.push(item);
     saveData(KEYS.food, current);
-    refreshLog();
-    refreshToday();
+    notifyDataChangedFromLog("undoDeleteFood");
   });
 }
 
@@ -243,8 +304,8 @@ function cancelEditFood() {
   $("foodCancelEdit").classList.add("hidden");
   ["foodName", "foodCalories", "foodProtein", "foodCarbs", "foodFat", "foodServing"].forEach((id) => ($(id).value = ""));
   $("foodDate").value = today();
-  $("autoCalcHint").textContent = "";
   $("foodCalories").dataset.manualEntry = "";
+  refreshCalorieGuidance();
 }
 
 function duplicateFood(id) {
@@ -260,26 +321,47 @@ function duplicateFood(id) {
   const data = loadData(KEYS.food);
   data.push(entry);
   saveData(KEYS.food, data);
-  refreshLog();
-  refreshToday();
+  notifyDataChangedFromLog("duplicateFood");
   showToast(esc(food.name) + " logged again! 🔄");
 }
 
 // ========== AUTO-CALC CALORIES ==========
-function autoCalcCalories() {
+function refreshCalorieGuidance() {
   const p = parseInt($("foodProtein").value) || 0;
   const c = parseInt($("foodCarbs").value) || 0;
   const f = parseInt($("foodFat").value) || 0;
   const est = p * 4 + c * 4 + f * 9;
   const hint = $("autoCalcHint");
+  const guide = $("autoCalcGuide");
+  const calInput = $("foodCalories");
+  const hasMacros = p || c || f;
+  const manual = !!(calInput && calInput.dataset.manualEntry);
+
+  if (hint) {
+    if (manual) hint.textContent = "(manual override)";
+    else if (hasMacros) hint.textContent = "(auto: " + est + " kcal)";
+    else hint.textContent = "";
+  }
+
+  if (guide) {
+    guide.textContent = manual
+      ? "Manual calories are used. Clear Calories to return to macro auto-calc."
+      : "Leave Calories empty to auto-calculate from Protein, Carbs, and Fat.";
+  }
+}
+
+function autoCalcCalories() {
+  const p = parseInt($("foodProtein").value) || 0;
+  const c = parseInt($("foodCarbs").value) || 0;
+  const f = parseInt($("foodFat").value) || 0;
+  const est = p * 4 + c * 4 + f * 9;
   const calInput = $("foodCalories");
   if (p || c || f) {
-    if (hint) hint.textContent = "(auto: " + est + " kcal)";
     if (calInput && !calInput.dataset.manualEntry) calInput.value = est;
   } else {
-    if (hint) hint.textContent = "";
     if (calInput && !calInput.dataset.manualEntry) calInput.value = "";
   }
+  refreshCalorieGuidance();
 }
 
 // ========== LOG WORKOUT ==========
@@ -288,39 +370,11 @@ function addExerciseRow() {
   const row = document.createElement("div");
   row.className = "stat-row stat-row-dense mb-8";
   row.id = "exrow_" + exerciseRowCount;
-  row.innerHTML =
-    '<div class="form-group dense-col-6"><input type="text" placeholder="Exercise name" id="exname_' + exerciseRowCount + '"></div>' +
-    '<div class="form-group dense-col-2"><input type="number" placeholder="Sets" id="exsets_' + exerciseRowCount + '"></div>' +
-    '<div class="form-group dense-col-2"><input type="number" placeholder="Reps" id="exreps_' + exerciseRowCount + '"></div>' +
-    '<div class="form-group dense-col-2"><input type="number" placeholder="Wt" id="exwt_' + exerciseRowCount + '"></div>' +
-    '<div class="form-group dense-col-2"><input type="number" placeholder="RPE" id="exrpe_' + exerciseRowCount + '"></div>' +
-    '<div class="form-group dense-col-2"><input type="number" placeholder="T.Reps" id="extargetreps_' + exerciseRowCount + '"></div>' +
-    '<div class="form-group dense-col-2"><input type="number" placeholder="T.Wt" id="extargetwt_' + exerciseRowCount + '"></div>' +
-    '<div class="form-group dense-col-2"><input type="number" placeholder="T.RPE" id="extargetrpe_' + exerciseRowCount + '"></div>' +
-    '<div class="form-group dense-col-3" style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="exassist_' + exerciseRowCount + '" style="width:auto"><label for="exassist_' + exerciseRowCount + '" class="text-xs">Assisted</label></div>' +
-    '<div class="form-group dense-col-3"><select id="exgym_' + exerciseRowCount + '"><option value="">Gym (optional)</option>' + getGymOptions() + '</select></div>' +
-    '<div class="form-group dense-col-3"><select id="exsetup_' + exerciseRowCount + '">' + getSetupSelectOptions("") + "</select></div>" +
-    '<div class="form-group dense-col-6"><input type="text" placeholder="Machine setup notes (seat/pin/grip)" id="exsetupnotes_' + exerciseRowCount + '"></div>' +
-    '<button class="btn btn-outline btn-sm dense-col-2" data-remove-row>✕</button>';
+  row.innerHTML = getExerciseRowHtml(exerciseRowCount);
   $("exerciseRows").appendChild(row);
   bindExerciseInputShortcuts(row);
-  const nameInput = $("exname_" + exerciseRowCount);
-  if (nameInput) {
-    nameInput.addEventListener("change", () => {
-      const setupSel = $("exsetup_" + exerciseRowCount);
-      if (setupSel) setupSel.innerHTML = getSetupSelectOptions(nameInput.value);
-    });
-  }
-  const setupSel = $("exsetup_" + exerciseRowCount);
-  if (setupSel) {
-    setupSel.addEventListener("change", () => {
-      const setupId = setupSel.value;
-      if (!setupId) return;
-      const setup = loadData(KEYS.machineSetups).find((s) => s.id === setupId);
-      const notes = $("exsetupnotes_" + exerciseRowCount);
-      if (setup && notes) notes.value = setup.notes || "";
-    });
-  }
+  bindExerciseRowAdvancedToggle(row, exerciseRowCount);
+  bindExerciseRowSetupHandlers(exerciseRowCount);
 }
 
 function logWorkout() {
@@ -395,17 +449,24 @@ function logWorkout() {
   exerciseRowCount = 0;
   const card = $("workoutFormCard");
   if (card) { card.classList.add("log-success"); setTimeout(() => card.classList.remove("log-success"), 600); }
-  refreshLog();
-  refreshToday();
+  notifyDataChangedFromLog("logWorkout");
   showToast("Workout logged! 💪");
   if (entry.protocolId) {
     const base = loadData(KEYS.protocols).find((p) => p.id === entry.protocolId);
     if (base && JSON.stringify((base.exercises || []).map((e) => e.name + "|" + e.sets + "|" + e.reps + "|" + e.weight)) !== JSON.stringify(exercises.map((e) => e.name + "|" + e.sets + "|" + e.reps + "|" + e.weight))) {
       $("modalContainer").innerHTML =
-        '<div class="modal-overlay"><div class="modal"><div class="modal-title">Routine change detected</div><p class="text-sm mb-12">How should FitOne handle these workout changes?</p>' +
+        '<div class="modal-overlay" id="routineChangeOverlay"><div class="modal"><div class="modal-title">Routine change detected <button class="modal-close" id="routineChangeCloseBtn" aria-label="Close modal">×</button></div><p class="text-sm mb-12">How should FitOne handle these workout changes?</p>' +
         '<button class="btn btn-primary btn-block mb-8" id="routineUpdateBaseBtn">Update base routine</button>' +
         '<button class="btn btn-outline btn-block mb-8" id="routineVariantBtn">Save as new variant</button>' +
         '<button class="btn btn-outline btn-block" id="routineUseOnceBtn">Use once</button></div></div>';
+      if ($("routineChangeOverlay")) {
+        $("routineChangeOverlay").addEventListener("click", (e) => {
+          if (e.target === $("routineChangeOverlay")) closeModal();
+        });
+      }
+      if ($("routineChangeCloseBtn")) {
+        $("routineChangeCloseBtn").addEventListener("click", closeModal);
+      }
       $("routineUpdateBaseBtn").addEventListener("click", () => {
         updateRoutineWithWorkoutChanges(base.id, exercises);
         closeModal();
@@ -446,9 +507,17 @@ function logWorkout() {
     const list = Array.from(recs);
     if (list.length) {
       $("modalContainer").innerHTML =
-        '<div class="modal-overlay"><div class="modal"><div class="modal-title">Cooldown suggestions</div><ul class="cooldown-list">' +
+        '<div class="modal-overlay" id="cooldownOverlay"><div class="modal"><div class="modal-title">Cooldown suggestions <button class="modal-close" id="cooldownCloseBtn" aria-label="Close modal">×</button></div><ul class="cooldown-list">' +
         list.map((r) => '<li><label><input type="checkbox" style="width:auto"> ' + esc(r) + "</label></li>").join("") +
         '</ul><button class="btn btn-primary btn-block mt-12" id="cooldownDoneBtn">Mark complete</button></div></div>';
+      if ($("cooldownOverlay")) {
+        $("cooldownOverlay").addEventListener("click", (e) => {
+          if (e.target === $("cooldownOverlay")) closeModal();
+        });
+      }
+      if ($("cooldownCloseBtn")) {
+        $("cooldownCloseBtn").addEventListener("click", closeModal);
+      }
       $("cooldownDoneBtn").addEventListener("click", () => {
         closeModal();
         showToast("Cooldown logged");
@@ -465,15 +534,13 @@ function deleteWorkout(id) {
   if (item.timestamp && Date.now() - item.timestamp < 2 * 60 * 1000) trackUXTelemetry("logging.deletedEntryImmediately");
   const filtered = data.filter((w) => w.id !== id);
   saveData(KEYS.workouts, filtered);
-  refreshLog();
-  refreshToday();
+  notifyDataChangedFromLog("deleteWorkout");
   showUndoToast("Workout deleted", () => {
     trackUXTelemetry("logging.undoCount");
     const current = loadData(KEYS.workouts);
     current.push(item);
     saveData(KEYS.workouts, current);
-    refreshLog();
-    refreshToday();
+    notifyDataChangedFromLog("undoDeleteWorkout");
   });
 }
 
@@ -500,7 +567,7 @@ function logBody() {
   $("bodyDate").value = today();
   const card = $("bodyFormCard");
   if (card) { card.classList.add("log-success"); setTimeout(() => card.classList.remove("log-success"), 600); }
-  refreshLog();
+  notifyDataChangedFromLog("logBody");
   showToast("Body measurements saved! 📏");
 }
 
@@ -511,13 +578,13 @@ function deleteBody(id) {
   if (item.timestamp && Date.now() - item.timestamp < 2 * 60 * 1000) trackUXTelemetry("logging.deletedEntryImmediately");
   const filtered = data.filter((b) => b.id !== id);
   saveData(KEYS.body, filtered);
-  refreshLog();
+  notifyDataChangedFromLog("deleteBody");
   showUndoToast("Measurement deleted", () => {
     trackUXTelemetry("logging.undoCount");
     const current = loadData(KEYS.body);
     current.push(item);
     saveData(KEYS.body, current);
-    refreshLog();
+    notifyDataChangedFromLog("undoDeleteBody");
   });
 }
 
@@ -694,7 +761,9 @@ function initLogEvents() {
   // Track manual calorie entry so auto-calc doesn't overwrite
   $("foodCalories").addEventListener("input", function () {
     this.dataset.manualEntry = this.value ? "1" : "";
+    refreshCalorieGuidance();
   });
+  refreshCalorieGuidance();
 
   // Search
   const searchFood = $("searchFood");

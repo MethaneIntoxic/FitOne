@@ -6,9 +6,6 @@ cd /d "C:\Users\admin\Desktop\random projs\FitOne"
 set PASSED=0
 set FAILED=0
 
-REM Create temporary files to store results
-echo. > results.txt
-
 echo Checking: src\dataStore.js
 node --check "src\dataStore.js" >nul 2>&1
 if !ERRORLEVEL! equ 0 (

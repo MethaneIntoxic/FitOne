@@ -11,6 +11,45 @@ function refreshCurrentTab(tab) {
 }
 let _navState = { tab: "today", at: Date.now() };
 
+window.notifyDataChanged = function (detail) {
+  window.dispatchEvent(new CustomEvent("fitone:dataChanged", { detail: detail || {} }));
+};
+
+window.addEventListener("fitone:dataChanged", () => {
+  refreshLog();
+  refreshToday();
+  populateProtocolSelect();
+  refreshFavorites();
+  const activeMain = document.querySelector(".tab-btn.active");
+  if (!activeMain) return;
+  if (activeMain.dataset.tab === "analytics") refreshAnalytics();
+  if (activeMain.dataset.tab === "protocols") refreshProtocols();
+});
+
+function activateMainTab(tab, options) {
+  const now = Date.now();
+  const shouldScroll = !(options && options.scroll === false);
+  document.querySelectorAll(".tab-btn").forEach((b) => {
+    b.classList.remove("active");
+    b.setAttribute("aria-selected", "false");
+  });
+  document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
+  const targetBtn = document.querySelector('[data-tab="' + tab + '"]');
+  const targetPanel = $("panel-" + tab);
+  if (!targetBtn || !targetPanel) return;
+  targetBtn.classList.add("active");
+  targetBtn.setAttribute("aria-selected", "true");
+  targetPanel.classList.add("active");
+  _navState = { tab, at: now };
+  if (shouldScroll) window.scrollTo({ top: 0, behavior: "smooth" });
+  refreshCurrentTab(tab);
+  const fab = $("fabBtn");
+  const fabMenu = $("fabMenu");
+  if (fab) fab.classList.toggle("fab-hidden", tab === "log");
+  if (fabMenu) fabMenu.classList.toggle("fab-hidden", tab === "log");
+  closeFabMenu();
+}
+
 // Expose for settings to call
 window._refreshCurrentTab = refreshCurrentTab;
 
@@ -20,23 +59,7 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
     if (_navState.tab && _navState.tab !== btn.dataset.tab && now - _navState.at < 2000) {
       trackUXTelemetry("navigation.backWithin2sOfNavigate");
     }
-    _navState = { tab: btn.dataset.tab, at: now };
-    document.querySelectorAll(".tab-btn").forEach((b) => {
-      b.classList.remove("active");
-      b.setAttribute("aria-selected", "false");
-    });
-    document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
-    btn.classList.add("active");
-    btn.setAttribute("aria-selected", "true");
-    $("panel-" + btn.dataset.tab).classList.add("active");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    refreshCurrentTab(btn.dataset.tab);
-    // Hide FAB on log tab
-    const fab = $("fabBtn");
-    const fabMenu = $("fabMenu");
-    if (fab) fab.classList.toggle("fab-hidden", btn.dataset.tab === "log");
-    if (fabMenu) fabMenu.classList.toggle("fab-hidden", btn.dataset.tab === "log");
-    closeFabMenu();
+    activateMainTab(btn.dataset.tab);
   });
 });
 
@@ -55,13 +78,7 @@ document.querySelectorAll(".sub-tab").forEach((btn) => {
 
 // ========== NAV HELPERS ==========
 function goToLog() {
-  document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
-  document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
-  document.querySelector('[data-tab="log"]').classList.add("active");
-  $("panel-log").classList.add("active");
-  $("fabBtn").classList.add("fab-hidden");
-  window.scrollTo({ top: 0, behavior: "smooth" });
-  refreshLog();
+  activateMainTab("log");
   setTimeout(() => { if ($("foodName")) $("foodName").focus(); }, 300);
 }
 
@@ -75,22 +92,17 @@ function goToLogWorkout() {
 }
 
 function goToLogBody() {
-  document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
-  document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
-  const logTab = document.querySelector('[data-tab="log"]');
-  if (logTab) { logTab.classList.add("active"); logTab.setAttribute("aria-selected", "true"); }
-  const logPanel = $("panel-log");
-  if (logPanel) logPanel.classList.add("active");
+  activateMainTab("log", { scroll: false });
   document.querySelectorAll("#panel-log .sub-tab").forEach((s) => s.classList.remove("active"));
   document.querySelectorAll("#panel-log .sub-panel").forEach((s) => s.classList.remove("active"));
   const bodySub = document.querySelector('[data-subtab="log-body"]');
   if (bodySub) bodySub.classList.add("active");
   const bodyPanel = $("log-body");
   if (bodyPanel) bodyPanel.classList.add("active");
-  $("fabBtn").classList.add("fab-hidden");
-  closeFabMenu();
-  refreshLog();
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
+
+window.activateMainTab = activateMainTab;
 
 // Set nav callbacks for todayView
 setNavCallbacks(goToLog, goToLogWorkout);
