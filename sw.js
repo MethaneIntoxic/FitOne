@@ -1,7 +1,8 @@
-const CACHE_NAME = 'fitone-v5';
+const CACHE_NAME = 'fitone-v6';
 const ASSETS = [
   './',
   './index.html',
+  './styles/brand-assets.css',
   './styles/main.css',
   './src/dataStore.js',
   './src/syncService.js',

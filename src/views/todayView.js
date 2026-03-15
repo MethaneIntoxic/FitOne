@@ -50,7 +50,7 @@ function refreshWater() {
   $("waterInfo").textContent = total + " / " + goal + " ml";
   if ($("waterPercent")) $("waterPercent").textContent = Math.round(pct * 100) + "%";
   const canvas = $("waterRing");
-  if (canvas) drawRing(canvas, pct, "#2196f3");
+  if (canvas) drawRing(canvas, pct, brandColor("--brand-info"));
 }
 
 function refreshWaterInsights() {
@@ -191,7 +191,7 @@ function drawReadinessSparkline() {
   ctx.closePath();
   ctx.fill();
 
-  ctx.strokeStyle = "#6c63ff";
+  ctx.strokeStyle = brandColor("--brand-primary");
   ctx.lineWidth = 2;
   ctx.lineJoin = "round";
   ctx.beginPath();
@@ -331,7 +331,14 @@ function triggerCelebration(message) {
     const p = document.createElement("div");
     p.className = "confetti-particle";
     p.style.left = Math.random() * 100 + "vw";
-    p.style.background = ["#ff6b6b", "#4ecdc4", "#45b7d1", "#f7dc6f", "#bb8fce", "#ff9ff3"][Math.floor(Math.random() * 6)];
+    p.style.background = [
+      brandColor("--brand-confetti-1"),
+      brandColor("--brand-confetti-2"),
+      brandColor("--brand-confetti-3"),
+      brandColor("--brand-confetti-4"),
+      brandColor("--brand-confetti-5"),
+      brandColor("--brand-confetti-6"),
+    ][Math.floor(Math.random() * 6)];
     p.style.animationDelay = Math.random() * 0.5 + "s";
     p.style.animationDuration = 1.5 + Math.random() + "s";
     document.body.appendChild(p);
@@ -366,10 +373,10 @@ function refreshToday() {
   );
 
   $("macroRings").innerHTML = [
-    { label: "Calories", val: totals.cal, goal: settings.calorieGoal, color: "#6c63ff" },
-    { label: "Protein", val: totals.pro, goal: settings.proteinGoal, color: "#4caf50", unit: "g" },
-    { label: "Carbs", val: totals.carb, goal: settings.carbsGoal, color: "#ff9800", unit: "g" },
-    { label: "Fat", val: totals.fat, goal: settings.fatGoal, color: "#2196f3", unit: "g" },
+    { label: "Calories", val: totals.cal, goal: settings.calorieGoal, color: brandColor("--brand-calories") },
+    { label: "Protein", val: totals.pro, goal: settings.proteinGoal, color: brandColor("--brand-protein"), unit: "g" },
+    { label: "Carbs", val: totals.carb, goal: settings.carbsGoal, color: brandColor("--brand-carbs"), unit: "g" },
+    { label: "Fat", val: totals.fat, goal: settings.fatGoal, color: brandColor("--brand-fat"), unit: "g" },
   ]
     .map(
       (r) => `
@@ -384,10 +391,10 @@ function refreshToday() {
 
   setTimeout(() => {
     [
-      { label: "Calories", val: totals.cal, goal: settings.calorieGoal, color: "#6c63ff" },
-      { label: "Protein", val: totals.pro, goal: settings.proteinGoal, color: "#4caf50" },
-      { label: "Carbs", val: totals.carb, goal: settings.carbsGoal, color: "#ff9800" },
-      { label: "Fat", val: totals.fat, goal: settings.fatGoal, color: "#2196f3" },
+      { label: "Calories", val: totals.cal, goal: settings.calorieGoal, color: brandColor("--brand-calories") },
+      { label: "Protein", val: totals.pro, goal: settings.proteinGoal, color: brandColor("--brand-protein") },
+      { label: "Carbs", val: totals.carb, goal: settings.carbsGoal, color: brandColor("--brand-carbs") },
+      { label: "Fat", val: totals.fat, goal: settings.fatGoal, color: brandColor("--brand-fat") },
     ].forEach((r) => drawRing($("ring_" + r.label), r.val / r.goal, r.color));
   }, 0);
 

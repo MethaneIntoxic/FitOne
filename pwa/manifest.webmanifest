@@ -5,8 +5,8 @@
   "scope": "/FitOne/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#09090b",
-  "theme_color": "#6366f1",
+  "background_color": "#09090B",
+  "theme_color": "#6C63FF",
   "icons": [
     {
       "src": "/FitOne/icons/icon-192.png",

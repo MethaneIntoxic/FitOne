@@ -21,7 +21,7 @@ function drawCalorieChart() {
   const days = getLast14Days();
   const food = loadData(KEYS.food);
   const vals = days.map((d) => food.filter((f) => f.date === d).reduce((a, f) => a + (f.calories || 0), 0));
-  drawBarChart($("chartCalories"), days.map((d) => d.slice(5)), vals, "#6c63ff", settings.calorieGoal);
+  drawBarChart($("chartCalories"), days.map((d) => d.slice(5)), vals, brandColor("--brand-calories"), settings.calorieGoal);
 
   const last7 = days.slice(-7);
   const macros = { protein: [], carbs: [], fat: [] };
@@ -55,7 +55,7 @@ function drawWeightChart() {
     $("weightStatsCard").innerHTML = "";
     return;
   }
-  drawLineChart($("chartWeight"), last20.map((b) => fmtDate(b.date)), last20.map((b) => b.weight), "#4caf50");
+  drawLineChart($("chartWeight"), last20.map((b) => fmtDate(b.date)), last20.map((b) => b.weight), brandColor("--brand-success"));
   const latest = last20[last20.length - 1].weight;
   const first = last20[0].weight;
   $("weightStatsCard").innerHTML =
@@ -70,7 +70,7 @@ function drawWorkoutChart() {
   const days = getLast14Days();
   const workouts = loadData(KEYS.workouts);
   const vals = days.map((d) => workouts.filter((w) => w.date === d).length);
-  drawBarChart($("chartWorkouts"), days.map((d) => d.slice(5)), vals, "#ff9800");
+  drawBarChart($("chartWorkouts"), days.map((d) => d.slice(5)), vals, brandColor("--brand-warning"));
 
   const thisWeek = workouts.filter((w) => {
     const ws = new Date();
@@ -210,7 +210,12 @@ function drawMealTimeline(analysis) {
     ctx.fillText(label, x, H - pad.b + 13);
   }
 
-  const mealColors = { breakfast: "#ff9800", lunch: "#4caf50", dinner: "#6c63ff", snack: "#2196f3" };
+  const mealColors = {
+    breakfast: brandColor("--brand-breakfast"),
+    lunch: brandColor("--brand-lunch"),
+    dinner: brandColor("--brand-dinner"),
+    snack: brandColor("--brand-snack"),
+  };
 
   last7.forEach((date, i) => {
     const y = pad.t + i * rowH;
@@ -229,7 +234,7 @@ function drawMealTimeline(analysis) {
       meals.forEach((m) => {
         const clampedH = Math.max(timeMin, Math.min(timeMax, m.hour));
         const mx = pad.l + ((clampedH - timeMin) / (timeMax - timeMin)) * timeW;
-        ctx.fillStyle = mealColors[m.meal] || "#6c63ff";
+        ctx.fillStyle = mealColors[m.meal] || brandColor("--brand-primary");
         ctx.beginPath();
         ctx.arc(mx, y + rowH / 2, 4, 0, Math.PI * 2);
         ctx.fill();
@@ -259,15 +264,15 @@ function drawMacroTimingBars(analysis) {
     const carbPct = totalMacro > 0 ? (p.carb / totalMacro) * 100 : 0;
     const fatPct = totalMacro > 0 ? (p.fat / totalMacro) * 100 : 0;
     html += '<div class="macro-timing-row"><span class="period-label">' + p.label + '</span><div class="macro-timing-bar">' +
-      '<div style="width:' + proPct + '%;background:#4caf50" title="Protein ' + Math.round(proPct) + '%"></div>' +
-      '<div style="width:' + carbPct + '%;background:#ff9800" title="Carbs ' + Math.round(carbPct) + '%"></div>' +
-      '<div style="width:' + fatPct + '%;background:#2196f3" title="Fat ' + Math.round(fatPct) + '%"></div>' +
+      '<div style="width:' + proPct + '%;background:var(--brand-protein)" title="Protein ' + Math.round(proPct) + '%"></div>' +
+      '<div style="width:' + carbPct + '%;background:var(--brand-carbs)" title="Carbs ' + Math.round(carbPct) + '%"></div>' +
+      '<div style="width:' + fatPct + '%;background:var(--brand-fat)" title="Fat ' + Math.round(fatPct) + '%"></div>' +
       '</div><span class="macro-timing-pct">' + pct + "% cal</span></div>";
   });
   html += '<div style="display:flex;gap:12px;justify-content:center;margin-top:8px;font-size:0.72rem;color:var(--text2)">' +
-    '<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#4caf50;margin-right:3px"></span>Protein</span>' +
-    '<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#ff9800;margin-right:3px"></span>Carbs</span>' +
-    '<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#2196f3;margin-right:3px"></span>Fat</span></div>';
+    '<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--brand-protein);margin-right:3px"></span>Protein</span>' +
+    '<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--brand-carbs);margin-right:3px"></span>Carbs</span>' +
+    '<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--brand-fat);margin-right:3px"></span>Fat</span></div>';
   container.innerHTML = html;
 }
 

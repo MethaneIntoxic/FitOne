@@ -1,6 +1,12 @@
 // ========== UI HELPERS ==========
 // Generic DOM helpers, shared UI utilities (toast, confirm, ring drawing, charts, etc.)
 
+// ========== BRAND COLOR READER ==========
+// Reads CSS custom properties so canvas code stays in sync with brand-assets.css
+function brandColor(token) {
+  return getComputedStyle(document.documentElement).getPropertyValue(token).trim();
+}
+
 // ========== TOAST ==========
 function showToast(msg, type) {
   type = type || "success";
@@ -127,7 +133,7 @@ function drawRing(canvas, pct, color) {
 
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.strokeStyle = cs.getPropertyValue("--bg3").trim() || "#252836";
+    ctx.strokeStyle = cs.getPropertyValue("--bg3").trim() || "#27272A";
     ctx.lineWidth = lw;
     ctx.stroke();
 
@@ -141,13 +147,13 @@ function drawRing(canvas, pct, color) {
         -Math.PI / 2,
         -Math.PI / 2 + Math.PI * 2 * drawPct
       );
-      ctx.strokeStyle = pct > 1.1 ? "#ef5350" : color;
+      ctx.strokeStyle = pct > 1.1 ? brandColor("--brand-danger") : color;
       ctx.lineWidth = lw;
       ctx.lineCap = "round";
       ctx.stroke();
     }
 
-    ctx.fillStyle = cs.getPropertyValue("--text").trim() || "#e4e6eb";
+    ctx.fillStyle = cs.getPropertyValue("--text").trim() || "#FAFAFA";
     ctx.font =
       "bold " + Math.round(size * 0.28) + "px -apple-system, sans-serif";
     ctx.textAlign = "center";
@@ -205,8 +211,8 @@ function drawBarChart(canvas, labels, values, color, goalLine) {
 
   ctx.clearRect(0, 0, W, H);
   const cs = getComputedStyle(document.documentElement);
-  const textColor = cs.getPropertyValue("--text2").trim() || "#a0a3b1";
-  const borderColor = cs.getPropertyValue("--border").trim() || "#2e3141";
+  const textColor = cs.getPropertyValue("--text2").trim() || "#A1A1AA";
+  const borderColor = cs.getPropertyValue("--border").trim() || "#27272A";
 
   const maxVal = Math.max(...values, goalLine || 0, 1);
   const barW = (cW / labels.length) * 0.6;
@@ -235,9 +241,9 @@ function drawBarChart(canvas, labels, values, color, goalLine) {
     let barColor = color;
     if (goalLine && values[i] > 0) {
       const ratio = values[i] / goalLine;
-      if (ratio > 1.1) barColor = "#ef5350";
-      else if (ratio > 0.9) barColor = "#4caf50";
-      else if (ratio > 0.7) barColor = "#ff9800";
+      if (ratio > 1.1) barColor = brandColor("--brand-danger");
+      else if (ratio > 0.9) barColor = brandColor("--brand-success");
+      else if (ratio > 0.7) barColor = brandColor("--brand-warning");
     }
     ctx.fillStyle = barColor;
     ctx.beginPath();
@@ -259,7 +265,8 @@ function drawBarChart(canvas, labels, values, color, goalLine) {
 
   if (goalLine) {
     const gy = pad.t + cH - (goalLine / maxVal) * cH;
-    ctx.strokeStyle = "#ef5350";
+    const goalColor = brandColor("--brand-danger");
+    ctx.strokeStyle = goalColor;
     ctx.lineWidth = 1;
     ctx.setLineDash([5, 3]);
     ctx.beginPath();
@@ -267,7 +274,7 @@ function drawBarChart(canvas, labels, values, color, goalLine) {
     ctx.lineTo(W - pad.r, gy);
     ctx.stroke();
     ctx.setLineDash([]);
-    ctx.fillStyle = "#ef5350";
+    ctx.fillStyle = goalColor;
     ctx.font = "9px sans-serif";
     ctx.textAlign = "left";
     ctx.fillText("Goal", W - pad.r - 24, gy - 4);
@@ -290,8 +297,8 @@ function drawLineChart(canvas, labels, values, color) {
 
   ctx.clearRect(0, 0, W, H);
   const cs = getComputedStyle(document.documentElement);
-  const textColor = cs.getPropertyValue("--text2").trim() || "#a0a3b1";
-  const borderColor = cs.getPropertyValue("--border").trim() || "#2e3141";
+  const textColor = cs.getPropertyValue("--text2").trim() || "#A1A1AA";
+  const borderColor = cs.getPropertyValue("--border").trim() || "#27272A";
 
   const minV = Math.min(...values);
   const maxV = Math.max(...values);
@@ -391,7 +398,7 @@ function drawStackedBar(canvas, labels, macros) {
   ctx.clearRect(0, 0, W, H);
   const cs = getComputedStyle(document.documentElement);
   const textColor = cs.getPropertyValue("--text2").trim();
-  const borderColor = cs.getPropertyValue("--border").trim() || "#2e3141";
+  const borderColor = cs.getPropertyValue("--border").trim() || "#27272A";
 
   const totals = labels.map(
     (_, i) => macros.protein[i] + macros.carbs[i] + macros.fat[i]
@@ -415,7 +422,11 @@ function drawStackedBar(canvas, labels, macros) {
 
   const barW = (cW / labels.length) * 0.6;
   const gap = (cW / labels.length) * 0.4;
-  const colors = { protein: "#4caf50", carbs: "#ff9800", fat: "#2196f3" };
+  const colors = {
+    protein: brandColor("--brand-protein"),
+    carbs: brandColor("--brand-carbs"),
+    fat: brandColor("--brand-fat"),
+  };
 
   labels.forEach((l, i) => {
     const x = pad.l + (cW / labels.length) * i + gap / 2;
@@ -436,9 +447,9 @@ function drawStackedBar(canvas, labels, macros) {
   });
 
   const legend = [
-    ["Protein", "#4caf50"],
-    ["Carbs", "#ff9800"],
-    ["Fat", "#2196f3"],
+    ["Protein", colors.protein],
+    ["Carbs", colors.carbs],
+    ["Fat", colors.fat],
   ];
   let lx = pad.l;
   legend.forEach(([name, c]) => {
@@ -454,10 +465,10 @@ function drawStackedBar(canvas, labels, macros) {
 
 // ========== READINESS GAUGE ==========
 function getReadinessColor(score) {
-  if (score < 40) return "#ef5350";
-  if (score < 60) return "#ff9800";
-  if (score < 75) return "#ffeb3b";
-  return "#4caf50";
+  if (score < 40) return brandColor("--brand-danger");
+  if (score < 60) return brandColor("--brand-warning");
+  if (score < 75) return brandColor("--brand-warning");
+  return brandColor("--brand-success");
 }
 
 function getReadinessLabel(score) {
@@ -496,7 +507,7 @@ function drawReadinessGauge(score) {
 
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0.75 * Math.PI, 2.25 * Math.PI);
-    ctx.strokeStyle = cs.getPropertyValue("--bg3").trim() || "#252836";
+    ctx.strokeStyle = cs.getPropertyValue("--bg3").trim() || "#27272A";
     ctx.lineWidth = lw;
     ctx.lineCap = "round";
     ctx.stroke();
@@ -522,7 +533,7 @@ function drawReadinessGauge(score) {
     ctx.textBaseline = "middle";
     ctx.fillText(currentScore, cx, cy - 4);
 
-    ctx.fillStyle = cs.getPropertyValue("--text2").trim() || "#a0a3b1";
+    ctx.fillStyle = cs.getPropertyValue("--text2").trim() || "#A1A1AA";
     ctx.font = "10px -apple-system, sans-serif";
     ctx.fillText("READINESS", cx, cy + 18);
 
