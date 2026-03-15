@@ -199,9 +199,9 @@ function renderSchemaDocs() {
     const fields = DATA_SCHEMAS[entity];
     return (
       '<div class="mb-12"><div style="font-weight:600;margin-bottom:6px">' + entity + ".csv</div>" +
-      '<table class="schema-table"><tr><th>field</th><th>description</th></tr>' +
+      '<div class="schema-scroll"><table class="schema-table"><tr><th>field</th><th>description</th></tr>' +
       fields.map((f) => "<tr><td>" + f + "</td><td>" + (f === "id" ? "Primary key" : "Schema field") + "</td></tr>").join("") +
-      "</table></div>"
+      "</table></div></div>"
     );
   });
   target.innerHTML = blocks.join("");

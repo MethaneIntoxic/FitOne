@@ -286,22 +286,22 @@ function autoCalcCalories() {
 function addExerciseRow() {
   exerciseRowCount++;
   const row = document.createElement("div");
-  row.className = "stat-row mb-8";
+  row.className = "stat-row stat-row-dense mb-8";
   row.id = "exrow_" + exerciseRowCount;
   row.innerHTML =
-    '<div class="form-group" style="flex:2"><input type="text" placeholder="Exercise name" id="exname_' + exerciseRowCount + '"></div>' +
-    '<div class="form-group" style="flex:1"><input type="number" placeholder="Sets" id="exsets_' + exerciseRowCount + '"></div>' +
-    '<div class="form-group" style="flex:1"><input type="number" placeholder="Reps" id="exreps_' + exerciseRowCount + '"></div>' +
-    '<div class="form-group" style="flex:1"><input type="number" placeholder="Wt" id="exwt_' + exerciseRowCount + '"></div>' +
-    '<div class="form-group" style="flex:1"><input type="number" placeholder="RPE" id="exrpe_' + exerciseRowCount + '"></div>' +
-    '<div class="form-group" style="flex:1"><input type="number" placeholder="T.Reps" id="extargetreps_' + exerciseRowCount + '"></div>' +
-    '<div class="form-group" style="flex:1"><input type="number" placeholder="T.Wt" id="extargetwt_' + exerciseRowCount + '"></div>' +
-    '<div class="form-group" style="flex:1"><input type="number" placeholder="T.RPE" id="extargetrpe_' + exerciseRowCount + '"></div>' +
-    '<div class="form-group" style="flex:1;display:flex;align-items:center;gap:6px"><input type="checkbox" id="exassist_' + exerciseRowCount + '" style="width:auto"><label for="exassist_' + exerciseRowCount + '" class="text-xs">Assisted</label></div>' +
-    '<div class="form-group" style="flex:1"><select id="exgym_' + exerciseRowCount + '"><option value="">Gym (optional)</option>' + getGymOptions() + '</select></div>' +
-    '<div class="form-group" style="flex:1"><select id="exsetup_' + exerciseRowCount + '">' + getSetupSelectOptions("") + "</select></div>" +
-    '<div class="form-group" style="flex:2"><input type="text" placeholder="Machine setup notes (seat/pin/grip)" id="exsetupnotes_' + exerciseRowCount + '"></div>' +
-    '<button class="btn btn-outline btn-sm" data-remove-row style="align-self:flex-end;margin-bottom:12px">✕</button>';
+    '<div class="form-group dense-col-6"><input type="text" placeholder="Exercise name" id="exname_' + exerciseRowCount + '"></div>' +
+    '<div class="form-group dense-col-2"><input type="number" placeholder="Sets" id="exsets_' + exerciseRowCount + '"></div>' +
+    '<div class="form-group dense-col-2"><input type="number" placeholder="Reps" id="exreps_' + exerciseRowCount + '"></div>' +
+    '<div class="form-group dense-col-2"><input type="number" placeholder="Wt" id="exwt_' + exerciseRowCount + '"></div>' +
+    '<div class="form-group dense-col-2"><input type="number" placeholder="RPE" id="exrpe_' + exerciseRowCount + '"></div>' +
+    '<div class="form-group dense-col-2"><input type="number" placeholder="T.Reps" id="extargetreps_' + exerciseRowCount + '"></div>' +
+    '<div class="form-group dense-col-2"><input type="number" placeholder="T.Wt" id="extargetwt_' + exerciseRowCount + '"></div>' +
+    '<div class="form-group dense-col-2"><input type="number" placeholder="T.RPE" id="extargetrpe_' + exerciseRowCount + '"></div>' +
+    '<div class="form-group dense-col-3" style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="exassist_' + exerciseRowCount + '" style="width:auto"><label for="exassist_' + exerciseRowCount + '" class="text-xs">Assisted</label></div>' +
+    '<div class="form-group dense-col-3"><select id="exgym_' + exerciseRowCount + '"><option value="">Gym (optional)</option>' + getGymOptions() + '</select></div>' +
+    '<div class="form-group dense-col-3"><select id="exsetup_' + exerciseRowCount + '">' + getSetupSelectOptions("") + "</select></div>" +
+    '<div class="form-group dense-col-6"><input type="text" placeholder="Machine setup notes (seat/pin/grip)" id="exsetupnotes_' + exerciseRowCount + '"></div>' +
+    '<button class="btn btn-outline btn-sm dense-col-2" data-remove-row>✕</button>';
   $("exerciseRows").appendChild(row);
   bindExerciseInputShortcuts(row);
   const nameInput = $("exname_" + exerciseRowCount);

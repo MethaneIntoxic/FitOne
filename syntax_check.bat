@@ -119,17 +119,6 @@ if !ERRORLEVEL! equ 0 (
     set /a FAILED+=1
 )
 
-echo Checking: pwa\sw.js
-node --check "pwa\sw.js" >nul 2>&1
-if !ERRORLEVEL! equ 0 (
-    echo [PASS] pwa\sw.js
-    set /a PASSED+=1
-) else (
-    echo [FAIL] pwa\sw.js
-    for /f "tokens=*" %%A in ('node --check "pwa\sw.js" 2^>^&1') do echo   %%A
-    set /a FAILED+=1
-)
-
 echo Checking: sw.js
 node --check "sw.js" >nul 2>&1
 if !ERRORLEVEL! equ 0 (
@@ -147,7 +136,7 @@ echo SYNTAX CHECK SUMMARY
 echo ========================================
 echo Passed: !PASSED!
 echo Failed: !FAILED!
-echo Total:  12
+echo Total:  11
 echo ========================================
 
 endlocal

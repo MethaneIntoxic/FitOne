@@ -57,15 +57,15 @@ function addProtoExercise() {
   window._protoExCount++;
   const n = window._protoExCount;
   const row = document.createElement("div");
-  row.className = "stat-row mb-8";
+  row.className = "stat-row stat-row-dense mb-8";
   row.id = "pex_" + n;
   row.innerHTML =
-    '<div class="form-group" style="flex:2"><input type="text" placeholder="Exercise" id="pexname_' + n + '"></div>' +
-    '<div class="form-group" style="flex:1"><input type="number" placeholder="Sets" id="pexsets_' + n + '"></div>' +
-    '<div class="form-group" style="flex:1"><input type="number" placeholder="Reps" id="pexreps_' + n + '"></div>' +
-      '<div class="form-group" style="flex:1"><input type="number" placeholder="Wt" id="pexwt_' + n + '"></div>' +
-      '<div class="form-group" style="flex:1"><input type="number" placeholder="RPE" id="pexrpe_' + n + '"></div>' +
-      '<button class="btn btn-outline btn-sm" data-remove-row style="align-self:flex-end;margin-bottom:12px">✕</button>';
+    '<div class="form-group dense-col-6"><input type="text" placeholder="Exercise" id="pexname_' + n + '"></div>' +
+    '<div class="form-group dense-col-2"><input type="number" placeholder="Sets" id="pexsets_' + n + '"></div>' +
+    '<div class="form-group dense-col-2"><input type="number" placeholder="Reps" id="pexreps_' + n + '"></div>' +
+      '<div class="form-group dense-col-2"><input type="number" placeholder="Wt" id="pexwt_' + n + '"></div>' +
+      '<div class="form-group dense-col-2"><input type="number" placeholder="RPE" id="pexrpe_' + n + '"></div>' +
+      '<button class="btn btn-outline btn-sm dense-col-2" data-remove-row>✕</button>';
   $("protoExercises").appendChild(row);
   row.querySelector("[data-remove-row]").addEventListener("click", () => row.remove());
 }
@@ -147,23 +147,23 @@ function useProtocol(id) {
     exerciseRowCount++;
     const n = exerciseRowCount;
     const row = document.createElement("div");
-    row.className = "stat-row mb-8";
+    row.className = "stat-row stat-row-dense mb-8";
     row.id = "exrow_" + n;
     const planned = (proto.plannedSets || []).find((ps) => ps.exerciseName === ex.name) || {};
     row.innerHTML =
-      '<div class="form-group" style="flex:2"><input type="text" placeholder="Exercise name" id="exname_' + n + '" value="' + escAttr(ex.name) + '"></div>' +
-      '<div class="form-group" style="flex:1"><input type="number" placeholder="Sets" id="exsets_' + n + '" value="' + (ex.sets || "") + '"></div>' +
-      '<div class="form-group" style="flex:1"><input type="number" placeholder="Reps" id="exreps_' + n + '" value="' + (ex.reps || "") + '"></div>' +
-      '<div class="form-group" style="flex:1"><input type="number" placeholder="Wt" id="exwt_' + n + '" value="' + (ex.weight || "") + '"></div>' +
-      '<div class="form-group" style="flex:1"><input type="number" placeholder="RPE" id="exrpe_' + n + '" value="' + (planned.targetRPE || "") + '"></div>' +
-      '<div class="form-group" style="flex:1"><input type="number" placeholder="T.Reps" id="extargetreps_' + n + '" value="' + (planned.targetReps || "") + '"></div>' +
-      '<div class="form-group" style="flex:1"><input type="number" placeholder="T.Wt" id="extargetwt_' + n + '" value="' + (planned.targetWeight || "") + '"></div>' +
-      '<div class="form-group" style="flex:1"><input type="number" placeholder="T.RPE" id="extargetrpe_' + n + '" value="' + (planned.targetRPE || "") + '"></div>' +
-      '<div class="form-group" style="flex:1;display:flex;align-items:center;gap:6px"><input type="checkbox" id="exassist_' + n + '" style="width:auto"><label for="exassist_' + n + '" class="text-xs">Assisted</label></div>' +
-      '<div class="form-group" style="flex:1"><select id="exgym_' + n + '"><option value="">Gym (optional)</option>' + getGymOptions() + '</select></div>' +
-      '<div class="form-group" style="flex:1"><select id="exsetup_' + n + '"><option value="">Last setup suggestion</option></select></div>' +
-      '<div class="form-group" style="flex:2"><input type="text" placeholder="Machine setup notes" id="exsetupnotes_' + n + '"></div>' +
-      '<button class="btn btn-outline btn-sm" data-remove-row style="align-self:flex-end;margin-bottom:12px">✕</button>';
+      '<div class="form-group dense-col-6"><input type="text" placeholder="Exercise name" id="exname_' + n + '" value="' + escAttr(ex.name) + '"></div>' +
+      '<div class="form-group dense-col-2"><input type="number" placeholder="Sets" id="exsets_' + n + '" value="' + (ex.sets || "") + '"></div>' +
+      '<div class="form-group dense-col-2"><input type="number" placeholder="Reps" id="exreps_' + n + '" value="' + (ex.reps || "") + '"></div>' +
+      '<div class="form-group dense-col-2"><input type="number" placeholder="Wt" id="exwt_' + n + '" value="' + (ex.weight || "") + '"></div>' +
+      '<div class="form-group dense-col-2"><input type="number" placeholder="RPE" id="exrpe_' + n + '" value="' + (planned.targetRPE || "") + '"></div>' +
+      '<div class="form-group dense-col-2"><input type="number" placeholder="T.Reps" id="extargetreps_' + n + '" value="' + (planned.targetReps || "") + '"></div>' +
+      '<div class="form-group dense-col-2"><input type="number" placeholder="T.Wt" id="extargetwt_' + n + '" value="' + (planned.targetWeight || "") + '"></div>' +
+      '<div class="form-group dense-col-2"><input type="number" placeholder="T.RPE" id="extargetrpe_' + n + '" value="' + (planned.targetRPE || "") + '"></div>' +
+      '<div class="form-group dense-col-3" style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="exassist_' + n + '" style="width:auto"><label for="exassist_' + n + '" class="text-xs">Assisted</label></div>' +
+      '<div class="form-group dense-col-3"><select id="exgym_' + n + '"><option value="">Gym (optional)</option>' + getGymOptions() + '</select></div>' +
+      '<div class="form-group dense-col-3"><select id="exsetup_' + n + '"><option value="">Last setup suggestion</option></select></div>' +
+      '<div class="form-group dense-col-6"><input type="text" placeholder="Machine setup notes" id="exsetupnotes_' + n + '"></div>' +
+      '<button class="btn btn-outline btn-sm dense-col-2" data-remove-row>✕</button>';
     $("exerciseRows").appendChild(row);
     row.querySelector("[data-remove-row]").addEventListener("click", () => row.remove());
   });

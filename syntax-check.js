@@ -14,7 +14,6 @@ const files = [
   'src\\views\\todayView.js',
   'src\\views\\analyticsView.js',
   'src\\main.js',
-  'pwa\\sw.js',
   'sw.js'
 ];
 
