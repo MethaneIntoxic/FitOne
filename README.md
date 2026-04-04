@@ -37,6 +37,22 @@ Train with intent, recover smarter, and stay consistent with analytics that turn
    - Python: `python -m http.server 5500`
    - Then open `http://localhost:5500`
 
+## Browser UAT Automation (Playwright)
+
+FitOne includes browser-based UAT automation powered by Playwright.
+
+1. Start the static server on the expected test URL:
+   - `npm run dev`
+   - This serves the app at `http://localhost:4173`
+
+2. In a second terminal, run the UAT suite:
+   - `npm run test:e2e`
+   - or `npx playwright test`
+
+3. After test completion:
+   - Review Playwright artifacts in `test-results/`
+   - Review generated failure tickets in `tickets/` (`.json` and `.md`)
+
 ## Data & Privacy
 
 - FitOne stores data in browser `localStorage` only.

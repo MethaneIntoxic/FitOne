@@ -1,0 +1,18 @@
+{
+  "id": "T-UAT-007-1",
+  "scenarioId": "UAT-007",
+  "scenarioTitle": "Per-gym PR tracking baseline",
+  "persona": "Kay – powerlifter",
+  "category": "Strength",
+  "mode": "power",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Create gym profile and log a heavy session with exercise sets.",
+  "expectedSummary": "Workout and sets are stored; workout analytics and summaries render without missing values.",
+  "actualResult": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4173/",
+  "errorMessage": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4173/\nCall log:\n  - navigating to \"http://localhost:4173/\", waiting until \"load\"\n",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-007-–-Per-gym-PR-tracking-baseline-UAT-007-chromium-retry1\\test-failed-1.png",
+  "createdAt": "2026-03-23T10:01:44.631Z"
+}

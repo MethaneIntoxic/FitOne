@@ -1,0 +1,18 @@
+{
+  "id": "T-UAT-010-1",
+  "scenarioId": "UAT-010",
+  "scenarioTitle": "Recomposition trend visibility",
+  "persona": "Mina – body recomposition",
+  "category": "Analytics",
+  "mode": "power",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Log food, workouts, and body entries then inspect calorie, workout, and weight analytics views.",
+  "expectedSummary": "Charts and weekly summary cards render with coherent trend context.",
+  "actualResult": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4173/",
+  "errorMessage": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4173/\nCall log:\n  - navigating to \"http://localhost:4173/\", waiting until \"load\"\n",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-010-–-Recomposition-trend-visibility-UAT-010-chromium-retry1\\test-failed-1.png",
+  "createdAt": "2026-03-23T10:02:04.113Z"
+}

@@ -1,0 +1,18 @@
+{
+  "id": "T-UAT-005-1",
+  "scenarioId": "UAT-005",
+  "scenarioTitle": "Beginner meal logging with macro auto-calc",
+  "persona": "Amira – new to tracking",
+  "category": "Nutrition",
+  "mode": "beginner",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Log meals with protein/carbs/fat and rely on calorie auto-calc guidance.",
+  "expectedSummary": "Macro-derived calories are applied and recent food list is accurate.",
+  "actualResult": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed",
+  "errorMessage": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('#recentFood .list-item')\nExpected: \u001b[32m3\u001b[39m\nReceived: \u001b[31m4\u001b[39m\nTimeout:  7000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" with timeout 7000ms\u001b[22m\n\u001b[2m  - waiting for locator('#recentFood .list-item')\u001b[22m\n\u001b[2m    11 × locator resolved to 4 elements\u001b[22m\n\u001b[2m       - unexpected value \"4\"\u001b[22m\n",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-005-–-Beginner-mea-8e0f6-ith-macro-auto-calc-UAT-005-chromium\\test-failed-1.png",
+  "createdAt": "2026-03-23T09:51:52.704Z"
+}

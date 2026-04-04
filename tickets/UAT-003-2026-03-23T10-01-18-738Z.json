@@ -1,0 +1,18 @@
+{
+  "id": "T-UAT-003-1",
+  "scenarioId": "UAT-003",
+  "scenarioTitle": "First body check-in and goal alignment",
+  "persona": "Amira – new to tracking",
+  "category": "Onboarding",
+  "mode": "beginner",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Set body goal and log first body measurement with notes.",
+  "expectedSummary": "Body history records the entry and reflects selected units/goals cleanly.",
+  "actualResult": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4173/",
+  "errorMessage": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4173/\nCall log:\n  - navigating to \"http://localhost:4173/\", waiting until \"load\"\n",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-003-–-First-body-check-in-and-goal-alignment-UAT-003-chromium-retry1\\test-failed-1.png",
+  "createdAt": "2026-03-23T10:01:18.738Z"
+}

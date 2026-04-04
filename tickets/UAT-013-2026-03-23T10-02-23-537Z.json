@@ -1,0 +1,18 @@
+{
+  "id": "T-UAT-013-1",
+  "scenarioId": "UAT-013",
+  "scenarioTitle": "Offline workout logging and resumption",
+  "persona": "Kay – trains in low connectivity gym",
+  "category": "Offline",
+  "mode": "power",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Switch browser context offline, log workout, then return online.",
+  "expectedSummary": "Workout logging remains functional offline and data persists after reconnect.",
+  "actualResult": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4173/",
+  "errorMessage": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4173/\nCall log:\n  - navigating to \"http://localhost:4173/\", waiting until \"load\"\n",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-013-–-Offline-workout-logging-and-resumption-UAT-013-chromium-retry1\\test-failed-1.png",
+  "createdAt": "2026-03-23T10:02:23.537Z"
+}

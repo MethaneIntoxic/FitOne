@@ -1,0 +1,17 @@
+{
+  "id": "T-UAT-015-1",
+  "scenarioId": "UAT-015",
+  "scenarioTitle": "Performance baseline on static SPA",
+  "persona": "QA benchmark runner",
+  "category": "Performance",
+  "mode": "beginner",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Open app, switch major tabs, and verify UI becomes interactive quickly.",
+  "expectedSummary": "Critical surfaces render in expected time budget and remain responsive.",
+  "actualResult": "Error: browserType.launch: Executable doesn't exist at C:\\Users\\admin\\AppData\\Local\\ms-playwright\\chromium_headless_shell-1208\\chrome-headless-shell-win64\\chrome-headless-shell.exe",
+  "errorMessage": "Error: browserType.launch: Executable doesn't exist at C:\\Users\\admin\\AppData\\Local\\ms-playwright\\chromium_headless_shell-1208\\chrome-headless-shell-win64\\chrome-headless-shell.exe\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+  "createdAt": "2026-03-23T09:20:49.468Z"
+}

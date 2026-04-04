@@ -1,0 +1,18 @@
+{
+  "id": "T-UAT-004-1",
+  "scenarioId": "UAT-004",
+  "scenarioTitle": "Hydration quick-add + custom ml",
+  "persona": "Leo – office professional",
+  "category": "Daily Tracking",
+  "mode": "beginner",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Add water via quick buttons and custom amount, then undo one action.",
+  "expectedSummary": "Water total and percentage update immediately and undo works correctly.",
+  "actualResult": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4173/",
+  "errorMessage": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4173/\nCall log:\n  - navigating to \"http://localhost:4173/\", waiting until \"load\"\n",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-004-–-Hydration-quick-add-custom-ml-UAT-004-chromium-retry1\\test-failed-1.png",
+  "createdAt": "2026-03-23T10:01:25.193Z"
+}

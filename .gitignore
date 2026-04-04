@@ -14,3 +14,9 @@ desktop.ini
 # Python local server artifacts
 __pycache__/
 *.pyc
+
+# Dependencies
+node_modules/
+dist/
+build/
+.env

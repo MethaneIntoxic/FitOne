@@ -1,0 +1,18 @@
+{
+  "id": "T-UAT-008-1",
+  "scenarioId": "UAT-008",
+  "scenarioTitle": "Routine versioning after workout changes",
+  "persona": "Kay – powerlifter",
+  "category": "Strength",
+  "mode": "power",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Log workout from protocol, modify exercise details, and choose variant/update flow.",
+  "expectedSummary": "Routine-change modal appears and accepts user decision without data corruption.",
+  "actualResult": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4173/",
+  "errorMessage": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4173/\nCall log:\n  - navigating to \"http://localhost:4173/\", waiting until \"load\"\n",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-008-–-Routine-vers-719d6-ter-workout-changes-UAT-008-chromium-retry1\\test-failed-1.png",
+  "createdAt": "2026-03-23T10:01:51.098Z"
+}

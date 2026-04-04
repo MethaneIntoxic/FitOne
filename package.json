@@ -2,9 +2,11 @@
   "name": "fitone",
   "private": true,
   "scripts": {
-    "dev": "serve ."
+    "dev": "serve . -l 4173",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "serve": "^14.2.4"
   }
 }
