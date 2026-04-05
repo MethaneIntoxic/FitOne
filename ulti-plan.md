@@ -2,7 +2,7 @@
 
 ## 1) Vibe Translation
 
-Goal: Continue wireframe-driven implementation in FitOne with W5.3 (Primary Activation Muscle Map) as the immediate target, while preserving the current Kinetic Obsidian UX and local-only architecture.
+Goal: Continue wireframe-driven implementation in FitOne with W5.4 (Execution Protocol / Form Tips) as the immediate target, while preserving the current Kinetic Obsidian UX and local-only architecture.
 
 Chosen stack (already established in repo):
 - Frontend: Vanilla JavaScript SPA
@@ -29,7 +29,7 @@ Relevant modules and responsibilities:
 - index.html
   - Loads exercise detail view script globally
 
-W5.3 required architecture extension:
+W5.3 implemented architecture extension:
 - Add a muscle-map render block inside exercise detail view:
   - Left column: muscle groups with percentage bars
   - Right column: body silhouette visual target
@@ -43,11 +43,24 @@ W5.3 required architecture extension:
   - renderMuscleMap(exerciseName, info) returns deterministic HTML block
   - Must remain compatible with existing modal open/close behavior
 
+W5.4 required architecture extension:
+- Provide bundled `formTips` JSON for exercise entries in `src/exerciseDatabase.js`
+- Render a collapsible execution protocol section in `src/views/exerciseDetailView.js`
+- Ensure the protocol section remains optional and does not force expanded UI for advanced users
+
 ## 3) Implementation Tracking
 
 All actionable implementation tasks are tracked in `todo.md`.
 
 `ulti-plan.md` remains the architecture/guardrails document only.
+
+Current synced checkpoint (from `todo.md`):
+- W5.1 complete
+- W5.2 complete
+- W5.3 complete
+- W5.4 complete
+- W5.5 complete
+- W5.6 next target
 
 ## 4) DO NOT List
 

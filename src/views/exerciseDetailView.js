@@ -240,10 +240,17 @@ function renderMuscleMap(exerciseName, info) {
 function getExecutionProtocolSteps(info) {
   const explicit = Array.isArray(info && info.formTips) ? info.formTips : [];
   if (explicit.length) {
-    return explicit.slice(0, 4).map((tip, i) => ({
+    const normalized = explicit.slice(0, 4).map((tip, i) => ({
       title: tip.title || "Step " + String(i + 1).padStart(2, "0"),
       description: tip.description || "",
     }));
+    while (normalized.length < 3) {
+      normalized.push({
+        title: ["Setup", "Execution", "Finish"][normalized.length] || "Step " + String(normalized.length + 1).padStart(2, "0"),
+        description: "Maintain stable bracing, repeat consistent mechanics, and stop the set when form breaks down.",
+      });
+    }
+    return normalized;
   }
 
   const tipsText = (info && info.tips) || "";
@@ -262,10 +269,17 @@ function getExecutionProtocolSteps(info) {
   }
 
   const defaultTitles = ["Setup", "Load Path", "Tempo", "Finish"];
-  return fragments.map((description, i) => ({
+  const mapped = fragments.map((description, i) => ({
     title: defaultTitles[i] || "Step " + String(i + 1).padStart(2, "0"),
     description,
   }));
+  while (mapped.length < 3) {
+    mapped.push({
+      title: ["Setup", "Execution", "Finish"][mapped.length] || "Step " + String(mapped.length + 1).padStart(2, "0"),
+      description: "Maintain stable bracing, repeat consistent mechanics, and stop the set when form breaks down.",
+    });
+  }
+  return mapped;
 }
 
 function renderExecutionProtocol(info) {
@@ -301,6 +315,114 @@ function renderExecutionProtocol(info) {
   );
 }
 
+function calculateEst1RM(weight, reps) {
+  const w = Number(weight) || 0;
+  const r = Number(reps) || 0;
+  if (w <= 0 || r <= 0) return 0;
+  if (r === 1) return w;
+  return Math.round(w * (1 + r / 30) * 10) / 10;
+}
+
+function getExercisePerformanceSessions(exerciseName) {
+  if (!exerciseName || typeof loadData !== "function" || !KEYS || !KEYS.workouts) return [];
+  const target = exerciseName.toLowerCase().trim();
+  const source = loadData(KEYS.workouts) || [];
+
+  const sessions = source
+    .map((workout) => {
+      const matched = (workout.exercises || []).find(
+        (ex) => (ex.name || "").toLowerCase().trim() === target
+      );
+      if (!matched) return null;
+      const sets = Number(matched.sets) || 0;
+      const reps = Number(matched.reps) || 0;
+      const weight = Number(matched.weight) || 0;
+      const ts = Number(workout.timestamp) || 0;
+
+      return {
+        date: workout.date || today(),
+        timestamp: ts,
+        volume: sets * reps * weight,
+        est1RM: calculateEst1RM(weight, reps),
+        maxEffort: weight,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+  return sessions.slice(-6);
+}
+
+function getMetricConfig(metric) {
+  if (metric === "est1rm") return { key: "est1RM", label: "1RM Est." };
+  if (metric === "max") return { key: "maxEffort", label: "Max Effort" };
+  return { key: "volume", label: "Volume" };
+}
+
+function drawPerformanceMetric(canvas, sessions, metric) {
+  if (!canvas || typeof drawLineChart !== "function" || !sessions.length) return;
+  const config = getMetricConfig(metric);
+  const labels = sessions.map((s) => {
+    const d = (s.date || "").split("-");
+    if (d.length === 3) return d[1] + "/" + d[2];
+    return s.date || "Session";
+  });
+  const values = sessions.map((s) => Number(s[config.key]) || 0);
+  drawLineChart(canvas, labels, values, "#8B5CF6");
+}
+
+function attachPerformanceChartHandlers(sessions) {
+  const wrap = $("exerciseDetailChartWrap");
+  const canvas = $("exerciseDetailPerfCanvas");
+  if (!wrap || !canvas || !sessions.length) return;
+
+  let active = "volume";
+  const render = () => {
+    drawPerformanceMetric(canvas, sessions, active);
+    const hint = $("exerciseDetailChartHint");
+    if (hint) hint.textContent = getMetricConfig(active).label + " • Last " + sessions.length + " sessions";
+  };
+
+  wrap.querySelectorAll("[data-perf-metric]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      active = btn.getAttribute("data-perf-metric") || "volume";
+      wrap.querySelectorAll("[data-perf-metric]").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      render();
+    });
+  });
+
+  render();
+}
+
+function renderPerformanceChart(exerciseName) {
+  const sessions = getExercisePerformanceSessions(exerciseName);
+  if (!sessions.length) {
+    return {
+      html:
+        '<section class="exercise-detail-performance">' +
+        '<div class="head"><h3>Performance Index</h3></div>' +
+        '<p class="empty">Log this movement in multiple sessions to unlock trend analytics.</p>' +
+        "</section>",
+      sessions,
+    };
+  }
+
+  const html =
+    '<section class="exercise-detail-performance" id="exerciseDetailChartWrap">' +
+    '<div class="head"><h3>Performance Index</h3>' +
+    '<div class="toggles">' +
+    '<button class="btn active" data-perf-metric="volume">VOLUME</button>' +
+    '<button class="btn" data-perf-metric="est1rm">1RM EST.</button>' +
+    '<button class="btn" data-perf-metric="max">MAX EFFORT</button>' +
+    "</div></div>" +
+    '<div class="canvas-wrap"><canvas id="exerciseDetailPerfCanvas" aria-label="Performance chart"></canvas></div>' +
+    '<p class="hint" id="exerciseDetailChartHint"></p>' +
+    "</section>";
+
+  return { html, sessions };
+}
+
 window.showExerciseDetailModal = function (exerciseName) {
   const cleanName = (exerciseName || "").trim();
   if (!cleanName) {
@@ -315,6 +437,7 @@ window.showExerciseDetailModal = function (exerciseName) {
   const lastSession = getLastSessionValue(cleanName);
   const muscleMapHtml = renderMuscleMap(cleanName, info);
   const protocolHtml = renderExecutionProtocol(info);
+  const perf = renderPerformanceChart(cleanName);
 
   const html =
     '<div class="exercise-detail-overlay" id="exerciseDetailOverlay">' +
@@ -350,6 +473,7 @@ window.showExerciseDetailModal = function (exerciseName) {
     '</div>' +
     muscleMapHtml +
     protocolHtml +
+    perf.html +
     '</div>' +
     '</div>' +
     '</div>' +
@@ -366,4 +490,6 @@ window.showExerciseDetailModal = function (exerciseName) {
       if (e.target === overlay) closeModal();
     });
   }
+
+  attachPerformanceChartHandlers(perf.sessions);
 };

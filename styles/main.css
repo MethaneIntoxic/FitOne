@@ -2759,6 +2759,72 @@ body.overlay-open { overflow: hidden; }
   line-height: 1.45;
 }
 
+.exercise-detail-performance {
+  margin-top: 14px;
+  background: linear-gradient(135deg, rgba(17, 24, 40, 0.92), rgba(10, 15, 27, 0.94));
+  border-radius: 16px;
+  padding: 12px;
+}
+
+.exercise-detail-performance .head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.exercise-detail-performance h3 {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #c6d0eb;
+}
+
+.exercise-detail-performance .toggles {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.exercise-detail-performance .toggles .btn {
+  border: none;
+  border-radius: 999px;
+  padding: 5px 8px;
+  background: rgba(64, 77, 108, 0.45);
+  color: #b8c1dc;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.exercise-detail-performance .toggles .btn.active {
+  background: linear-gradient(135deg, rgba(132, 85, 239, 0.95), rgba(186, 158, 255, 0.9));
+  color: #fff;
+}
+
+.exercise-detail-performance .canvas-wrap {
+  margin-top: 10px;
+  height: 180px;
+  border-radius: 12px;
+  background: rgba(11, 17, 32, 0.86);
+  padding: 6px;
+}
+
+.exercise-detail-performance .canvas-wrap canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.exercise-detail-performance .hint,
+.exercise-detail-performance .empty {
+  margin-top: 7px;
+  font-size: 0.68rem;
+  color: var(--text2);
+}
+
 @media (max-width: 420px) {
   .exercise-detail-stats {
     grid-template-columns: 1fr;

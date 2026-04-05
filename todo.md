@@ -267,14 +267,14 @@
     - [x] No new diagnostics errors in changed files
     - [x] W5.3 checkbox marked complete after browser validation
 
-- [ ] **W5.4 — Execution Protocol (Form Tips)**
+- [x] **W5.4 — Execution Protocol (Form Tips)**
   - Step-by-step form instructions (numbered 01, 02, 03...)
   - Each step: title (bold) + description paragraph
   - Bundled as JSON data per exercise (top 200 exercises)
   - Collapsible section — not forced on experienced users
   - **Modify:** `src/exerciseDatabase.js` → add `formTips` array to exercise entries
 
-- [ ] **W5.5 — Performance Index Chart**
+- [x] **W5.5 — Performance Index Chart**
   - Canvas chart showing exercise performance over time
   - Toggle between: "VOLUME" | "1RM EST." | "MAX EFFORT"
   - Volume = total weight × reps per session
