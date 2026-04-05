@@ -237,6 +237,70 @@ function renderMuscleMap(exerciseName, info) {
   );
 }
 
+function getExecutionProtocolSteps(info) {
+  const explicit = Array.isArray(info && info.formTips) ? info.formTips : [];
+  if (explicit.length) {
+    return explicit.slice(0, 4).map((tip, i) => ({
+      title: tip.title || "Step " + String(i + 1).padStart(2, "0"),
+      description: tip.description || "",
+    }));
+  }
+
+  const tipsText = (info && info.tips) || "";
+  const fragments = tipsText
+    .split(/[.!?]\s+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, 4);
+
+  if (!fragments.length) {
+    return [
+      { title: "Setup", description: "Establish stance, grip, and joint alignment before initiating each rep." },
+      { title: "Execution", description: "Move through the target range with controlled tempo and stable bracing." },
+      { title: "Finish", description: "Complete lockout with intent, then reset before the next repetition." },
+    ];
+  }
+
+  const defaultTitles = ["Setup", "Load Path", "Tempo", "Finish"];
+  return fragments.map((description, i) => ({
+    title: defaultTitles[i] || "Step " + String(i + 1).padStart(2, "0"),
+    description,
+  }));
+}
+
+function renderExecutionProtocol(info) {
+  const steps = getExecutionProtocolSteps(info);
+  const stepsHtml = steps
+    .map(
+      (step, i) =>
+        '<div class="exercise-detail-protocol-step">' +
+        '<div class="idx">' +
+        String(i + 1).padStart(2, "0") +
+        "</div>" +
+        '<div class="content">' +
+        '<h4>' +
+        esc(step.title) +
+        "</h4>" +
+        '<p>' +
+        esc(step.description) +
+        "</p>" +
+        "</div>" +
+        "</div>"
+    )
+    .join("");
+
+  return (
+    '<section class="exercise-detail-protocol">' +
+    '<details>' +
+    '<summary><span>Execution Protocol</span><span class="hint">Tap to expand</span></summary>' +
+    '<div class="exercise-detail-protocol-body">' +
+    stepsHtml +
+    "</div>" +
+    "</details>" +
+    "</section>"
+  );
+}
+
 window.showExerciseDetailModal = function (exerciseName) {
   const cleanName = (exerciseName || "").trim();
   if (!cleanName) {
@@ -250,6 +314,7 @@ window.showExerciseDetailModal = function (exerciseName) {
   const personalBest = getPersonalBestValue(cleanName);
   const lastSession = getLastSessionValue(cleanName);
   const muscleMapHtml = renderMuscleMap(cleanName, info);
+  const protocolHtml = renderExecutionProtocol(info);
 
   const html =
     '<div class="exercise-detail-overlay" id="exerciseDetailOverlay">' +
@@ -284,6 +349,7 @@ window.showExerciseDetailModal = function (exerciseName) {
     '<div class="label">LAST SESSION</div>' +
     '</div>' +
     muscleMapHtml +
+    protocolHtml +
     '</div>' +
     '</div>' +
     '</div>' +
