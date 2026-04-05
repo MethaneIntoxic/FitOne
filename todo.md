@@ -246,7 +246,7 @@
     - "LAST SESSION" → e.g., "110 KG" (from most recent workout log)
   - **Modify:** `src/views/exerciseDetailView.js` → pull from `prTracker.js` and `dataStore.js`
 
-- [ ] **W5.3 — Primary Activation Muscle Map**
+- [x] **W5.3 — Primary Activation Muscle Map**
   - Left side: list of muscle groups with percentage bars
     - e.g., "Pectoralis Major — 95%", "Triceps Brachii — 70%", "Anterior Deltoids — 45%"
   - Right side: human body silhouette SVG with highlighted muscles
@@ -254,18 +254,18 @@
   - **Add file:** `assets/body-outline.svg` (front/back body outline)
   - **Modify:** `src/views/exerciseDetailView.js` → `renderMuscleMap()`
   - **Execution checklist (migrated from `ulti-plan.md`):**
-    - [ ] Add `assets/body-outline.svg` with mobile-friendly, stylable silhouette classes
-    - [ ] Add `getMuscleActivationData(exerciseName, info)` resolver with bundled fallback behavior
-    - [ ] Add `renderMuscleMap(exerciseName, info)` and integrate block into exercise detail modal
-    - [ ] Add muscle-map layout/progress-bar/silhouette styles in `styles/main.css`
-    - [ ] Validate both entry points (Library exercise tap + Workout Log info button)
-    - [ ] Run diagnostics on changed files and mark W5.3 complete only after passing checks
+    - [x] Add `assets/body-outline.svg` with mobile-friendly, stylable silhouette classes
+    - [x] Add `getMuscleActivationData(exerciseName, info)` resolver with bundled fallback behavior
+    - [x] Add `renderMuscleMap(exerciseName, info)` and integrate block into exercise detail modal
+    - [x] Add muscle-map layout/progress-bar/silhouette styles in `styles/main.css`
+    - [x] Validate both entry points (Library exercise tap + Workout Log info button)
+    - [x] Run diagnostics on changed files and mark W5.3 complete only after passing checks
   - **W5.3 acceptance criteria:**
-    - [ ] Exercise detail shows a visible Primary Activation section
-    - [ ] At least 3 muscle rows render with percentages and progress bars
-    - [ ] Body silhouette panel renders on desktop and mobile
-    - [ ] No new diagnostics errors in changed files
-    - [ ] W5.3 checkbox marked complete after browser validation
+    - [x] Exercise detail shows a visible Primary Activation section
+    - [x] At least 3 muscle rows render with percentages and progress bars
+    - [x] Body silhouette panel renders on desktop and mobile
+    - [x] No new diagnostics errors in changed files
+    - [x] W5.3 checkbox marked complete after browser validation
 
 - [ ] **W5.4 — Execution Protocol (Form Tips)**
   - Step-by-step form instructions (numbered 01, 02, 03...)
