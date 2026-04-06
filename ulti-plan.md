@@ -63,10 +63,23 @@ Current synced checkpoint (from `todo.md`):
 - W5.6 complete
 - W6.1 complete
 - W6.2 complete
+- W6.3 complete
+- W7.1-W7.5 complete
+- W8.1-W8.6 complete
+- W9.1-W9.5 complete
+- W10.1-W10.4 complete
+- W11.1-W11.3 complete
+- W13.1-W13.4 complete
+- W14.1-W14.4 complete
+- W15.1-W15.5 complete
+- W16.1-W16.5 complete
+- W17.1 complete
+- W12.1 complete
+- W12.2 complete
 - R1 complete
 - R2 complete
 - R3 complete
-- Phase W next target
+- Phase W next target: #6 (Built-in Exercise Database with Muscle Group Tags)
 
 ## 4) DO NOT List
 

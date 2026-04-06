@@ -42,6 +42,7 @@ function showProtocolModal() {
     '<div class="form-group"><label>Description</label><textarea id="protoDesc" placeholder="Describe this workout..."></textarea></div>' +
     '<div class="flex-between mb-8 mt-12"><span class="card-title" style="margin-bottom:0">Exercises</span><button class="btn btn-outline btn-sm" id="protoAddEx">+ Add</button></div>' +
     '<div id="protoExercises"></div>' +
+    '<div id="protoSuggestedModules"></div>' +
     '<button class="btn btn-primary btn-block mt-12" id="protoSaveBtn">Save Protocol</button>' +
     "</div></div>";
   window._protoExCount = 0;
@@ -53,8 +54,22 @@ function showProtocolModal() {
   $("protoAddEx").addEventListener("click", addProtoExercise);
   $("protoSaveBtn").addEventListener("click", saveProtocol);
   renderProtocolBuilderEmptyState();
+  renderSuggestedModules();
+
+  const modalRoot = $("modalContainer");
+  if (modalRoot && !modalRoot.dataset.protoModuleBound) {
+    modalRoot.addEventListener("click", onProtocolModalClick);
+    modalRoot.dataset.protoModuleBound = "true";
+  }
 
   setTimeout(() => { if ($("protoName")) $("protoName").focus(); }, 200);
+}
+
+function onProtocolModalClick(e) {
+  const moduleCard = e.target.closest("[data-proto-module]");
+  if (!moduleCard) return;
+  const moduleId = moduleCard.dataset.protoModule;
+  if (moduleId) insertSuggestedModule(moduleId);
 }
 
 function renderProtocolBuilderEmptyState() {
@@ -78,6 +93,56 @@ function renderProtocolBuilderEmptyState() {
   if (hasExerciseRows && existingEmpty) {
     existingEmpty.remove();
   }
+}
+
+function renderSuggestedModules() {
+  const container = $("protoSuggestedModules");
+  if (!container) return;
+  const modules = window.STARTER_MODULES || [];
+  if (!modules.length) {
+    container.innerHTML = "";
+    return;
+  }
+
+  const cards = modules.slice(0, 3).map(function (m, idx) {
+    const order = String(idx + 1).padStart(2, "0");
+    return (
+      '<button class="proto-module-card" data-proto-module="' + escAttr(m.id) + '" type="button" aria-label="Insert ' + escAttr(m.name || "module") + ' module">' +
+        '<div class="proto-module-head"><span class="proto-module-order">' + order + '</span><span class="material-symbols-outlined proto-module-icon">' + esc(m.icon || "fitness_center") + '</span></div>' +
+        '<div class="proto-module-name">' + esc((m.name || "Module").toUpperCase()) + '</div>' +
+        '<div class="proto-module-desc">' + esc(m.description || "") + '</div>' +
+      "</button>"
+    );
+  }).join("");
+
+  container.innerHTML =
+    '<div class="proto-modules-wrap">' +
+      '<div class="proto-modules-title">Suggested Modules</div>' +
+      '<div class="proto-modules-grid">' + cards + '</div>' +
+    "</div>";
+}
+
+function insertSuggestedModule(moduleId) {
+  const modules = window.STARTER_MODULES || [];
+  const mod = modules.find(function (m) { return m.id === moduleId; });
+  if (!mod || !Array.isArray(mod.exercises) || !mod.exercises.length) return;
+
+  mod.exercises.forEach(function (ex) {
+    addProtoExercise();
+    const idx = window._protoExCount;
+    const n = $("pexname_" + idx);
+    const s = $("pexsets_" + idx);
+    const r = $("pexreps_" + idx);
+    const w = $("pexwt_" + idx);
+    const p = $("pexrpe_" + idx);
+    if (n) n.value = ex.name || "";
+    if (s) s.value = ex.sets || "";
+    if (r) r.value = ex.reps || "";
+    if (w) w.value = ex.weight || "";
+    if (p && ex.rpe != null) p.value = ex.rpe;
+  });
+
+  showToast((mod.name || "Module") + " inserted");
 }
 
 function addProtoExercise() {

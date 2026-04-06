@@ -79,6 +79,7 @@ const KEYS = {
   settings: "ft_settings",
   water: "ft_water",
   favorites: "ft_favorites",
+  mealTemplates: "ft_meal_templates",
   wellness: "ft_wellness",
   tdee: "ft_tdee",
 };
@@ -137,12 +138,14 @@ function defaultSettings() {
     height: "",
     // W16 Workout Settings
     defaultRestTime: 90,
-    plateSystem: "20kg",
+    plateSystem: "kg",
     autoLock: false,
+    autoLockActiveOnly: true,
     autoAdvance: false,
     focusMode: false,
     voiceCountdown: false,
     pushNotifications: false,
+    emailSummaries: false,
   };
 }
 
@@ -338,6 +341,269 @@ function estimateLocalStorageSize() {
     total += key.length + value.length;
   }
   return total;
+}
+
+function getRecentActivity(limit) {
+  const maxItems = Number(limit) > 0 ? Number(limit) : 60;
+  const timeline = [];
+
+  const workouts = loadData(KEYS.workouts);
+  workouts.forEach((w) => {
+    const exCount = Array.isArray(w.exercises) ? w.exercises.length : 0;
+    const volume = (w.exercises || []).reduce(function (sum, ex) {
+      if (Array.isArray(ex.sets)) {
+        return sum + ex.sets.reduce(function (s, set) {
+          return s + (Number(set.weight) || 0) * (Number(set.reps) || 0);
+        }, 0);
+      }
+      return sum + (Number(ex.weight) || 0) * (Number(ex.reps) || 0) * (Number(ex.sets) || 0);
+    }, 0);
+    timeline.push({
+      id: w.id || uid(),
+      type: "workout",
+      icon: "🏋️",
+      title: (w.name || "Workout") + " completed",
+      subtitle: exCount + " exercises • " + (w.duration || 0) + " min • " + Math.round(volume).toLocaleString() + " kg",
+      context: "FitOne",
+      date: w.date,
+      timestamp: Number(w.timestamp) || 0,
+      ts: Number(w.timestamp) || new Date((w.date || today()) + "T00:00:00").getTime(),
+    });
+  });
+
+  const foodLogs = loadData(KEYS.food);
+  const foodByDate = {};
+  foodLogs.forEach((f) => {
+    const d = f.date || today();
+    if (!foodByDate[d]) {
+      foodByDate[d] = { calories: 0, protein: 0, count: 0, ts: Number(f.timestamp) || 0 };
+    }
+    foodByDate[d].calories += Number(f.calories) || 0;
+    foodByDate[d].protein += Number(f.protein) || 0;
+    foodByDate[d].count += 1;
+    foodByDate[d].ts = Math.max(foodByDate[d].ts, Number(f.timestamp) || 0);
+  });
+  Object.keys(foodByDate).forEach((d) => {
+    const entry = foodByDate[d];
+    timeline.push({
+      id: "food-" + d,
+      type: "food",
+      icon: "🍽️",
+      title: "Nutrition logged",
+      subtitle: Math.round(entry.calories) + " kcal • " + Math.round(entry.protein) + "g protein • " + entry.count + " entries",
+      context: "FitOne",
+      date: d,
+      timestamp: entry.ts,
+      ts: entry.ts || new Date(d + "T12:00:00").getTime(),
+    });
+  });
+
+  const body = loadData(KEYS.body);
+  body.forEach((b) => {
+    const wt = Number(b.weight);
+    timeline.push({
+      id: b.id || ("body-" + (b.date || today())),
+      type: "body",
+      icon: "📏",
+      title: "Body metrics updated",
+      subtitle: Number.isFinite(wt) ? (wt + " " + String(settings.weightUnit || "kg").toUpperCase()) : "Measurement logged",
+      context: "FitOne",
+      date: b.date,
+      timestamp: Number(b.timestamp) || 0,
+      ts: Number(b.timestamp) || new Date((b.date || today()) + "T12:00:00").getTime(),
+    });
+  });
+
+  let prList = [];
+  if (typeof loadPRs === "function") {
+    prList = loadPRs();
+  } else {
+    try { prList = JSON.parse(localStorage.getItem("ft_personal_records")) || []; } catch { prList = []; }
+  }
+  prList.forEach((pr) => {
+    const unit = pr.type === "reps" ? "reps" : String(settings.weightUnit || "kg").toUpperCase();
+    timeline.push({
+      id: pr.id || uid(),
+      type: "pr",
+      icon: "⚡",
+      title: "PR: " + (pr.exercise || "Exercise"),
+      subtitle: (pr.value || "--") + " " + unit + " • " + String((pr.type || "weight")).toUpperCase() + "",
+      context: "FitOne",
+      badge: "ELITE PERFORMANCE",
+      hot: true,
+      exercise: pr.exercise || "",
+      date: pr.date,
+      timestamp: Number(pr.timestamp) || 0,
+      ts: Number(pr.timestamp) || new Date((pr.date || today()) + "T12:00:00").getTime(),
+    });
+  });
+
+  try {
+    const unlocked = JSON.parse(localStorage.getItem("ft_achievements")) || {};
+    const defs = typeof ACHIEVEMENT_DEFS !== "undefined" ? ACHIEVEMENT_DEFS : [];
+    Object.keys(unlocked).forEach((id) => {
+      const meta = unlocked[id] || {};
+      const def = defs.find(function (d) { return d.id === id; });
+      timeline.push({
+        id: "ach-" + id,
+        type: "achievement",
+        icon: def && def.icon ? def.icon : "🏆",
+        title: "Achievement unlocked",
+        subtitle: def && def.name ? def.name : id,
+        context: "FitOne",
+        date: meta.date || today(),
+        timestamp: Number(meta.unlockedAt) || 0,
+        ts: Number(meta.unlockedAt) || new Date((meta.date || today()) + "T12:00:00").getTime(),
+      });
+    });
+  } catch {}
+
+  const streak = calculateStreak();
+  if (streak >= 3) {
+    timeline.push({
+      id: "streak-" + streak,
+      type: "streak",
+      icon: "🔥",
+      title: "Streak milestone",
+      subtitle: streak + " days active in a row",
+      context: "FitOne",
+      date: today(),
+      timestamp: Date.now() - 60 * 1000,
+      ts: Date.now() - 60 * 1000,
+    });
+  }
+
+  return timeline
+    .sort(function (a, b) { return (Number(b.ts) || 0) - (Number(a.ts) || 0); })
+    .slice(0, maxItems);
+}
+
+function getWorkoutVolume(workout) {
+  return (workout && workout.exercises ? workout.exercises : []).reduce(function (sum, ex) {
+    if (Array.isArray(ex.sets) && ex.sets.length) {
+      return sum + ex.sets.reduce(function (setSum, set) {
+        return setSum + (Number(set.weight) || 0) * (Number(set.reps) || 0);
+      }, 0);
+    }
+    return sum + (Number(ex.weight) || 0) * (Number(ex.reps) || 0) * Math.max(1, Number(ex.sets) || 1);
+  }, 0);
+}
+
+function getWeeklyPerformanceSummary(referenceDate) {
+  const anchor = referenceDate || today();
+  const dayMs = 24 * 60 * 60 * 1000;
+  const anchorDate = new Date(anchor + "T12:00:00");
+  const currentStart = new Date(anchorDate.getTime() - (6 * dayMs));
+  const previousEnd = new Date(currentStart.getTime() - dayMs);
+  const previousStart = new Date(previousEnd.getTime() - (6 * dayMs));
+
+  const inRange = function (date, start, end) {
+    if (!date) return false;
+    return date >= localDateStr(start) && date <= localDateStr(end);
+  };
+
+  const workouts = loadData(KEYS.workouts);
+  const currentVolume = workouts
+    .filter(function (w) { return inRange(w.date, currentStart, anchorDate); })
+    .reduce(function (sum, w) { return sum + getWorkoutVolume(w); }, 0);
+  const previousVolume = workouts
+    .filter(function (w) { return inRange(w.date, previousStart, previousEnd); })
+    .reduce(function (sum, w) { return sum + getWorkoutVolume(w); }, 0);
+
+  let changePct = 0;
+  if (previousVolume > 0) {
+    changePct = Math.round(((currentVolume - previousVolume) / previousVolume) * 100);
+  } else if (currentVolume > 0) {
+    changePct = 100;
+  }
+
+  return {
+    currentVolume,
+    previousVolume,
+    changePct,
+    generatedAt: Date.now(),
+  };
+}
+
+function getNotifications(limit) {
+  const maxItems = Number(limit) > 0 ? Number(limit) : 24;
+  const notifications = [];
+  const now = Date.now();
+
+  const recentActivity = getRecentActivity(80);
+  recentActivity
+    .filter(function (item) { return item.type === "pr"; })
+    .slice(0, 8)
+    .forEach(function (item) {
+      notifications.push({
+        id: "notif-pr-" + String(item.id || uid()),
+        type: "pr",
+        icon: "military_tech",
+        title: "New PR Set",
+        description: item.title + " • " + (item.subtitle || "Elite performance unlocked."),
+        timestamp: Number(item.timestamp) || Number(item.ts) || now,
+        ts: Number(item.ts) || Number(item.timestamp) || now,
+      });
+    });
+
+  try {
+    const unlocked = JSON.parse(localStorage.getItem("ft_achievements")) || {};
+    const defs = typeof ACHIEVEMENT_DEFS !== "undefined" ? ACHIEVEMENT_DEFS : [];
+    Object.keys(unlocked).forEach(function (id) {
+      const meta = unlocked[id] || {};
+      const def = defs.find(function (d) { return d.id === id; });
+      const ts = Number(meta.unlockedAt) || new Date((meta.date || today()) + "T12:00:00").getTime();
+      notifications.push({
+        id: "notif-ach-" + id,
+        type: "achievement",
+        icon: "emoji_events",
+        title: "Achievement Unlocked",
+        description: (def && def.name) ? def.name : "New badge unlocked.",
+        timestamp: ts,
+        ts,
+      });
+    });
+  } catch {
+    // ignore malformed achievement payloads
+  }
+
+  const streak = calculateStreak();
+  if (streak >= 3) {
+    notifications.push({
+      id: "notif-streak-" + streak,
+      type: "streak",
+      icon: "local_fire_department",
+      title: "Streak Milestone",
+      description: "Don't lose your " + streak + "-day streak!",
+      timestamp: now - (5 * 60 * 1000),
+      ts: now - (5 * 60 * 1000),
+    });
+  }
+
+  const todaysFood = loadData(KEYS.food).filter(function (f) { return f.date === today(); });
+  const calories = todaysFood.reduce(function (sum, f) { return sum + (Number(f.calories) || 0); }, 0);
+  const protein = todaysFood.reduce(function (sum, f) { return sum + (Number(f.protein) || 0); }, 0);
+  const water = getWaterToday();
+  const completedGoals = [];
+  if (Number(settings.calorieGoal) > 0 && calories >= Number(settings.calorieGoal)) completedGoals.push("calorie");
+  if (Number(settings.proteinGoal) > 0 && protein >= Number(settings.proteinGoal)) completedGoals.push("protein");
+  if (Number(settings.waterGoal) > 0 && water >= Number(settings.waterGoal)) completedGoals.push("water");
+
+  if (completedGoals.length) {
+    notifications.push({
+      id: "notif-goals-" + today() + "-" + completedGoals.join("-"),
+      type: "goal",
+      icon: "task_alt",
+      title: "Goal Completed",
+      description: "You hit your " + completedGoals.join(", ") + " goal" + (completedGoals.length > 1 ? "s" : "") + " today.",
+      timestamp: now - (2 * 60 * 1000),
+      ts: now - (2 * 60 * 1000),
+    });
+  }
+
+  return notifications
+    .sort(function (a, b) { return (Number(b.ts) || 0) - (Number(a.ts) || 0); })
+    .slice(0, maxItems);
 }
 
 // ========== STREAK ==========

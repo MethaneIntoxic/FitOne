@@ -528,7 +528,10 @@ window.showExerciseDetailModal = function (exerciseName) {
     muscleMapHtml +
     protocolHtml +
     perf.html +
+    '<div class="exercise-detail-actions">' +
+    '<button class="exercise-detail-secondary-btn" id="exerciseDetailDeepDiveBtn">OPEN DEEP DIVE METRICS</button>' +
     '<button class="exercise-detail-start-btn" id="exerciseDetailStartBtn">START WORKOUT WITH THIS LIFT</button>' +
+    '</div>' +
     '</div>' +
     '</div>' +
     '</div>' +
@@ -553,6 +556,17 @@ window.showExerciseDetailModal = function (exerciseName) {
     startBtn.addEventListener("click", () => {
       closeModal();
       prefillWorkoutLogWithLift(cleanName, info);
+    });
+  }
+
+  const deepDiveBtn = $("exerciseDetailDeepDiveBtn");
+  if (deepDiveBtn) {
+    deepDiveBtn.addEventListener("click", () => {
+      if (typeof showDeepDiveModal === "function") {
+        showDeepDiveModal(cleanName);
+      } else {
+        showToast("Deep Dive is loading. Try again.", "info");
+      }
     });
   }
 };

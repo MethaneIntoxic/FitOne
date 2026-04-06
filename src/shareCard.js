@@ -10,24 +10,38 @@ function generateShareCard(workout) {
 
   // Background gradient
   const bgGrad = ctx.createLinearGradient(0, 0, W, H);
-  bgGrad.addColorStop(0, '#0f0f1a');
-  bgGrad.addColorStop(1, '#1a1a2e');
+  bgGrad.addColorStop(0, '#0b0a14');
+  bgGrad.addColorStop(1, '#151228');
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, W, H);
 
+  // Subtle topographic pattern
+  ctx.save();
+  ctx.strokeStyle = 'rgba(186,158,255,0.12)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 10; i++) {
+    const y = 120 + i * 58;
+    ctx.beginPath();
+    ctx.moveTo(-20, y);
+    ctx.bezierCurveTo(130, y - 22, 240, y + 24, 360, y - 10);
+    ctx.bezierCurveTo(470, y - 36, 560, y + 18, 640, y - 8);
+    ctx.stroke();
+  }
+  ctx.restore();
+
   // Accent stripe
   const stripeGrad = ctx.createLinearGradient(0, 0, W, 0);
-  stripeGrad.addColorStop(0, '#6C63FF');
-  stripeGrad.addColorStop(1, '#8B7FFF');
+  stripeGrad.addColorStop(0, '#8455ef');
+  stripeGrad.addColorStop(1, '#ba9eff');
   ctx.fillStyle = stripeGrad;
-  ctx.fillRect(0, 0, W, 6);
+  ctx.fillRect(0, 0, W, 8);
 
   // Header
-  ctx.fillStyle = '#6C63FF';
-  ctx.font = 'bold 16px Inter, sans-serif';
-  ctx.fillText('FitOne', 30, 40);
+  ctx.fillStyle = '#ba9eff';
+  ctx.font = '700 13px Space Grotesk, Inter, sans-serif';
+  ctx.fillText('WORKOUT COMPLETE', 30, 42);
 
-  ctx.fillStyle = '#666';
+  ctx.fillStyle = '#9a97ad';
   ctx.font = '14px Inter, sans-serif';
   ctx.textAlign = 'right';
   ctx.fillText(fmtDate(workout.date || today()), W - 30, 40);
@@ -35,16 +49,24 @@ function generateShareCard(workout) {
 
   // Workout name
   ctx.fillStyle = '#fff';
-  ctx.font = 'bold 28px Inter, sans-serif';
-  ctx.fillText(workout.name || 'Workout', 30, 85);
+  ctx.font = 'italic 800 36px Space Grotesk, Inter, sans-serif';
+  ctx.fillText((workout.name || 'Workout').toUpperCase(), 30, 96);
+
+  if (workout._prs && workout._prs.length > 0) {
+    ctx.fillStyle = 'rgba(94,225,168,0.18)';
+    ctx.fillRect(30, 108, 180, 28);
+    ctx.fillStyle = '#5ee1a8';
+    ctx.font = '700 12px Inter, sans-serif';
+    ctx.fillText(workout._prs.length + ' NEW PR' + (workout._prs.length > 1 ? 'S' : ''), 40, 127);
+  }
 
   // Duration + type badge
-  let badgeY = 110;
+  let badgeY = 156;
   if (workout.duration) {
-    ctx.fillStyle = 'rgba(108,99,255,0.15)';
+    ctx.fillStyle = 'rgba(132,85,239,0.2)';
     const durText = workout.duration + ' min';
     ctx.fillRect(30, badgeY - 16, ctx.measureText(durText).width + 20, 28);
-    ctx.fillStyle = '#8B7FFF';
+    ctx.fillStyle = '#c9bcff';
     ctx.font = '13px Inter, sans-serif';
     ctx.fillText(durText, 40, badgeY);
   }
@@ -62,13 +84,13 @@ function generateShareCard(workout) {
   ctx.strokeStyle = 'rgba(255,255,255,0.1)';
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(30, 140);
-  ctx.lineTo(W - 30, 140);
+  ctx.moveTo(30, 186);
+  ctx.lineTo(W - 30, 186);
   ctx.stroke();
 
   // Exercises
   const exercises = workout.exercises || [];
-  let y = 170;
+  let y = 216;
   ctx.font = 'bold 13px Inter, sans-serif';
   ctx.fillStyle = '#888';
   ctx.fillText('EXERCISE', 30, y);
@@ -167,7 +189,11 @@ function showShareCardModal(workout, prs) {
     '<div class="modal">' +
       '<div class="modal-title">Share Workout <button class="modal-close" id="shareCloseBtn" aria-label="Close">×</button></div>' +
       '<div class="share-preview"><img src="' + dataUrl + '" alt="Workout summary" style="width:100%;border-radius:12px"></div>' +
-      '<button class="btn btn-primary btn-block mt-12" id="shareDownloadBtn">📥 Save Image</button>' +
+      '<div class="share-action-row mt-12">' +
+        '<button class="btn btn-outline" id="shareDownloadBtn">📥 Save</button>' +
+        '<button class="btn btn-primary" id="shareNativeBtn">📤 Instagram</button>' +
+        '<button class="btn btn-outline" id="shareCopyBtn">🔗 Copy</button>' +
+      '</div>' +
     '</div></div>';
 
   $('shareCloseBtn').addEventListener('click', closeModal);
@@ -180,4 +206,59 @@ function showShareCardModal(workout, prs) {
     a.click();
     showToast('Image saved! 🖼️');
   });
+
+  const nativeBtn = $('shareNativeBtn');
+  if (nativeBtn) {
+    nativeBtn.addEventListener('click', async () => {
+      const summary = [
+        'Workout complete: ' + (workout.name || 'Session'),
+        (workout.duration ? 'Duration: ' + workout.duration + ' min' : ''),
+        (workout.caloriesBurned ? 'Calories: ' + workout.caloriesBurned : ''),
+      ].filter(Boolean).join(' • ');
+
+      try {
+        if (navigator.share) {
+          await navigator.share({
+            title: 'FitOne Workout',
+            text: summary,
+          });
+          showToast('Shared successfully!');
+        } else {
+          showToast('Native share not available on this device', 'info');
+        }
+      } catch (err) {
+        showToast('Share canceled', 'info');
+      }
+    });
+  }
+
+  const copyBtn = $('shareCopyBtn');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', async () => {
+      const lines = [];
+      lines.push('🏋️ ' + (workout.name || 'Workout'));
+      lines.push('Date: ' + fmtDate(workout.date || today()));
+      if (workout.duration) lines.push('Duration: ' + workout.duration + ' min');
+      if (workout.caloriesBurned) lines.push('Calories: ' + workout.caloriesBurned);
+      if (Array.isArray(workout.exercises) && workout.exercises.length) {
+        lines.push('Exercises: ' + workout.exercises.length);
+      }
+      if (Array.isArray(w._prs) && w._prs.length) {
+        lines.push('PRs: ' + w._prs.length);
+      }
+      lines.push('Tracked with FitOne');
+      const text = lines.join('\n');
+
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+          showToast('Summary copied!');
+        } else {
+          showToast('Clipboard not available', 'info');
+        }
+      } catch (err) {
+        showToast('Could not copy summary', 'error');
+      }
+    });
+  }
 }

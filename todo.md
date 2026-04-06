@@ -326,7 +326,7 @@
   - Text input that becomes the protocol name
   - **Modify:** `src/views/protocolsView.js` → protocol modal title field
 
-- [ ] **W6.3 — Suggested Modules Section**
+- [x] **W6.3 — Suggested Modules Section**
   - Below exercise list, show "SUGGESTED MODULES" section
   - 3 module cards (numbered 01, 02, 03):
     - **Hyper-Growth** ⚡ — "Pre-built hypertrophy sequences for maximum muscle recruitment"
@@ -342,7 +342,7 @@
 
 > Transform existing basic timer into fullscreen workout timer overlay.
 
-- [ ] **W7.1 — Fullscreen Timer Overlay**
+- [x] **W7.1 — Fullscreen Timer Overlay**
   - When timer starts, show fullscreen overlay (covers workout form)
   - Dark background with "RECOVERY PHASE" uppercase label at top
   - **Large circular countdown** in center:
@@ -353,12 +353,12 @@
   - **Modify:** `styles/main.css` → `.timer-overlay` fullscreen styles
   - **Modify:** `index.html` → add timer overlay container
 
-- [ ] **W7.2 — Skip Rest Button**
+- [x] **W7.2 — Skip Rest Button**
   - "SKIP REST >>" full-width gradient button below timer circle
   - Immediately ends rest period, hides overlay
   - **Modify:** `src/views/logView.js` → `skipRest()` handler
 
-- [ ] **W7.3 — Next Set Preview Card**
+- [x] **W7.3 — Next Set Preview Card**
   - Below skip button, show card with:
     - "NEXT SET" green badge + "SET 3 OF 4" label
     - Exercise name (bold): "Incline Dumbbell Press"
@@ -367,13 +367,13 @@
   - Data: pull from current workout's exercise rows
   - **Modify:** `src/views/logView.js` → `renderNextSetPreview()`
 
-- [ ] **W7.4 — Form Tip in Timer**
+- [x] **W7.4 — Form Tip in Timer**
   - Small card with exercise-specific form tip
   - "Focus on slow eccentric movement and explosive push."
   - Pull from exercise database form tips (W5.4)
   - **Modify:** `src/views/logView.js` → include form tip in overlay
 
-- [ ] **W7.5 — Live Stat Boxes**
+- [x] **W7.5 — Live Stat Boxes**
   - Bottom of timer overlay: two stat boxes
   - "HEART RATE" → show "— BPM" (placeholder, future wearable)
   - "CALORIES" → show estimated calories so far (duration × avg burn rate)
@@ -385,7 +385,7 @@
 
 > Brand new screen shown after logging a workout.
 
-- [ ] **W8.1 — Session Complete Banner**
+- [x] **W8.1 — Session Complete Banner**
   - Large gradient card at top:
     - "SESSION COMPLETE" uppercase purple label
     - Workout name in huge display text (e.g., "PULL DAY AESTHETICS")
@@ -395,7 +395,7 @@
   - **Add file:** `src/views/postWorkoutView.js`
   - **Modify:** `index.html` → post-workout overlay/modal
 
-- [ ] **W8.2 — PR Achievements Section**
+- [x] **W8.2 — PR Achievements Section**
   - "PR ACHIEVEMENTS" heading with trend icon (📈)
   - List of exercise PRs detected during this workout:
     - Exercise icon + name + new PR value
@@ -404,27 +404,27 @@
   - **Modify:** `src/views/postWorkoutView.js` → `renderPRs()`
   - **Modify:** `src/prTracker.js` → return detected PRs from `checkAndStorePRs()`
 
-- [ ] **W8.3 — Muscle Focus Map**
+- [x] **W8.3 — Muscle Focus Map**
   - "FOCUS" section with background muscle illustration
   - "Intensity map by muscle group" subtitle
   - Horizontal bars: "LATS 92%", "BICEPS 78%", "RHOMBOIDS 85%"
   - Calculate from exercises logged × muscle group tags
   - **Modify:** `src/views/postWorkoutView.js` → `renderMuscleFocusMap()`
 
-- [ ] **W8.4 — Work Log (Set-by-Set Breakdown)**
+- [x] **W8.4 — Work Log (Set-by-Set Breakdown)**
   - "WORK LOG" section
   - Per exercise: name (bold) + set count badge + set table (SET | WEIGHT | REPS | RPE)
   - Color RPE values: 7 (green), 8.5 (yellow), 10 (red)
   - "View full breakdown in activity history..." link at bottom
   - **Modify:** `src/views/postWorkoutView.js` → `renderWorkLog()`
 
-- [ ] **W8.5 — Share & Done Buttons**
+- [x] **W8.5 — Share & Done Buttons**
   - Bottom bar: "↗ SHARE" text button (left) + "✅ DONE" gradient button (right)
   - SHARE → open Share Flex view (W12)
   - DONE → dismiss summary, return to Dashboard
   - **Modify:** `src/views/postWorkoutView.js` → button handlers
 
-- [ ] **W8.6 — Trigger Post-Workout Summary**
+- [x] **W8.6 — Trigger Post-Workout Summary**
   - After `logWorkout()` succeeds, auto-show post-workout summary instead of just a toast
   - Pass workout data + detected PRs to the new view
   - **Modify:** `src/views/logView.js` → `logWorkout()` → call `showPostWorkoutSummary(data)`
@@ -435,12 +435,12 @@
 
 > Upgrade existing analytics tab to match wireframe design.
 
-- [ ] **W9.1 — Stats Hub Title Treatment**
+- [x] **W9.1 — Stats Hub Title Treatment**
   - "PERFORMANCE ANALYTICS" uppercase purple subtitle
   - "Stats Hub" large display title
   - **Modify:** `index.html` → add heading above sub-tabs in `panel-analytics`
 
-- [ ] **W9.2 — Time Range Selector**
+- [x] **W9.2 — Time Range Selector**
   - Pill-button row: "3 MONTHS" | "6 MONTHS" | "1 YEAR"
   - Selected pill: purple gradient background
   - All analytics charts update to selected time range
@@ -448,7 +448,7 @@
   - **Modify:** `src/views/analyticsView.js` → add `timeRange` state + filter logic
   - **Modify:** `index.html` → add time range pill buttons
 
-- [ ] **W9.3 — Total Tonnage Card**
+- [x] **W9.3 — Total Tonnage Card**
   - Large featured card at top of stats:
     - "Total Tonnage" title + description ("Cumulative volume lifted across all muscle groups")
     - Large green number (e.g., "142.5 TONS")
@@ -456,14 +456,14 @@
     - Line chart below showing tonnage trend over selected range
   - **Modify:** `src/views/analyticsView.js` → new `renderTotalTonnage()` function
 
-- [ ] **W9.4 — Personal Record Highlight Cards**
+- [x] **W9.4 — Personal Record Highlight Cards**
   - 2 PR cards below tonnage:
     - Each shows: icon + "PERSONAL RECORD" label + exercise name + PR value + status badge
     - Status: "NEW HIGH" (green) or "STABLE" (grey) + time ago ("2 days ago")
   - Pull from `prTracker.js` → latest PRs
   - **Modify:** `src/views/analyticsView.js` → `renderPRHighlights()`
 
-- [ ] **W9.5 — Weekly Consistency Heatmap**
+- [x] **W9.5 — Weekly Consistency Heatmap**
   - GitHub-style contribution grid
   - 12 weeks × 7 days = 84 cells
   - Color intensity: no data (dark) → light purple → full purple
@@ -480,14 +480,14 @@
 
 > Drill-down view for analyzing a single exercise's performance over time.
 
-- [ ] **W10.1 — Deep Dive Panel/Modal**
+- [x] **W10.1 — Deep Dive Panel/Modal**
   - Accessible from: Exercise Detail (W5), Stats Hub PR cards (W9.4), or Post-Workout PRs (W8.2)
   - Header: back arrow + "PERFORMANCE HIGH" badge + breadcrumb ("UPPER BODY • STRENGTH")
   - Exercise name + "Trend" suffix: "BENCH PRESS TREND"
   - AI-style description: "Analyzing explosive power and mechanical consistency across the last 180 days..."
   - **Add file:** `src/views/deepDiveView.js`
 
-- [ ] **W10.2 — Multi-Metric Chart**
+- [x] **W10.2 — Multi-Metric Chart**
   - Time range pills: 3 MONTHS | 6 MONTHS | 1 YEAR
   - Line chart with up to 3 overlaid series:
     - "Estimated 1RM (KG)" — Epley formula result per session
@@ -497,13 +497,13 @@
   - **Modify:** `src/views/deepDiveView.js` → canvas chart
   - **Modify:** `src/ui.js` → multi-line chart utility
 
-- [ ] **W10.3 — Intensity Gauge**
+- [x] **W10.3 — Intensity Gauge**
   - "CURRENT INTENSITY" card
   - Circular or horizontal gauge: "88% HYPERTROPHY"
   - Calculated from recent session RPE averages and rep ranges
   - **Modify:** `src/views/deepDiveView.js` → `renderIntensityGauge()`
 
-- [ ] **W10.4 — Quick Stat Cards**
+- [x] **W10.4 — Quick Stat Cards**
   - Grid of 4 stat cards:
     - "SESSION VOLUME" — "12,450 KG" with "+12% vs LY" delta
     - "ALL-TIME MAX" w/ "P.R. STATUS" badge — "145.0 KG" with date
@@ -517,14 +517,14 @@
 
 > Personal activity timeline (adapted from social feed wireframe — no multi-user).
 
-- [ ] **W11.1 — Activity Feed Panel**
+- [x] **W11.1 — Activity Feed Panel**
   - New sub-tab or view accessible from Dashboard
   - "Activity Feed" scrollable timeline of all logged events
   - Event types: Workout completed, Food logged (daily summary), Body measurement, PR achieved, Achievement unlocked, Streak milestone
   - **Add file:** `src/views/activityFeedView.js`
   - **Modify:** `index.html` → sub-tab or accessible via Dashboard card
 
-- [ ] **W11.2 — Activity Post Cards**
+- [x] **W11.2 — Activity Post Cards**
   - Each card shows:
     - Activity icon + title + timestamp ("22m ago")
     - Context: gym name/location if set, or just "FitOne"
@@ -536,7 +536,7 @@
   - **Modify:** `src/views/activityFeedView.js` → `renderActivityCards()`
   - **Modify:** `src/dataStore.js` → unified `getRecentActivity()` query across all data types
 
-- [ ] **W11.3 — Activity Card Interactions**
+- [x] **W11.3 — Activity Card Interactions**
   - Tap card → navigate to relevant detail view (workout detail, exercise detail, etc.)
   - No likes/comments (no multi-user), but show "🔥 Personal Best!" badges on PR activities
   - **Modify:** `src/views/activityFeedView.js` → click handlers
@@ -547,7 +547,7 @@
 
 > Upgrade existing share card generator to match wireframe design.
 
-- [ ] **W12.1 — Branded Share Card Design**
+- [x] **W12.1 — Branded Share Card Design**
   - Full-screen share card preview:
     - Topographic pattern background (SVG or canvas-generated)
     - "WORKOUT COMPLETE" uppercase purple label
@@ -557,7 +557,7 @@
   - Rounded card shape (large border-radius)
   - **Modify:** `src/shareCard.js` → `generateShareCard()` redesign
 
-- [ ] **W12.2 — Share Action Buttons**
+- [x] **W12.2 — Share Action Buttons**
   - Bottom row: 3 actions
     - "SAVE" (download icon) → Canvas-to-PNG download (already exists)
     - "INSTAGRAM" (share icon, purple gradient) → attempt `navigator.share()` for native sharing
@@ -570,7 +570,7 @@
 
 > Read-only drill-down into a logged workout (adapted from social detail wireframe).
 
-- [ ] **W13.1 — Workout Detail Panel**
+- [x] **W13.1 — Workout Detail Panel**
   - Accessible by tapping any workout in Recent Workouts or Activity Feed
   - Header: back arrow + share icon + profile avatar
   - User info: display name + time ago + gym (if set)
@@ -578,13 +578,13 @@
   - Intensity bar (visual indicator)
   - **Add file:** `src/views/workoutDetailView.js`
 
-- [ ] **W13.2 — Summary Stat Boxes**
+- [x] **W13.2 — Summary Stat Boxes**
   - 4 stat circles/boxes:
     - DURATION (74:12), VOLUME (12,450 kg), AVG HEART (— bpm), CALORIES (642 kcal)
   - Arranged in 2×2 grid
   - **Modify:** `src/views/workoutDetailView.js` → `renderSummaryStats()`
 
-- [ ] **W13.3 — Workout Breakdown**
+- [x] **W13.3 — Workout Breakdown**
   - "WORKOUT BREAKDOWN" section heading
   - Per exercise card:
     - Exercise name (bold) + expand icon
@@ -594,7 +594,7 @@
     - Progress bar showing % of all-time max
   - **Modify:** `src/views/workoutDetailView.js` → `renderBreakdown()`
 
-- [ ] **W13.4 — Workout Notes Section**
+- [x] **W13.4 — Workout Notes Section**
   - Show workout notes if any were logged
   - Styled as a quote block
   - **Modify:** `src/views/workoutDetailView.js`
@@ -605,14 +605,14 @@
 
 > Local notification center for performance alerts.
 
-- [ ] **W14.1 — Pulse Center Panel**
+- [x] **W14.1 — Pulse Center Panel**
   - Accessible from notification bell icon in header
   - "Pulse Center" large title + "ALL PERFORMANCE ALERTS AND ACTIVITY" subtitle
   - Slide-in panel or overlay
   - **Add file:** `src/views/pulseCenterView.js`
   - **Modify:** `index.html` → pulse center container
 
-- [ ] **W14.2 — Recent Activity Notifications**
+- [x] **W14.2 — Recent Activity Notifications**
   - "RECENT ACTIVITY" green section header
   - Notification cards:
     - Purple icon badge + title + time ago ("2M AGO")
@@ -625,7 +625,7 @@
   - **Modify:** `src/views/pulseCenterView.js` → `renderNotifications()`
   - **Modify:** `src/dataStore.js` → new `getNotifications()` (generates from data analysis)
 
-- [ ] **W14.3 — Performance Metrics Notifications**
+- [x] **W14.3 — Performance Metrics Notifications**
   - "PERFORMANCE METRICS" purple section header
   - "Weekly Performance Summary Ready" card:
     - "Your volume is up by +12% compared to last week. Review your metabolic breakdown."
@@ -634,7 +634,7 @@
   - Generated weekly from analytics data
   - **Modify:** `src/views/pulseCenterView.js` → `renderPerformanceAlerts()`
 
-- [ ] **W14.4 — Notification Badge Counter**
+- [x] **W14.4 — Notification Badge Counter**
   - Show red/purple badge with unread count on bell icon in header
   - Track "last seen" timestamp to calculate unread count
   - **Modify:** `src/main.js` → update badge count on navigation
@@ -646,7 +646,7 @@
 
 > Add profile identity and enhanced settings sections.
 
-- [ ] **W15.1 — Profile Identity Section**
+- [x] **W15.1 — Profile Identity Section**
   - "PROFILE IDENTITY" uppercase section header
   - Centered profile avatar (120px circular) with purple edit button overlay
   - Avatar: camera capture or file upload → store as base64 in localStorage
@@ -657,14 +657,14 @@
   - **Modify:** `src/views/settingsView.js` → render and save profile data
   - **Modify:** `src/dataStore.js` → add profile fields to settings schema
 
-- [ ] **W15.2 — System Calibration Section**
+- [x] **W15.2 — System Calibration Section**
   - "SYSTEM CALIBRATION" uppercase section header
   - Preferred Units: existing KG/LB toggle → restyle as segmented pill buttons (KG highlighted in purple, LB in dark)
   - "Kinetic Mode" → existing dark mode toggle → rename label + add "Obsidian Theme" subtitle
   - **Modify:** `src/views/settingsView.js` → update labels
   - **Modify:** `index.html` → restructure settings cards
 
-- [ ] **W15.3 — Notification Pulse Section**
+- [x] **W15.3 — Notification Pulse Section**
   - "Notification Pulse" section with icon
   - "Push Notifications" toggle — enable browser Notification API (free, local)
   - Show subtitle: "Real-time performance alerts"
@@ -673,14 +673,14 @@
   - **Modify:** `src/views/settingsView.js` → notification toggle handlers
   - **Modify:** `src/dataStore.js` → add `settings.pushNotifications` flag
 
-- [ ] **W15.4 — Privacy & Safety Section**
+- [x] **W15.4 — Privacy & Safety Section**
   - "Privacy & Safety" section with shield icon
   - "Data Syncing" → chevron → links to Data Studio (existing export panel)
   - Remove "Profile Visibility" (no social backend)
   - **Modify:** `index.html` → add section
   - **Modify:** `src/views/settingsView.js`
 
-- [ ] **W15.5 — Terminate Session / Clear Data**
+- [x] **W15.5 — Terminate Session / Clear Data**
   - Replace "TERMINATE SESSION" with "CLEAR ALL DATA" danger button
   - Confirmation dialog before wiping localStorage
   - Links to existing delete-all functionality
@@ -693,13 +693,13 @@
 
 > Dedicated workout configuration page.
 
-- [ ] **W16.1 — Workout Settings Panel**
+- [x] **W16.1 — Workout Settings Panel**
   - Accessible from Workouts tab → gear (⚙️) icon or from App Settings
   - "Workout Settings" display title + "OPTIMIZE YOUR TRAINING PRECISION" subtitle
   - **Add file:** `src/views/workoutSettingsView.js` (or integrate into settingsView)
   - **Modify:** `index.html` → new panel or section
 
-- [ ] **W16.2 — Default Rest Timer Configuration**
+- [x] **W16.2 — Default Rest Timer Configuration**
   - "Default Rest Timers" heading with timer icon + current value display ("90s")
   - Range slider: 30s ↔ 300s (in 15s increments)
   - Tick marks: 30 SEC | 180 SEC | 300 SEC
@@ -708,7 +708,7 @@
   - **Modify:** `src/dataStore.js` → add default rest time setting
   - **Modify:** `src/views/logView.js` → use default rest time instead of hardcoded presets
 
-- [ ] **W16.3 — Plate System Selector**
+- [x] **W16.3 — Plate System Selector**
   - "Plate System" heading with dumbbell icon
   - Segmented toggle: "45LB" | "20KG"
   - Subtitle: "Selected: Standard Olympic Cast Iron"
@@ -716,13 +716,13 @@
   - Save to `settings.plateSystem`
   - **Modify:** `src/dataStore.js` → add plate system setting
 
-- [ ] **W16.4 — Auto-Lock Toggle**
+- [x] **W16.4 — Auto-Lock Toggle**
   - "Auto-Lock" toggle with description: "Prevent accidental screen taps during active sets"
   - When enabled: during rest timer, overlay blocks accidental form interactions
   - "ACTIVE SETS ONLY" checkbox (sub-option)
   - **Modify:** `src/views/logView.js` → lock behavior during timer
 
-- [ ] **W16.5 — Automation Toggles**
+- [x] **W16.5 — Automation Toggles**
   - "AUTOMATION" section header (purple)
   - "Auto-Advance Exercises" toggle — after completing all sets, auto-scroll to next exercise
   - "VISUALS" section header (purple)
@@ -739,7 +739,7 @@
 
 > Several wireframes show a "Social" tab. Adapt for local-only.
 
-- [ ] **W17.1 — Feed/Social Tab Decision**
+- [x] **W17.1 — Feed/Social Tab Decision**
   - Wireframes show 4-tab: Feed | Stats | Workout | Profile (or variations with Social)
   - Current: Dashboard | Workouts | Stats | Profile
   - **Option A:** Keep 4 tabs, add Activity Feed as Dashboard sub-view
@@ -800,7 +800,7 @@
 
 ### Food Logging & Nutrition
 
-- [ ] **#1 🔴 Barcode Scanner with Food Lookup**
+- [x] **#1 🔴 Barcode Scanner with Food Lookup**
   - **API:** Open Food Facts (free, no key, no rate limit for reasonable use)
   - Use `BarcodeDetector` Web API for camera scanning
   - Auto-fill: name, calories, protein, carbs, fat, serving size
@@ -810,7 +810,7 @@
   - **New file:** `src/barcodeScanner.js`
   - **Modify:** `logView.js` — scan button next to `#foodName`
 
-- [ ] **#2 🔴 Food Search Database (Text-Based)**
+- [x] **#2 🔴 Food Search Database (Text-Based)**
   - **API:** Open Food Facts text search (free)
   - Debounced search, top 10 results, auto-fill on tap
   - Cache results in localStorage/IndexedDB — works offline after first lookup
@@ -820,7 +820,7 @@
   - **New file:** `src/foodDatabase.js`
   - **Modify:** `logView.js` — search dropdown below `#foodName`
 
-- [ ] **#3 🟠 Meal Templates / Saved Meals**
+- [x] **#3 🟠 Meal Templates / Saved Meals**
   - Group multiple food entries into named meals
   - Quick-add entire meal in one tap
   - Support serving multiplier (e.g., "double portion")

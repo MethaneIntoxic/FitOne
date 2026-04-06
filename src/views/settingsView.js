@@ -15,6 +15,77 @@ function settingVal(id, fallback) {
   return el ? el.value : fallback;
 }
 
+function setSegmentedActive(containerId, selector, value) {
+  const container = $(containerId);
+  if (!container) return;
+  container.querySelectorAll(selector).forEach((btn) => {
+    const key = btn.getAttribute("data-weight-unit") || btn.getAttribute("data-plate-system") || "";
+    btn.classList.toggle("active", key === String(value || ""));
+  });
+}
+
+function normalizePlateSystem(value) {
+  const raw = String(value || "").toLowerCase();
+  if (raw === "45lb" || raw === "lbs" || raw === "lb") return "lbs";
+  return "kg";
+}
+
+function updateRestTimeDisplay() {
+  const display = $("settingRestTimeDisplay");
+  const hidden = $("settingRestTime");
+  const range = $("settingRestTimeRange");
+  const value = Number((range && range.value) || (hidden && hidden.value) || settings.defaultRestTime || 90);
+  if (hidden) hidden.value = String(value);
+  if (display) display.textContent = value + "s";
+}
+
+function renderProfileAvatar() {
+  const avatarWrap = $("profileAvatarLarge");
+  const headerAvatar = $("headerAvatar");
+  if (!avatarWrap) return;
+
+  if (settings.avatar) {
+    avatarWrap.innerHTML = '<img src="' + escAttr(settings.avatar) + '" alt="Profile avatar"><div class="profile-avatar-edit"><span class="material-symbols-outlined profile-avatar-edit-icon">edit</span></div>';
+    if (headerAvatar) {
+      headerAvatar.innerHTML = '<img class="header-avatar-img" src="' + escAttr(settings.avatar) + '" alt="Avatar">';
+    }
+  } else {
+    avatarWrap.innerHTML = '<span class="material-symbols-outlined">person</span><div class="profile-avatar-edit"><span class="material-symbols-outlined profile-avatar-edit-icon">edit</span></div>';
+    if (headerAvatar) {
+      headerAvatar.innerHTML = '<span class="material-symbols-outlined">person</span>';
+    }
+  }
+}
+
+function handleAvatarUpload(file) {
+  if (!file) return;
+  if (!/^image\//.test(file.type || "")) {
+    showToast("Please choose an image file.", "warning");
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function () {
+    const next = { ...settings, avatar: String(reader.result || "") };
+    updateSettings(next);
+    localStorage.setItem(KEYS.settings, JSON.stringify(next));
+    renderProfileAvatar();
+    showToast("Avatar updated");
+  };
+  reader.onerror = function () {
+    showToast("Could not read image", "error");
+  };
+  reader.readAsDataURL(file);
+}
+
+function updatePlateSystemSubtitle() {
+  const subtitle = $("plateSystemSubtitle");
+  const val = normalizePlateSystem(settingVal("settingPlateSystem", settings.plateSystem || "kg"));
+  if (!subtitle) return;
+  subtitle.textContent = val === "lbs"
+    ? "Selected: Standard Olympic 45LB"
+    : "Selected: Standard Olympic 20KG";
+}
+
 function buildSettingsPayload() {
   const gymItems = Array.from(document.querySelectorAll("#gymList .gym-chip"))
     .map((el) => (el.getAttribute("data-gym") || "").trim())
@@ -34,12 +105,14 @@ function buildSettingsPayload() {
     
     // W15 App Settings
     defaultRestTime: settingNum("settingRestTime", 60),
-    plateSystem: settingVal("settingPlateSystem", "kg"),
+    plateSystem: normalizePlateSystem(settingVal("settingPlateSystem", "kg")),
     autoLock: settingBool("settingAutoLock", true),
     autoAdvance: settingBool("settingAutoAdvance", true),
     focusMode: settingBool("settingFocusMode", false),
     voiceCountdown: settingBool("settingVoiceCountdown", false),
     pushNotifications: settingBool("settingPushPulse", false),
+    autoLockActiveOnly: settingBool("settingAutoLockActiveOnly", true),
+    emailSummaries: false,
     measureUnit: settingVal("settingMeasureUnit", "cm"),
     darkMode: settingBool("settingTheme", true),
     bodyGoal: settings.bodyGoal || "maintain",
@@ -90,6 +163,51 @@ function saveSettingsFromUI() {
   renderAdvancedSettings();
   const activeTab = document.querySelector(".tab-btn.active");
   if (activeTab && window._refreshCurrentTab) window._refreshCurrentTab(activeTab.dataset.tab);
+}
+
+function saveWorkoutSettingsSection() {
+  updateRestTimeDisplay();
+  saveSettingsFromUI();
+  showToast("Workout settings saved");
+}
+
+function resetWorkoutSettingsSection() {
+  const defaults = defaultSettings();
+  if ($("settingRestTimeRange")) $("settingRestTimeRange").value = String(defaults.defaultRestTime || 90);
+  if ($("settingRestTime")) $("settingRestTime").value = String(defaults.defaultRestTime || 90);
+  if ($("settingPlateSystem")) $("settingPlateSystem").value = defaults.plateSystem || "20kg";
+  if ($("settingAutoLock")) $("settingAutoLock").checked = !!defaults.autoLock;
+  if ($("settingAutoLockActiveOnly")) $("settingAutoLockActiveOnly").checked = !!defaults.autoLockActiveOnly;
+  if ($("settingAutoAdvance")) $("settingAutoAdvance").checked = !!defaults.autoAdvance;
+  if ($("settingFocusMode")) $("settingFocusMode").checked = !!defaults.focusMode;
+  if ($("settingVoiceCountdown")) $("settingVoiceCountdown").checked = !!defaults.voiceCountdown;
+  updateRestTimeDisplay();
+  setSegmentedActive("plateSystemSegmented", ".segmented-btn", settingVal("settingPlateSystem", "kg"));
+  updatePlateSystemSubtitle();
+  saveSettingsFromUI();
+  showToast("Workout settings reset");
+}
+
+function requestPushPermissionIfNeeded() {
+  const pushToggle = $("settingPushPulse");
+  if (!pushToggle || !pushToggle.checked) return;
+  if (!("Notification" in window)) {
+    showToast("Notifications are not supported in this browser.", "warning");
+    pushToggle.checked = false;
+    saveSettingsFromUI();
+    return;
+  }
+  if (Notification.permission === "granted") return;
+  Notification.requestPermission().then((permission) => {
+    if (permission !== "granted") {
+      pushToggle.checked = false;
+      saveSettingsFromUI();
+      showToast("Push permission denied", "warning");
+      return;
+    }
+    saveSettingsFromUI();
+    showToast("Push notifications enabled");
+  });
 }
 
 function renderAdvancedSettings() {
@@ -213,6 +331,17 @@ function loadSettingsUI() {
   $("settingWaterGoal").value = settings.waterGoal || 2000;
   $("settingWeightUnit").value = settings.weightUnit;
   $("settingMeasureUnit").value = settings.measureUnit;
+  if ($("settingDisplayName")) $("settingDisplayName").value = settings.displayName || "";
+  if ($("settingBio")) $("settingBio").value = settings.bio || "";
+  if ($("settingPushPulse")) $("settingPushPulse").checked = !!settings.pushNotifications;
+  if ($("settingRestTimeRange")) $("settingRestTimeRange").value = String(settings.defaultRestTime || 90);
+  if ($("settingRestTime")) $("settingRestTime").value = String(settings.defaultRestTime || 90);
+  if ($("settingPlateSystem")) $("settingPlateSystem").value = normalizePlateSystem(settings.plateSystem || "kg");
+  if ($("settingAutoLock")) $("settingAutoLock").checked = !!settings.autoLock;
+  if ($("settingAutoLockActiveOnly")) $("settingAutoLockActiveOnly").checked = settings.autoLockActiveOnly !== false;
+  if ($("settingAutoAdvance")) $("settingAutoAdvance").checked = !!settings.autoAdvance;
+  if ($("settingFocusMode")) $("settingFocusMode").checked = !!settings.focusMode;
+  if ($("settingVoiceCountdown")) $("settingVoiceCountdown").checked = !!settings.voiceCountdown;
   $("settingTheme").checked = settings.darkMode;
   document.documentElement.setAttribute("data-theme", settings.darkMode ? "" : "light");
   const tc = document.querySelector('meta[name="theme-color"]');
@@ -221,6 +350,11 @@ function loadSettingsUI() {
   document.querySelectorAll(".goal-option").forEach((b) => {
     b.classList.toggle("active", b.dataset.goal === (settings.bodyGoal || "maintain"));
   });
+  setSegmentedActive("weightUnitSegmented", ".segmented-btn", settings.weightUnit || "kg");
+  setSegmentedActive("plateSystemSegmented", ".segmented-btn", normalizePlateSystem(settings.plateSystem || "kg"));
+  updateRestTimeDisplay();
+  updatePlateSystemSubtitle();
+  renderProfileAvatar();
   renderAdvancedSettings();
 }
 
@@ -315,11 +449,87 @@ function bindDynamicSettingsEvents(panel) {
 
 function initSettingsEvents() {
   $("settingTheme").addEventListener("change", toggleTheme);
-  ["settingCalorieGoal", "settingProteinGoal", "settingCarbsGoal", "settingFatGoal", "settingWorkoutGoal", "settingWaterGoal"].forEach((id) => {
+  ["settingCalorieGoal", "settingProteinGoal", "settingCarbsGoal", "settingFatGoal", "settingWorkoutGoal", "settingWaterGoal", "settingDisplayName", "settingBio", "settingMeasureUnit"].forEach((id) => {
     $(id).addEventListener("change", saveSettingsFromUI);
   });
-  $("settingWeightUnit").addEventListener("change", saveSettingsFromUI);
-  $("settingMeasureUnit").addEventListener("change", saveSettingsFromUI);
+  const weightUnitSegmented = $("weightUnitSegmented");
+  if (weightUnitSegmented) {
+    weightUnitSegmented.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-weight-unit]");
+      if (!btn) return;
+      const unit = btn.getAttribute("data-weight-unit") || "kg";
+      if ($("settingWeightUnit")) $("settingWeightUnit").value = unit;
+      setSegmentedActive("weightUnitSegmented", ".segmented-btn", unit);
+      saveSettingsFromUI();
+    });
+  }
+
+  const plateSegmented = $("plateSystemSegmented");
+  if (plateSegmented) {
+    plateSegmented.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-plate-system]");
+      if (!btn) return;
+      const val = btn.getAttribute("data-plate-system") || "kg";
+      if ($("settingPlateSystem")) $("settingPlateSystem").value = val;
+      setSegmentedActive("plateSystemSegmented", ".segmented-btn", val);
+      updatePlateSystemSubtitle();
+      saveSettingsFromUI();
+    });
+  }
+
+  const restRange = $("settingRestTimeRange");
+  if (restRange) {
+    restRange.addEventListener("input", updateRestTimeDisplay);
+    restRange.addEventListener("change", saveSettingsFromUI);
+  }
+
+  const pushPulse = $("settingPushPulse");
+  if (pushPulse) {
+    pushPulse.addEventListener("change", () => {
+      saveSettingsFromUI();
+      requestPushPermissionIfNeeded();
+    });
+  }
+
+  ["settingAutoLock", "settingAutoLockActiveOnly", "settingAutoAdvance", "settingFocusMode", "settingVoiceCountdown"].forEach((id) => {
+    const el = $(id);
+    if (el) el.addEventListener("change", saveSettingsFromUI);
+  });
+
+  const saveWorkoutBtn = $("workoutSettingsSaveBtn");
+  if (saveWorkoutBtn) saveWorkoutBtn.addEventListener("click", saveWorkoutSettingsSection);
+  const resetWorkoutBtn = $("workoutSettingsResetBtn");
+  if (resetWorkoutBtn) resetWorkoutBtn.addEventListener("click", resetWorkoutSettingsSection);
+
+  const openDataBtn = $("openDataStudioBtn");
+  if (openDataBtn) {
+    openDataBtn.addEventListener("click", () => {
+      if (typeof activateMainTab === "function") activateMainTab("data");
+    });
+  }
+
+  const clearBtn = $("settingsClearAllDataBtn");
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      if (typeof clearAllData === "function") {
+        clearAllData();
+      } else {
+        showToast("Data Studio is still loading.", "info");
+      }
+    });
+  }
+
+  const avatarWrap = $("profileAvatarLarge");
+  const avatarInput = $("avatarFileInput");
+  if (avatarWrap && avatarInput) {
+    avatarWrap.addEventListener("click", () => avatarInput.click());
+    avatarInput.addEventListener("change", () => {
+      const file = avatarInput.files && avatarInput.files[0];
+      handleAvatarUpload(file);
+      avatarInput.value = "";
+    });
+  }
+
   const goalSelector = $("bodyGoalSelector");
   if (goalSelector) {
     goalSelector.addEventListener("click", (e) => {

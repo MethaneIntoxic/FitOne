@@ -399,6 +399,108 @@ function drawLineChart(canvas, labels, values, color) {
   });
 }
 
+function drawMultiLineChart(canvas, labels, datasets) {
+  if (!canvas || !Array.isArray(datasets) || !datasets.length) return;
+  const visibleSets = datasets.filter(function (ds) {
+    return ds && ds.visible !== false && Array.isArray(ds.values) && ds.values.length;
+  });
+  if (!visibleSets.length) {
+    const ctxEmpty = canvas.getContext("2d");
+    const dprEmpty = window.devicePixelRatio || 1;
+    const rectEmpty = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rectEmpty.width * dprEmpty;
+    canvas.height = rectEmpty.height * dprEmpty;
+    ctxEmpty.scale(dprEmpty, dprEmpty);
+    ctxEmpty.clearRect(0, 0, rectEmpty.width, rectEmpty.height);
+    ctxEmpty.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--text2").trim() || "#A1A1AA";
+    ctxEmpty.font = "12px sans-serif";
+    ctxEmpty.textAlign = "center";
+    ctxEmpty.fillText("Enable at least one metric", rectEmpty.width / 2, rectEmpty.height / 2);
+    return;
+  }
+
+  const ctx = canvas.getContext("2d");
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+
+  const W = rect.width;
+  const H = rect.height;
+  const pad = { t: 20, r: 12, b: 28, l: 44 };
+  const cW = W - pad.l - pad.r;
+  const cH = H - pad.t - pad.b;
+
+  ctx.clearRect(0, 0, W, H);
+  const cs = getComputedStyle(document.documentElement);
+  const textColor = cs.getPropertyValue("--text2").trim() || "#A1A1AA";
+  const borderColor = cs.getPropertyValue("--border").trim() || "#27272A";
+
+  let allValues = [];
+  visibleSets.forEach(function (ds) { allValues = allValues.concat(ds.values.map(Number)); });
+  allValues = allValues.filter(function (v) { return Number.isFinite(v); });
+  const minV = allValues.length ? Math.min.apply(null, allValues) : 0;
+  const maxV = allValues.length ? Math.max.apply(null, allValues) : 1;
+  const range = (maxV - minV) || 1;
+  const yMin = Math.max(0, minV - range * 0.12);
+  const yMax = maxV + range * 0.12;
+  const yRange = yMax - yMin || 1;
+
+  ctx.fillStyle = textColor;
+  ctx.font = "10px sans-serif";
+  ctx.textAlign = "right";
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + cH - (cH * i) / 4;
+    const v = yMin + (yRange * i) / 4;
+    ctx.fillText(Math.round(v), pad.l - 6, y + 3);
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = 0.6;
+    ctx.beginPath();
+    ctx.moveTo(pad.l, y);
+    ctx.lineTo(W - pad.r, y);
+    ctx.stroke();
+  }
+
+  visibleSets.forEach(function (ds) {
+    const points = ds.values.map(function (v, i) {
+      return {
+        x: pad.l + (cW / (Math.max(1, ds.values.length - 1))) * i,
+        y: pad.t + cH - ((Number(v) - yMin) / yRange) * cH,
+      };
+    });
+
+    ctx.strokeStyle = ds.color || "#8B5CF6";
+    ctx.lineWidth = 2;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    points.forEach(function (p, i) {
+      if (i === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    });
+    ctx.stroke();
+
+    points.forEach(function (p) {
+      ctx.fillStyle = ds.color || "#8B5CF6";
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 2.6, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  });
+
+  ctx.fillStyle = textColor;
+  ctx.font = "9px sans-serif";
+  ctx.textAlign = "center";
+  const step = Math.max(1, Math.floor(labels.length / 6));
+  labels.forEach(function (l, i) {
+    if (i % step === 0 || i === labels.length - 1) {
+      const x = pad.l + (cW / (Math.max(1, labels.length - 1))) * i;
+      ctx.fillText(l, x, H - pad.b + 14);
+    }
+  });
+}
+
 function drawStackedBar(canvas, labels, macros) {
   if (!canvas) return;
   const ctx = canvas.getContext("2d");

@@ -11,6 +11,57 @@ function refreshCurrentTab(tab) {
   else if (tab === "settings") { if (typeof renderAchievementGallery === 'function') renderAchievementGallery(); }
 }
 let _navState = { tab: "today", at: Date.now() };
+const NOTIFICATIONS_LAST_SEEN_KEY = "ft_notifications_last_seen";
+
+function getLastSeenNotificationTs() {
+  const raw = Number(localStorage.getItem(NOTIFICATIONS_LAST_SEEN_KEY));
+  return Number.isFinite(raw) && raw > 0 ? raw : 0;
+}
+
+function setLastSeenNotificationTs(ts) {
+  localStorage.setItem(NOTIFICATIONS_LAST_SEEN_KEY, String(Number(ts) || Date.now()));
+}
+
+function getNotificationItems() {
+  if (typeof getNotifications !== "function") return [];
+  return getNotifications(60);
+}
+
+function updateNotificationBadge() {
+  const badge = $("bellBadge");
+  if (!badge) return;
+  const items = getNotificationItems();
+  const lastSeen = getLastSeenNotificationTs();
+  const unread = items.filter(function (item) {
+    const ts = Number(item.ts) || Number(item.timestamp) || 0;
+    return ts > lastSeen;
+  }).length;
+
+  badge.textContent = unread > 99 ? "99+" : String(unread);
+  badge.classList.toggle("hidden", unread <= 0);
+}
+
+function openPulseCenter() {
+  if (typeof showPulseCenterView !== "function") {
+    showToast("Pulse Center is loading...", "info");
+    return;
+  }
+
+  const mostRecentTs = getNotificationItems().reduce(function (maxTs, item) {
+    const ts = Number(item.ts) || Number(item.timestamp) || 0;
+    return Math.max(maxTs, ts);
+  }, 0);
+
+  showPulseCenterView({
+    onOpen: function () {
+      setLastSeenNotificationTs(Math.max(Date.now(), mostRecentTs));
+      updateNotificationBadge();
+    },
+    onClose: function () {
+      updateNotificationBadge();
+    },
+  });
+}
 
 function tabFromHash(hash) {
   const clean = (hash || "").replace(/^#/, "").toLowerCase();
@@ -25,6 +76,8 @@ function tabFromHash(hash) {
     profile: "settings",
     protocols: "protocols",
     library: "protocols",
+    data: "data",
+    export: "data",
   };
   return map[clean] || null;
 }
@@ -36,6 +89,7 @@ function hashForTab(tab) {
     analytics: "#analytics",
     settings: "#settings",
     protocols: "#protocols",
+    data: "#data",
   };
   return map[tab] || "#today";
 }
@@ -49,6 +103,7 @@ window.addEventListener("fitone:dataChanged", () => {
   refreshToday();
   populateProtocolSelect();
   refreshFavorites();
+  updateNotificationBadge();
   const activeMain = document.querySelector(".tab-btn.active");
   if (!activeMain) return;
   if (activeMain.dataset.tab === "analytics") refreshAnalytics();
@@ -83,6 +138,7 @@ function activateMainTab(tab, options) {
   }
   if (shouldScroll) window.scrollTo({ top: 0, behavior: "smooth" });
   refreshCurrentTab(tab);
+  updateNotificationBadge();
   const fab = $("fabBtn");
   const fabMenu = $("fabMenu");
   if (fab) fab.classList.toggle("fab-hidden", tab === "log");
@@ -329,6 +385,12 @@ function init() {
   if ($("bodyDate")) $("bodyDate").value = td;
   updateBodyLabels();
 
+  const bellBtn = $("headerBell");
+  if (bellBtn && !bellBtn.dataset.bound) {
+    bellBtn.dataset.bound = "1";
+    bellBtn.addEventListener("click", openPulseCenter);
+  }
+
   // Initialize events for each view
   initTodayEvents();
   initLogEvents();
@@ -342,6 +404,7 @@ function init() {
   refreshLog();
   populateProtocolSelect();
   refreshFavorites();
+  updateNotificationBadge();
   restoreCollapseState();
   initSwipeGestures();
 

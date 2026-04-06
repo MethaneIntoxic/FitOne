@@ -1,7 +1,33 @@
 // ========== POST-WORKOUT SUMMARY VIEW (W8) ==========
 // Shows a celebration overlay after a workout is logged
 
-function showPostWorkoutSummary(workoutData) {
+function normalizePRsForSummary(prs) {
+  if (!Array.isArray(prs)) return [];
+  return prs.map(function (pr) {
+    const typeLabelMap = {
+      weight: "WEIGHT PR",
+      reps: "ENDURANCE PR",
+      volume: "VOLUME PR",
+      est1RM: "1RM PR",
+    };
+    const unitMap = {
+      weight: settings.weightUnit,
+      reps: "reps",
+      volume: settings.weightUnit,
+      est1RM: settings.weightUnit,
+    };
+    return {
+      exercise: pr.exercise || "Exercise",
+      type: typeLabelMap[pr.type] || (pr.type || "PR").toUpperCase(),
+      value: pr.value,
+      unit: unitMap[pr.type] || "",
+      delta: pr.previousBest ? ((Number(pr.value) || 0) - (Number(pr.previousBest) || 0)).toFixed(1) + " " + (unitMap[pr.type] || "") : "",
+      label: pr.label || "",
+    };
+  });
+}
+
+function showPostWorkoutSummary(workoutData, prsFromLog) {
   const overlay = $("postWorkoutOverlay");
   if (!overlay) return;
 
@@ -18,7 +44,9 @@ function showPostWorkoutSummary(workoutData) {
   });
 
   // Detect PRs from this workout
-  const detectedPRs = detectWorkoutPRs(workoutData);
+  const detectedPRs = Array.isArray(prsFromLog) && prsFromLog.length
+    ? normalizePRsForSummary(prsFromLog)
+    : detectWorkoutPRs(workoutData);
 
   // Calculate muscle focus from exercises
   const muscleFocus = calculateMuscleFocus(exercises);
@@ -69,7 +97,7 @@ function showPostWorkoutSummary(workoutData) {
     html +=
       '<div class="pw-section-title"><span class="material-symbols-outlined">trending_up</span> PR ACHIEVEMENTS</div>';
     detectedPRs.forEach(function (pr) {
-      html += '<div class="pw-pr-card">';
+      html += '<button class="pw-pr-card" data-pr-exercise="' + esc(pr.exercise) + '">';
       html +=
         '<div class="pw-pr-exercise"><span class="material-symbols-outlined">fitness_center</span> ' +
         esc(pr.exercise) +
@@ -80,7 +108,7 @@ function showPostWorkoutSummary(workoutData) {
       }
       html +=
         '<div class="pw-pr-type">' + (pr.type || "WEIGHT PR").toUpperCase() + "</div>";
-      html += "</div>";
+      html += "</button>";
     });
     html += "</div>";
   }
@@ -169,13 +197,25 @@ function showPostWorkoutSummary(workoutData) {
   var shareBtn = $("pwShareBtn");
   if (shareBtn) {
     shareBtn.addEventListener("click", function () {
-      if (typeof generateShareCard === "function") {
-        generateShareCard(workoutData);
+      if (typeof showShareCardModal === "function") {
+        showShareCardModal(workoutData, detectedPRs);
       } else {
         showToast("Share card is coming soon!", "info");
       }
     });
   }
+
+  overlay.querySelectorAll("[data-pr-exercise]").forEach(function (card) {
+    card.addEventListener("click", function () {
+      var exercise = card.getAttribute("data-pr-exercise");
+      if (!exercise) return;
+      if (typeof showDeepDiveModal === "function") {
+        showDeepDiveModal(exercise);
+      } else {
+        showToast("Deep Dive is loading. Try again in a moment.", "info");
+      }
+    });
+  });
 
   // Scroll to top of overlay
   overlay.scrollTop = 0;

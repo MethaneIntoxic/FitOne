@@ -5,16 +5,19 @@
 // ========== REFRESH ==========
 function refreshAnalytics() {
   const activeSubTab = document.querySelector("#panel-analytics .sub-tab.active");
-  if (activeSubTab) refreshSubTab(activeSubTab.dataset.subtab);
+  const subtab = activeSubTab && activeSubTab.dataset && activeSubTab.dataset.subtab
+    ? activeSubTab.dataset.subtab
+    : "analytics-performance";
+  refreshAnalyticsSubTab(subtab);
 
   const timeRangeSel = $("statsTimeRange");
   if (timeRangeSel && !timeRangeSel.dataset.bound) {
     timeRangeSel.dataset.bound = "true";
-    timeRangeSel.addEventListener("change", () => refreshSubTab("analytics-performance"));
+    timeRangeSel.addEventListener("change", () => refreshAnalyticsSubTab("analytics-performance"));
   }
 }
 
-function refreshSubTab(sub) {
+function refreshAnalyticsSubTab(sub) {
   if (sub === "analytics-performance") drawPerformanceAnalytics();
   if (sub === "analytics-calories") drawCalorieChart();
   if (sub === "analytics-weight") drawWeightChart();
@@ -403,6 +406,33 @@ function initAnalyticsResize() {
 
 // ========== W9 STATS HUB V2 IMPLEMENTATIONS ==========
 
+function getExerciseSessionVolume(ex) {
+  if (!ex) return 0;
+  if (Array.isArray(ex.sets)) {
+    return ex.sets.reduce((sum, s) => sum + (parseFloat(s.weight) || 0) * (parseInt(s.reps) || 0), 0);
+  }
+  return (parseInt(ex.sets, 10) || 0) * (parseInt(ex.reps, 10) || 0) * (parseFloat(ex.weight) || 0);
+}
+
+function getExercisePeakWeight(ex) {
+  if (!ex) return 0;
+  if (Array.isArray(ex.sets)) {
+    return ex.sets.reduce((max, s) => Math.max(max, parseFloat(s.weight) || 0), 0);
+  }
+  return parseFloat(ex.weight) || 0;
+}
+
+function timeAgoFromDate(dateStr) {
+  if (!dateStr) return "—";
+  const d = new Date(dateStr + "T00:00:00");
+  const days = Math.max(0, Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24)));
+  if (days === 0) return "today";
+  if (days === 1) return "1 day ago";
+  if (days < 30) return days + " days ago";
+  const months = Math.floor(days / 30);
+  return months + (months === 1 ? " month ago" : " months ago");
+}
+
 function drawPerformanceTonnage(workouts, daysBack) {
   const chartEl = $("chartTonnage");
   if (!chartEl) return;
@@ -426,7 +456,7 @@ function drawPerformanceTonnage(workouts, daysBack) {
      workouts.forEach(w => {
        if (w.date >= startStr && w.date <= endStr) {
           (w.exercises||[]).forEach(ex => {
-             (ex.sets||[]).forEach(s => sum += (parseFloat(s.weight)||0)*(parseInt(s.reps)||0));
+            sum += getExerciseSessionVolume(ex);
           });
        }
      });
@@ -446,7 +476,7 @@ function drawPerformanceTonnage(workouts, daysBack) {
   workouts.forEach(w => {
     if (w.date >= psStr && w.date <= peStr) {
       (w.exercises||[]).forEach(ex => {
-         (ex.sets||[]).forEach(s => prevSum += (parseFloat(s.weight)||0)*(parseInt(s.reps)||0));
+        prevSum += getExerciseSessionVolume(ex);
       });
     }
   });
@@ -462,7 +492,10 @@ function drawPerformanceTonnage(workouts, daysBack) {
      trendEl.style.color = pct >= 0 ? "var(--success)" : "var(--danger)";
   }
   
-  if (typeof drawLineChart === 'function') drawLineChart(chartEl, weeks, vals, "var(--primary)"); 
+  if (typeof drawLineChart === 'function') {
+    const lineColor = typeof brandColor === "function" ? brandColor("--accent") : "#8B5CF6";
+    drawLineChart(chartEl, weeks, vals, lineColor);
+  }
 }
 
 function drawPerformanceConsistency(workouts) {
@@ -472,7 +505,9 @@ function drawPerformanceConsistency(workouts) {
   
   const endD = new Date();
   const daysHash = {};
+  const foods = loadData(KEYS.food);
   workouts.forEach(w => { daysHash[w.date] = (daysHash[w.date]||0) + 1; });
+  foods.forEach(f => { daysHash[f.date] = (daysHash[f.date]||0) + 1; });
   
   let daysMatched = 0;
   let activeWeeks = new Set();
@@ -510,46 +545,84 @@ function drawPerformanceConsistency(workouts) {
 function drawPerformancePRs() {
   const container = $("statsPRCards");
   if (!container) return;
-  const workouts = loadData(KEYS.workouts);
-  
-  const maxes = {};
-  workouts.forEach(w => {
-    (w.exercises||[]).forEach(ex => {
-       (ex.sets||[]).forEach(s => {
-          const wt = parseFloat(s.weight)||0;
-          if (wt > 0) {
-             const key = (ex.name||"").trim().toLowerCase();
-             if (key) {
-               if (!maxes[key] || wt > maxes[key].wt) {
-                  maxes[key] = { wt: wt, date: w.date };
-               }
-             }
-          }
-       });
+  let prs = [];
+
+  if (typeof loadPRs === "function") {
+    prs = loadPRs()
+      .filter(pr => pr && pr.exercise && pr.value)
+      .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+      .slice(0, 6)
+      .map(pr => {
+        const unit = pr.type === "reps" ? "reps" : (settings.weightUnit || "kg");
+        return {
+          name: pr.exercise,
+          value: pr.value,
+          date: pr.date,
+          label: pr.type === "reps" ? "REP PR" : pr.type === "volume" ? "VOLUME PR" : pr.type === "est1RM" ? "1RM PR" : "WEIGHT PR",
+          unit,
+        };
+      });
+  }
+
+  if (!prs.length) {
+    const workouts = loadData(KEYS.workouts);
+    const maxes = {};
+    workouts.forEach(w => {
+      (w.exercises || []).forEach(ex => {
+        const key = (ex.name || "").trim().toLowerCase();
+        if (!key) return;
+        const wt = getExercisePeakWeight(ex);
+        if (wt > 0 && (!maxes[key] || wt > maxes[key].value)) {
+          maxes[key] = { value: wt, date: w.date, label: "WEIGHT PR" };
+        }
+      });
+    });
+    prs = Object.keys(maxes)
+      .map(k => ({ name: k, value: maxes[k].value, date: maxes[k].date, label: maxes[k].label, unit: settings.weightUnit || "kg" }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 6);
+  }
+
+  if (!prs.length) {
+    container.innerHTML = '<div class="empty text-sm stats-pr-empty">Log workouts to see your PRs here.</div>';
+    return;
+  }
+
+  container.innerHTML = prs.map(pr => {
+    const ageText = timeAgoFromDate(pr.date);
+    const isNew = ageText === "today" || ageText === "1 day ago" || ageText.includes("days ago") && parseInt(ageText, 10) <= 14;
+    const badge = isNew ? "NEW HIGH" : "STABLE";
+    const exerciseName = String(pr.name || "").trim();
+
+    return '<button class="card stats-pr-item" data-pr-exercise="' + esc(exerciseName) + '" style="padding:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;width:100%;text-align:left">' +
+      '<div>' +
+      '<div style="font-size:12px;letter-spacing:0.08em;color:var(--text2);font-weight:700;margin-bottom:4px">PERSONAL RECORD</div>' +
+      '<div style="font-size:14px;font-weight:700;margin-bottom:4px;text-transform:capitalize">' + esc(pr.name) + '</div>' +
+      '<div style="font-size:12px;color:var(--text2)">' + esc(pr.label) + ' • ' + esc(ageText) + '</div>' +
+      '</div>' +
+      '<div style="text-align:right">' +
+      '<div style="font-size:20px;font-weight:700;color:var(--primary)">' + pr.value + ' <span style="font-size:12px;color:var(--text2)">' + esc(pr.unit) + '</span></div>' +
+      '<div style="margin-top:4px"><span style="background:' + (isNew ? 'rgba(187,134,252,0.2);color:var(--primary)' : 'rgba(255,255,255,0.1);color:var(--text2)') + ';padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700">' + badge + '</span></div>' +
+      '</div>' +
+      '</button>';
+  }).join('');
+
+  container.querySelectorAll("[data-pr-exercise]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      const exercise = btn.getAttribute("data-pr-exercise");
+      if (!exercise) return;
+      if (typeof showDeepDiveModal === "function") {
+        showDeepDiveModal(exercise);
+      } else {
+        showToast("Deep Dive is loading. Try again in a moment.", "info");
+      }
     });
   });
-  
-  const prs = Object.keys(maxes).map(k => ({ name: k, wt: maxes[k].wt, date: maxes[k].date }));
-  prs.sort((a,b) => b.wt - a.wt);
-  
-  if (!prs.length) return;
-  
-  container.innerHTML = prs.slice(0, 5).map(pr => {
-    const dDate = new Date(pr.date);
-    const ageDays = (new Date() - dDate) / (1000 * 3600 * 24);
-    const badge = ageDays <= 14 
-       ? '<span style="background:rgba(187,134,252,0.2);color:var(--primary);padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700">NEW HIGH</span>'
-       : '<span style="background:rgba(255,255,255,0.1);color:var(--text2);padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700">STABLE</span>';
-       
-    return '<div class="card" style="padding:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">' +
-             '<div>' +
-               '<div style="font-size:14px;font-weight:600;margin-bottom:4px;text-transform:capitalize">' + escAttr(pr.name) + '</div>' +
-               '<div style="font-size:12px;color:var(--text2)">' + fmtDate(pr.date) + '</div>' + 
-             '</div>' + 
-             '<div style="text-align:right">' + 
-               '<div style="font-size:20px;font-weight:700;color:var(--primary)">' + pr.wt + ' <span style="font-size:12px;color:var(--text2)">' + (settings.weightUnit||'kg') + '</span></div>' +
-               '<div style="margin-top:4px">' + badge + '</div>' +
-             '</div>' +
-           '</div>';
-  }).join('');
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  const analyticsPanel = $("panel-analytics");
+  if (analyticsPanel && analyticsPanel.classList.contains("active")) {
+    refreshAnalytics();
+  }
+});

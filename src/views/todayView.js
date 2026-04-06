@@ -600,6 +600,7 @@ function initTodayEvents() {
       else if (action === "igniteSession" && _goToLogWorkout) _goToLogWorkout();
       else if (action === "viewAllRoutines") activateMainTab("protocols");
       else if (action === "startProtocol" && _goToLogWorkout) _goToLogWorkout();
+      else if (action === "openActivityFeed" && typeof showActivityFeedModal === "function") showActivityFeedModal();
       return;
     }
 

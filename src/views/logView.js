@@ -103,7 +103,7 @@ function getExerciseRowHtml(index, seed, planned) {
     '<button class="btn btn-outline btn-sm dense-col-1" data-remove-row aria-label="Remove exercise row">✕</button>' +
     '<div class="dense-col-12 exercise-advanced-toggle-wrap" style="display:flex; justify-content:space-between; align-items:center;">' +
       '<button class="btn btn-outline btn-sm exercise-advanced-toggle" data-action="toggle-ex-advanced" aria-expanded="false">Advanced targets & setup</button>' +
-      '<button class="btn btn-primary btn-sm" onclick="startTimer(settings.defaultRestTime || 60, $(\'exname_' + index + '\').value)" style="border-radius:20px; padding:2px 12px; font-size:11px;">⏱️ Rest</button>' +
+      '<button class="btn btn-primary btn-sm" onclick="startTimer(settings.defaultRestTime || 60, $(\'exname_' + index + '\').value, ' + index + ')" style="border-radius:20px; padding:2px 12px; font-size:11px;">⏱️ Rest</button>' +
     '</div>' +
     '<div class="dense-col-12 exercise-advanced hidden" id="exadv_' + index + '">' +
       '<div class="stat-row stat-row-dense exercise-advanced-grid">' +
@@ -201,6 +201,161 @@ function quickAddFavorite(id) {
   saveData(KEYS.food, data);
   notifyDataChangedFromLog("quickAddFavorite");
   showToast(esc(fav.name) + " added! ⭐");
+}
+
+function mealLabelFromKey(mealKey) {
+  return ({ breakfast: "Breakfast", lunch: "Lunch", dinner: "Dinner", snack: "Snack" }[mealKey] || "Meal");
+}
+
+function getMealTemplateItemsFromCurrentMeal() {
+  const selectedDate = ($("foodDate") && $("foodDate").value) || today();
+  const selectedMeal = ($("foodMeal") && $("foodMeal").value) || "breakfast";
+  const fromLog = loadData(KEYS.food)
+    .filter((f) => f.date === selectedDate && f.meal === selectedMeal)
+    .map((f) => ({
+      name: f.name || "",
+      calories: Number(f.calories) || 0,
+      protein: Number(f.protein) || 0,
+      carbs: Number(f.carbs) || 0,
+      fat: Number(f.fat) || 0,
+      serving: f.serving || "",
+    }))
+    .filter((f) => f.name);
+
+  if (fromLog.length) return fromLog;
+
+  const name = ($("foodName") && $("foodName").value.trim()) || "";
+  if (!name) return [];
+  const pro = parseInt($("foodProtein").value) || 0;
+  const carb = parseInt($("foodCarbs").value) || 0;
+  const fat = parseInt($("foodFat").value) || 0;
+  const caloriesInput = parseInt($("foodCalories").value) || 0;
+  return [{
+    name,
+    calories: caloriesInput || Math.round(pro * 4 + carb * 4 + fat * 9),
+    protein: pro,
+    carbs: carb,
+    fat,
+    serving: ($("foodServing") && $("foodServing").value.trim()) || "",
+  }];
+}
+
+function refreshMealTemplateMeta() {
+  const meta = $("mealTemplateMeta");
+  const select = $("mealTemplateSelect");
+  if (!meta || !select) return;
+  const tpl = loadData(KEYS.mealTemplates).find((t) => t.id === select.value);
+  if (!tpl) {
+    meta.textContent = "Save meals once and log all items in one tap.";
+    return;
+  }
+  const itemCount = Array.isArray(tpl.items) ? tpl.items.length : 0;
+  const totalCalories = (tpl.items || []).reduce((sum, item) => sum + (Number(item.calories) || 0), 0);
+  meta.textContent = itemCount + " items • " + totalCalories + " kcal • " + mealLabelFromKey(tpl.meal || "");
+}
+
+function refreshMealTemplates() {
+  const select = $("mealTemplateSelect");
+  const multiplier = $("mealTemplateMultiplier");
+  const card = $("mealTemplatesCard");
+  if (!select || !multiplier || !card) return;
+
+  const templates = loadData(KEYS.mealTemplates);
+  if (!templates.length) {
+    card.classList.remove("hidden");
+    select.innerHTML = '<option value="">No saved meals yet</option>';
+    select.value = "";
+    select.disabled = true;
+    return refreshMealTemplateMeta();
+  }
+
+  const prev = select.value;
+  select.disabled = false;
+  select.innerHTML = '<option value="">Select a saved meal</option>' + templates
+    .map((tpl) => '<option value="' + escAttr(tpl.id) + '">' + esc(tpl.name || "Meal Template") + '</option>')
+    .join("");
+  if (prev && templates.some((tpl) => tpl.id === prev)) select.value = prev;
+  if (!select.value) select.value = templates[0].id;
+  if (!multiplier.value) multiplier.value = "1";
+  refreshMealTemplateMeta();
+}
+
+function saveMealTemplate() {
+  const meal = ($("foodMeal") && $("foodMeal").value) || "breakfast";
+  const items = getMealTemplateItemsFromCurrentMeal();
+  if (!items.length) {
+    showToast("Log a meal or fill the form before saving a template", "info");
+    return;
+  }
+
+  const suggested = mealLabelFromKey(meal) + " Template";
+  const name = (window.prompt("Template name", suggested) || "").trim();
+  if (!name) return;
+
+  const templates = loadData(KEYS.mealTemplates);
+  const existing = templates.find((tpl) => (tpl.name || "").toLowerCase() === name.toLowerCase());
+  const next = {
+    id: existing ? existing.id : uid(),
+    name,
+    meal,
+    items,
+    updatedAt: Date.now(),
+    createdAt: existing && existing.createdAt ? existing.createdAt : Date.now(),
+  };
+
+  if (existing) {
+    const idx = templates.findIndex((tpl) => tpl.id === existing.id);
+    templates[idx] = next;
+    showToast("Template updated", "success");
+  } else {
+    templates.push(next);
+    showToast("Meal template saved", "success");
+  }
+
+  saveData(KEYS.mealTemplates, templates);
+  refreshMealTemplates();
+  const select = $("mealTemplateSelect");
+  if (select) select.value = next.id;
+  refreshMealTemplateMeta();
+}
+
+function applyMealTemplate() {
+  const select = $("mealTemplateSelect");
+  if (!select || !select.value) {
+    showToast("Select a meal template first", "info");
+    return;
+  }
+  const templates = loadData(KEYS.mealTemplates);
+  const template = templates.find((tpl) => tpl.id === select.value);
+  if (!template || !Array.isArray(template.items) || !template.items.length) {
+    showToast("Selected template is empty", "error");
+    return;
+  }
+
+  const multiplierInput = $("mealTemplateMultiplier");
+  const multiplier = Math.max(0.25, Math.min(5, parseFloat(multiplierInput && multiplierInput.value) || 1));
+  if (multiplierInput) multiplierInput.value = String(multiplier);
+  const selectedDate = ($("foodDate") && $("foodDate").value) || today();
+  const selectedMeal = ($("foodMeal") && $("foodMeal").value) || template.meal || "breakfast";
+
+  const current = loadData(KEYS.food);
+  const now = Date.now();
+  const newEntries = template.items.map((item, idx) => ({
+    id: uid(),
+    date: selectedDate,
+    meal: selectedMeal,
+    name: item.name,
+    calories: Math.round((Number(item.calories) || 0) * multiplier),
+    protein: Math.round((Number(item.protein) || 0) * multiplier * 10) / 10,
+    carbs: Math.round((Number(item.carbs) || 0) * multiplier * 10) / 10,
+    fat: Math.round((Number(item.fat) || 0) * multiplier * 10) / 10,
+    serving: multiplier === 1 ? (item.serving || "") : ((item.serving || "serving") + " x" + multiplier),
+    timestamp: now + idx,
+  }));
+
+  saveData(KEYS.food, current.concat(newEntries));
+  notifyDataChangedFromLog("applyMealTemplate");
+  showToast("Added " + newEntries.length + " items from " + template.name, "success");
 }
 
 // ========== LOG FOOD ==========
@@ -488,12 +643,20 @@ function logWorkout() {
       // Convert exercises to include sets array for the summary view
       const summaryEntry = { ...entry };
       summaryEntry.exercises = exercises.map(function (ex) {
+        const setCount = Math.max(1, ex.sets || 1);
+        const setRows = [];
+        for (let si = 0; si < setCount; si++) {
+          setRows.push({ weight: ex.weight, reps: ex.reps, rpe: ex.rpe });
+        }
         return {
           name: ex.name,
-          sets: [{ weight: ex.weight, reps: ex.reps, rpe: ex.rpe }],
+          sets: setRows,
+          setsCount: setCount,
+          reps: ex.reps,
+          weight: ex.weight,
         };
       });
-      setTimeout(function () { showPostWorkoutSummary(summaryEntry); }, prs.length > 0 ? 2500 : 800);
+      setTimeout(function () { showPostWorkoutSummary(summaryEntry, prs); }, prs.length > 0 ? 2500 : 800);
     }
     // Always offer share if module available
     if (typeof showShareCardModal === 'function') {
@@ -513,12 +676,20 @@ function logWorkout() {
     if (typeof showPostWorkoutSummary === 'function') {
       const summaryEntry = { ...entry };
       summaryEntry.exercises = exercises.map(function (ex) {
+        const setCount = Math.max(1, ex.sets || 1);
+        const setRows = [];
+        for (let si = 0; si < setCount; si++) {
+          setRows.push({ weight: ex.weight, reps: ex.reps, rpe: ex.rpe });
+        }
         return {
           name: ex.name,
-          sets: [{ weight: ex.weight, reps: ex.reps, rpe: ex.rpe }],
+          sets: setRows,
+          setsCount: setCount,
+          reps: ex.reps,
+          weight: ex.weight,
         };
       });
-      setTimeout(function () { showPostWorkoutSummary(summaryEntry); }, 800);
+      setTimeout(function () { showPostWorkoutSummary(summaryEntry, []); }, 800);
     }
   }
   if (entry.protocolId) {
@@ -663,31 +834,138 @@ let _timerInterval = null;
 let _timerRemaining = 0;
 let _timerTotal = 0;
 let _timerCanvasContext = null;
+let _timerEstimatedStartCalories = 0;
+let _timerBurnRatePerMin = 0;
+let _timerRowIndex = 0;
+let _timerLastVoiceSecond = null;
 
-function startTimer(seconds, nextExName) {
+function clearTimerFocusMode() {
+  document.body.classList.remove("workout-focus-mode", "timer-locked");
+  document.querySelectorAll(".exercise-focus-active").forEach((row) => {
+    row.classList.remove("exercise-focus-active");
+  });
+}
+
+function applyTimerFocusMode(rowIndex) {
+  clearTimerFocusMode();
+  if (settings.autoLock) {
+    document.body.classList.add("timer-locked");
+  }
+  if (!settings.focusMode) return;
+  document.body.classList.add("workout-focus-mode");
+  const activeRow = $("exrow_" + Number(rowIndex || 0));
+  if (activeRow) activeRow.classList.add("exercise-focus-active");
+}
+
+function announceCountdownSecond(sec) {
+  if (!settings.voiceCountdown) return;
+  if (!("speechSynthesis" in window)) return;
+  if (sec === _timerLastVoiceSecond) return;
+  _timerLastVoiceSecond = sec;
+  const utterance = new SpeechSynthesisUtterance(String(sec));
+  utterance.rate = 1.02;
+  utterance.pitch = 1;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
+}
+
+function autoAdvanceToNextExercise(rowIndex) {
+  if (!settings.autoAdvance) return;
+  const current = Number(rowIndex || 0);
+  if (!current) return;
+  const nextRow = $("exrow_" + (current + 1));
+  if (!nextRow) return;
+  const nextName = $("exname_" + (current + 1));
+  if (nextName) {
+    nextName.focus();
+    nextName.scrollIntoView({ block: "center", behavior: "smooth" });
+  }
+}
+
+function getTimerExerciseContext(nextExName, rowIndex) {
+  let idx = Number(rowIndex) || 0;
+  const normalizedName = (nextExName || "").trim().toLowerCase();
+
+  if (!idx && normalizedName) {
+    for (let i = 1; i <= exerciseRowCount; i++) {
+      const nameEl = $("exname_" + i);
+      if (nameEl && (nameEl.value || "").trim().toLowerCase() === normalizedName) {
+        idx = i;
+        break;
+      }
+    }
+  }
+
+  const nameEl = idx ? $("exname_" + idx) : null;
+  const setsEl = idx ? $("exsets_" + idx) : null;
+  const repsEl = idx ? $("exreps_" + idx) : null;
+  const wtEl = idx ? $("exwt_" + idx) : null;
+
+  const name = ((nameEl && nameEl.value) || nextExName || "Next Exercise").trim();
+  const totalSets = Math.max(1, parseInt((setsEl && setsEl.value) || "1", 10) || 1);
+  const reps = parseInt((repsEl && repsEl.value) || "0", 10) || 0;
+  const weight = parseFloat((wtEl && wtEl.value) || "0") || 0;
+
+  const info = typeof getExerciseInfo === "function" ? getExerciseInfo(name) : null;
+  let tip = "Focus on controlled tempo and strong bracing before your next set.";
+  if (info) {
+    const firstTip = Array.isArray(info.formTips) && info.formTips.length ? info.formTips[0] : null;
+    tip = (firstTip && firstTip.description) || info.tips || tip;
+  }
+
+  return {
+    name,
+    setLabel: "SET 1 OF " + totalSets,
+    target: (weight > 0 ? weight + " " + settings.weightUnit : "Bodyweight") + " • " + (reps > 0 ? reps + " reps" : "AMRAP"),
+    tip,
+  };
+}
+
+function renderTimerNextSet(nextExName, rowIndex) {
+  const nextSetEl = $("timerNextSet");
+  if (!nextSetEl) return;
+  const context = getTimerExerciseContext(nextExName, rowIndex);
+  nextSetEl.innerHTML =
+    '<div class="timer-next-head"><span class="timer-next-badge">NEXT SET</span><span class="timer-next-count">' + esc(context.setLabel) + "</span></div>" +
+    '<div class="timer-next-name"><span class="material-symbols-outlined">fitness_center</span>' + esc(context.name) + "</div>" +
+    '<div class="timer-next-target">🏋️ ' + esc(context.target) + "</div>" +
+    '<div class="timer-form-tip">' + esc(context.tip) + "</div>";
+}
+
+function updateTimerLiveStats() {
+  const elapsedSeconds = Math.max(0, _timerTotal - _timerRemaining);
+  const estCalories = Math.max(0, _timerEstimatedStartCalories + (elapsedSeconds / 60) * _timerBurnRatePerMin);
+  if ($("timerCal")) {
+    $("timerCal").textContent = Math.round(estCalories) + " KCAL";
+  }
+  if ($("timerHR") && !$("timerHR").textContent.trim()) {
+    $("timerHR").textContent = "— BPM";
+  }
+}
+
+function startTimer(seconds, nextExName, rowIndex) {
   stopTimer();
   _timerTotal = seconds || (settings.defaultRestTime || 60);
   _timerRemaining = _timerTotal;
+  _timerRowIndex = Number(rowIndex) || 0;
+  _timerLastVoiceSecond = null;
+
+  const userBodyweight = getPrimaryBodyweight ? (getPrimaryBodyweight() || 70) : 70;
+  _timerBurnRatePerMin = Math.max(3.5, userBodyweight * 0.1);
+  const workoutCaloriesInput = parseFloat((($("workoutCalories") && $("workoutCalories").value) || "0")) || 0;
+  const durInputVal = parseFloat((($("workoutDuration") && $("workoutDuration").value) || "0")) || 0;
+  _timerEstimatedStartCalories = workoutCaloriesInput > 0 ? workoutCaloriesInput : durInputVal * _timerBurnRatePerMin;
   
   const overlay = $("timerOverlay");
   if (overlay) {
     overlay.classList.remove("hidden");
     document.body.classList.add("overlay-open");
-    // Populate stats
-    const durInput = $("workoutDuration");
-    if ($("timerCal") && durInput) {
-       const userBodyweight = getPrimaryBodyweight ? getPrimaryBodyweight() : 70;
-       const burned = ((parseFloat(durInput.value)||0) * (userBodyweight * 0.1)).toFixed(0);
-       $("timerCal").textContent = burned + " KCAL";
-    }
-    // Populate next set
-    if ($("timerNextSet")) {
-      const activeName = nextExName || ($("workoutName") ? $("workoutName").value : "Next Exercise");
-      $("timerNextSet").innerHTML = "PREPARE FOR<br/><b>" + escAttr(activeName || "LIFT") + "</b>";
-    }
+    applyTimerFocusMode(_timerRowIndex);
+    renderTimerNextSet(nextExName || ($("workoutName") ? $("workoutName").value : "Next Exercise"), rowIndex);
+    updateTimerLiveStats();
     
     if (!$("skipRestBtn").hasAttribute('data-bound')) {
-      $("skipRestBtn").addEventListener("click", stopTimer);
+      $("skipRestBtn").addEventListener("click", skipRest);
       $("skipRestBtn").setAttribute('data-bound', 'true');
     }
   }
@@ -716,7 +994,9 @@ function updateTimerDisplay() {
 
   const txt = $("timerCircleText");
   if (txt) txt.textContent = tStr;
+  if (_timerRemaining > 0 && _timerRemaining <= 3) announceCountdownSecond(_timerRemaining);
   
+  updateTimerLiveStats();
   drawTimerCanvas();
 }
 
@@ -762,6 +1042,7 @@ function stopTimer() {
   if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
   _timerRemaining = 0;
   _timerTotal = 0;
+  _timerLastVoiceSecond = null;
   
   const disp = $("timerDisplay");
   if (disp) { disp.textContent = "0:00"; disp.className = "timer-display"; }
@@ -771,11 +1052,29 @@ function stopTimer() {
     overlay.classList.add("hidden");
     document.body.classList.remove("overlay-open");
   }
+
+  const nextSetEl = $("timerNextSet");
+  if (nextSetEl) nextSetEl.innerHTML = "";
+  clearTimerFocusMode();
+  _timerRowIndex = 0;
+}
+
+function skipRest() {
+  stopTimer();
+  showToast("Rest skipped. Back to work!", "info");
 }
 
 function finishTimer() {
+  const completedRow = _timerRowIndex;
   stopTimer();
   if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  if (settings.voiceCountdown && "speechSynthesis" in window) {
+    const goUtterance = new SpeechSynthesisUtterance("Go");
+    goUtterance.rate = 1.08;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(goUtterance);
+  }
+  autoAdvanceToNextExercise(completedRow);
   showToast("Rest complete! Let's go! 💪", "info");
 }
 
@@ -833,7 +1132,7 @@ function refreshLog() {
       .map((w) => {
         const time = w.timestamp ? fmtTime(w.timestamp) : "";
         const targetHints = (w.exercises || []).map((ex) => renderTargetChip(ex)).filter(Boolean).slice(0, 2).join("");
-        return '<div class="list-item"><div class="list-item-main"><div class="list-item-title">' + esc(w.name) + '<span class="entry-time">' + time + '</span></div><div class="list-item-sub">' + fmtDate(w.date) + " • " + w.type + " • " + (w.duration || 0) + " min • " + (w.exercises || []).length + ' ex</div>' + targetHints + '</div><div class="list-item-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span class="tag tag-blue">' + (w.caloriesBurned || 0) + ' cal</span><button class="btn-delete" data-delete-workout="' + w.id + '" title="Delete">✕</button></div></div>';
+        return '<div class="list-item" data-open-workout="' + w.id + '"><div class="list-item-main"><div class="list-item-title">' + esc(w.name) + '<span class="entry-time">' + time + '</span></div><div class="list-item-sub">' + fmtDate(w.date) + " • " + w.type + " • " + (w.duration || 0) + " min • " + (w.exercises || []).length + ' ex</div>' + targetHints + '</div><div class="list-item-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span class="tag tag-blue">' + (w.caloriesBurned || 0) + ' cal</span><button class="btn-delete" data-delete-workout="' + w.id + '" title="Delete">✕</button></div></div>';
       })
       .join("");
   } else {
@@ -853,6 +1152,7 @@ function refreshLog() {
 
   populateProtocolSelect();
   refreshFavorites();
+  refreshMealTemplates();
 }
 
 // ========== EVENT DELEGATION ==========
@@ -866,6 +1166,8 @@ function initLogEvents() {
     if (actionEl) {
       const action = actionEl.dataset.action;
       if (action === "logFood") logFood();
+      else if (action === "saveMealTemplate") saveMealTemplate();
+      else if (action === "applyMealTemplate") applyMealTemplate();
       else if (action === "cancelEditFood") cancelEditFood();
       else if (action === "clearTodayFood") clearTodayFood();
       else if (action === "logWorkout") logWorkout();
@@ -891,6 +1193,11 @@ function initLogEvents() {
     // Workout actions
     const delWorkout = e.target.closest("[data-delete-workout]");
     if (delWorkout) { deleteWorkout(delWorkout.dataset.deleteWorkout); return; }
+    const openWorkout = e.target.closest("[data-open-workout]");
+    if (openWorkout && typeof showWorkoutDetailView === "function") {
+      showWorkoutDetailView(openWorkout.dataset.openWorkout);
+      return;
+    }
 
     // Body actions
     const delBody = e.target.closest("[data-delete-body]");
@@ -926,6 +1233,9 @@ function initLogEvents() {
   if (searchFood) searchFood.addEventListener("input", filterRecentFood);
   const searchWorkout = $("searchWorkout");
   if (searchWorkout) searchWorkout.addEventListener("input", filterRecentWorkouts);
+
+  const mealTemplateSelect = $("mealTemplateSelect");
+  if (mealTemplateSelect) mealTemplateSelect.addEventListener("change", refreshMealTemplateMeta);
 
   const protocolSel = $("workoutProtocol");
   if (protocolSel) {

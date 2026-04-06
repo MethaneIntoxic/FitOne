@@ -12,7 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
 <link rel="stylesheet" href="styles/brand-assets.css">
-<link rel="stylesheet" href="styles/main.css?v=20260406c">
+<link rel="stylesheet" href="styles/main.css?v=20260406p">
 <link rel="manifest" href="pwa/manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -95,6 +95,13 @@
       <div id="nextWorkoutContent">
         <div class="empty"><div class="empty-icon">🏋️</div><div class="empty-text">Create Your First Routine</div></div>
       </div>
+    </div>
+    <div class="card activity-feed-entry" data-section="activityFeed">
+      <div class="flex-between mb-8">
+        <span class="card-title" style="margin-bottom:0">Activity Feed</span>
+        <button class="btn btn-outline btn-sm" data-action="openActivityFeed">OPEN</button>
+      </div>
+      <div class="text-xs" style="color:var(--text2)">Track workouts, PRs, nutrition, body updates, achievements, and streak milestones in one timeline.</div>
     </div>
     <div class="card" data-section="calories">
       <div class="card-title">Daily Calories</div>
@@ -199,6 +206,26 @@
         <div class="card-title">⭐ Quick Add Favorites</div>
         <div id="favoritesList" class="favorites-grid"></div>
       </div>
+      <div class="card" id="mealTemplatesCard">
+        <div class="card-title">🧩 Meal Templates</div>
+        <div class="stat-row meal-template-controls">
+          <div class="form-group" style="flex:1">
+            <label>Saved Meal</label>
+            <select id="mealTemplateSelect">
+              <option value="">Select a saved meal</option>
+            </select>
+          </div>
+          <div class="form-group meal-template-multiplier-wrap">
+            <label>Portion</label>
+            <input type="number" id="mealTemplateMultiplier" min="0.25" max="5" step="0.25" value="1">
+          </div>
+        </div>
+        <div class="meal-template-actions">
+          <button class="btn btn-primary btn-sm" data-action="applyMealTemplate">Quick Add Meal</button>
+          <button class="btn btn-outline btn-sm" data-action="saveMealTemplate">Save This Meal</button>
+        </div>
+        <div class="text-xs mt-8" style="color:var(--text2)" id="mealTemplateMeta">Save meals once and log all items in one tap.</div>
+      </div>
       <div class="card" id="foodFormCard">
         <div class="flex-between mb-8">
           <span class="card-title" style="margin-bottom:0" id="foodFormTitle">Log Food</span>
@@ -206,7 +233,10 @@
         </div>
         <div class="form-group">
           <label>Food Name</label>
-          <input type="text" id="foodName" placeholder="e.g., Chicken breast">
+          <div class="stat-row">
+            <input type="text" id="foodName" placeholder="e.g., Chicken breast">
+            <button class="btn btn-outline btn-sm barcode-scan-btn" type="button" data-action="scanBarcode">📷 Scan</button>
+          </div>
           <div class="form-error" id="foodNameError">Please enter a food name</div>
         </div>
         <div class="stat-row">
@@ -656,46 +686,69 @@
       </div>
       <div class="text-xs goal-note">Used by Adaptive TDEE for personalized recommendations</div>
     </div>
-    <div class="card">
+    <div class="card" id="workoutSettingsCard">
       <div class="card-title">Workout Settings</div>
-      <div class="form-group">
-        <label>Default Rest Time</label>
-        <select id="settingRestTime">
-          <option value="30">30 Seconds</option>
-          <option value="60">60 Seconds</option>
-          <option value="90">90 Seconds</option>
-          <option value="120">120 Seconds</option>
-        </select>
+      <div class="text-xs mb-12" style="color:var(--text2)">OPTIMIZE YOUR TRAINING PRECISION</div>
+
+      <div class="workout-setting-head">
+        <div class="section-label">DEFAULT REST TIMERS</div>
+        <div class="workout-rest-display" id="settingRestTimeDisplay">90s</div>
       </div>
-      <div class="form-group">
-        <label>Plate System</label>
-        <select id="settingPlateSystem">
-          <option value="kg">Kilograms (Standard)</option>
-          <option value="lbs">Pounds (Standard)</option>
-        </select>
+      <input type="range" id="settingRestTimeRange" min="30" max="300" step="15" value="90">
+      <div class="workout-rest-ticks"><span>30 SEC</span><span>180 SEC</span><span>300 SEC</span></div>
+      <div class="text-xs mt-8" style="color:var(--text2)">Timers auto-start after each set. You can override this per exercise in workout view.</div>
+      <input type="hidden" id="settingRestTime" value="90">
+
+      <div class="section-label mt-16">PLATE SYSTEM</div>
+      <div class="segmented-control" id="plateSystemSegmented">
+        <button type="button" class="segmented-btn" data-plate-system="lbs">45LB</button>
+        <button type="button" class="segmented-btn" data-plate-system="kg">20KG</button>
       </div>
+      <div class="text-xs mt-8" id="plateSystemSubtitle" style="color:var(--text2)">Selected: Standard Olympic Cast Iron</div>
+      <input type="hidden" id="settingPlateSystem" value="kg">
+
       <div class="toggle-row mt-12">
-        <span>Auto-Lock completed sets</span>
+        <span>Auto-Lock</span>
         <label class="toggle"><input type="checkbox" id="settingAutoLock"><span class="toggle-slider"></span></label>
       </div>
-      <div class="toggle-row mt-12">
-        <span>Auto-Advance exercise</span>
+      <div class="toggle-row mt-8">
+        <span>ACTIVE SETS ONLY</span>
+        <label class="toggle"><input type="checkbox" id="settingAutoLockActiveOnly"><span class="toggle-slider"></span></label>
+      </div>
+
+      <div class="section-label mt-16">AUTOMATION</div>
+      <div class="toggle-row mt-8">
+        <span>Auto-Advance Exercises</span>
         <label class="toggle"><input type="checkbox" id="settingAutoAdvance"><span class="toggle-slider"></span></label>
       </div>
-      <div class="toggle-row mt-12">
-        <span>Focus Mode</span>
+
+      <div class="section-label mt-16">VISUALS</div>
+      <div class="toggle-row mt-8">
+        <span>Dark Mode Focus Mode</span>
         <label class="toggle"><input type="checkbox" id="settingFocusMode"><span class="toggle-slider"></span></label>
       </div>
-      <div class="toggle-row mt-12">
+
+      <div class="section-label mt-16">AUDIO</div>
+      <div class="toggle-row mt-8">
         <span>Voice Countdown</span>
         <label class="toggle"><input type="checkbox" id="settingVoiceCountdown"><span class="toggle-slider"></span></label>
       </div>
+
+      <div class="workout-settings-actions">
+        <button class="btn btn-primary" id="workoutSettingsSaveBtn">SAVE CHANGES</button>
+        <button class="btn btn-outline" id="workoutSettingsResetBtn">RESET</button>
+      </div>
     </div>
-    <div class="card">
-      <div class="card-title">Notifications</div>
+    <div class="card" id="notificationPulseCard">
+      <div class="card-title">Notification Pulse</div>
+      <div class="text-xs mb-12" style="color:var(--text2)">Real-time performance alerts</div>
       <div class="toggle-row">
-        <span>Notification Pulse (Push)</span>
+        <span>Push Notifications</span>
         <label class="toggle"><input type="checkbox" id="settingPushPulse"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row mt-12">
+        <span>Email Summaries <span class="tag tag-purple">Coming Soon</span></span>
+        <label class="toggle"><input type="checkbox" id="settingEmailSummaries" disabled><span class="toggle-slider"></span></label>
       </div>
     </div>
     <div class="card">
@@ -725,22 +778,24 @@
         <input type="number" id="settingWaterGoal" value="2000">
       </div>
     </div>
-    <div class="card">
-      <div class="card-title">Units</div>
-      <div class="form-group">
-        <label>Weight Unit</label>
-        <select id="settingWeightUnit">
-          <option value="kg">Kilograms (kg)</option>
-          <option value="lbs">Pounds (lbs)</option>
-        </select>
+    <div class="card" id="systemCalibrationCard">
+      <div class="card-title">Preferred Units</div>
+      <div class="segmented-control" id="weightUnitSegmented">
+        <button type="button" class="segmented-btn" data-weight-unit="kg">KG</button>
+        <button type="button" class="segmented-btn" data-weight-unit="lbs">LB</button>
       </div>
-      <div class="form-group">
+      <input type="hidden" id="settingWeightUnit" value="kg">
+      <div class="form-group mt-12">
         <label>Measurement Unit</label>
         <select id="settingMeasureUnit">
           <option value="cm">Centimeters (cm)</option>
           <option value="in">Inches (in)</option>
         </select>
       </div>
+    </div>
+    <div class="card" id="privacySafetyCard">
+      <div class="card-title">Privacy & Safety</div>
+      <button type="button" class="btn btn-outline btn-block" id="openDataStudioBtn">Data Syncing <span class="material-symbols-outlined">chevron_right</span></button>
     </div>
     <div class="card" id="settingsDataPrivacyCard"></div>
     <div class="card" id="settingsDiagnosticsCard"></div>
@@ -752,6 +807,10 @@
     <div class="card" id="settingsAboutCard"></div>
     <div class="card">
       <div class="text-xs text-center">FitOne v3.0 • All data stored locally in your browser</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Clear All Data</div>
+      <button class="btn btn-danger btn-block" id="settingsClearAllDataBtn">CLEAR ALL DATA</button>
     </div>
   </div>
 </div>
@@ -808,28 +867,33 @@
 
 <!-- Modal Container -->
 <div id="modalContainer"></div>
+<div id="pulseCenterRoot"></div>
 
-<script src="src/dataStore.js"></script>
+<script src="src/dataStore.js?v=20260406b"></script>
 <script src="src/syncService.js"></script>
 <script src="src/wearableIntegration.js"></script>
 <script src="src/foodDatabase.js"></script>
 <script src="src/barcodeScanner.js"></script>
 <script src="src/exerciseDatabase.js"></script>
-<script src="src/starterRoutines.js"></script>
+<script src="src/starterRoutines.js?v=20260406d"></script>
 <script src="src/prTracker.js"></script>
 <script src="src/achievements.js"></script>
-<script src="src/shareCard.js"></script>
+<script src="src/shareCard.js?v=20260406k"></script>
 <script src="src/workoutIntelligence.js"></script>
-<script src="src/ui.js?v=20260406b"></script>
+<script src="src/ui.js?v=20260406c"></script>
 <script src="src/onboarding.js?v=20260406b"></script>
-<script src="src/views/todayView.js?v=20260406b"></script>
-<script src="src/views/logView.js"></script>
-<script src="src/views/exerciseDetailView.js"></script>
-<script src="src/views/settingsView.js"></script>
-<script src="src/views/protocolsView.js"></script>
-<script src="src/views/analyticsView.js"></script>
+<script src="src/views/todayView.js?v=20260406c"></script>
+<script src="src/views/logView.js?v=20260406i"></script>
+<script src="src/views/exerciseDetailView.js?v=20260406c"></script>
+<script src="src/views/deepDiveView.js?v=20260406a"></script>
+<script src="src/views/activityFeedView.js?v=20260406a"></script>
+<script src="src/views/workoutDetailView.js?v=20260406a"></script>
+<script src="src/views/pulseCenterView.js?v=20260406a"></script>
+<script src="src/views/settingsView.js?v=20260406b"></script>
+<script src="src/views/protocolsView.js?v=20260406d"></script>
+<script src="src/views/analyticsView.js?v=20260406j"></script>
 <script src="src/views/exportView.js"></script>
-<script src="src/views/postWorkoutView.js"></script>
-<script src="src/main.js?v=20260406c"></script>
+<script src="src/views/postWorkoutView.js?v=20260406f"></script>
+<script src="src/main.js?v=20260406d"></script>
 </body>
 </html>
