@@ -1,0 +1,207 @@
+<html class="dark"><head>
+<meta charset="utf-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "on-tertiary-fixed": "#064200",
+                  "tertiary-dim": "#2be800",
+                  "outline": "#767577",
+                  "surface-container": "#19191c",
+                  "on-tertiary-fixed-variant": "#0d6200",
+                  "secondary-fixed-dim": "#00d7f0",
+                  "on-error-container": "#ffd2c8",
+                  "surface-container-highest": "#262528",
+                  "tertiary-container": "#2ff801",
+                  "on-surface-variant": "#adaaad",
+                  "secondary-container": "#006875",
+                  "on-error": "#450900",
+                  "inverse-surface": "#fcf8fb",
+                  "primary": "#8B5CF6",
+                  "on-primary": "#ffffff",
+                  "on-secondary-fixed-variant": "#005964",
+                  "tertiary-fixed": "#2ff801",
+                  "on-secondary": "#004d57",
+                  "error-dim": "#d53d18",
+                  "surface-container-low": "#131315",
+                  "surface-container-high": "#1f1f22",
+                  "surface-tint": "#8B5CF6",
+                  "secondary-fixed": "#26e6ff",
+                  "inverse-primary": "#4c1d95",
+                  "primary-dim": "#7c3aed",
+                  "on-tertiary": "#0d6100",
+                  "on-secondary-fixed": "#003a42",
+                  "on-primary-fixed": "#000000",
+                  "on-background": "#f9f5f8",
+                  "on-primary-fixed-variant": "#2e1065",
+                  "surface-variant": "#262528",
+                  "on-primary-container": "#f5f3ff",
+                  "primary-fixed-dim": "#a78bfa",
+                  "on-tertiary-container": "#0b5800",
+                  "surface-dim": "#0e0e10",
+                  "on-surface": "#f9f5f8",
+                  "surface-container-lowest": "#000000",
+                  "surface-bright": "#2c2c2f",
+                  "secondary-dim": "#00d4ec",
+                  "tertiary-fixed-dim": "#2be800",
+                  "secondary": "#00e3fd",
+                  "primary-fixed": "#c4b5fd",
+                  "tertiary": "#8eff71",
+                  "outline-variant": "#48474a",
+                  "on-secondary-container": "#e8fbff",
+                  "inverse-on-surface": "#565457",
+                  "surface": "#0e0e10",
+                  "primary-container": "#7c3aed",
+                  "error-container": "#b92902",
+                  "background": "#0e0e10",
+                  "error": "#ff7351"
+          },
+          "borderRadius": {
+                  "DEFAULT": "0.125rem",
+                  "lg": "0.25rem",
+                  "xl": "0.5rem",
+                  "full": "0.75rem"
+          },
+          "fontFamily": {
+                  "headline": ["Space Grotesk"],
+                  "body": ["Inter"],
+                  "label": ["Inter"]
+          }
+        },
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .kinetic-gradient {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(0, 0, 0, 0) 50%);
+    }
+    .timer-text {
+      text-shadow: 0 0 40px rgba(139, 92, 246, 0.3);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary selection:text-on-primary">
+<!-- TopAppBar -->
+<header class="bg-[#0e0e10] dark:bg-[#0e0e10] docked full-width top-0 z-50 shadow-[0_4px_30px_rgba(139,92,246,0.08)] flex justify-between items-center px-6 py-4 w-full border-b border-outline-variant/10">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg overflow-hidden bg-surface-container-high border border-outline-variant/20">
+<img class="w-full h-full object-cover" data-alt="Close-up portrait of a determined athlete with sweat on brow, dramatic lighting, high contrast cinematic style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBhGS-_d4QbcpqhtT8VNoNJY7gS5wvFh7qWitqGP0fEwOYJPh3gaxxCWBdGHXNUjiD0uihj0kwjykezwC-YVkFmDILKWZ2tOKAGmYPgI1mjbCvBrIkmlJYGQQ8pi59e4nY8WkyoFrI4Moi2nTZN_p876zJ0peYceqQMHyE26cnwlPM22j8eTEtG66a10nLC0VnRDtgbKbTSKZ5NpyGcLDk_1BY57-urkcUKUXfCqUaf-2Tb5V4gI09iEalrO16gDnHb8EzD701-X6W5"/>
+</div>
+<span class="text-xl font-black tracking-tighter text-[#8B5CF6] font-['Space_Grotesk'] tracking-widest uppercase">NEON PULSE</span>
+</div>
+<button class="text-[#adaaad] hover:bg-[#1f1f22] transition-colors duration-200 scale-95 active:scale-90 transition-transform p-2 rounded-lg">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</header>
+<main class="min-h-screen pt-20 pb-32 px-6 flex flex-col items-center justify-center relative overflow-hidden">
+<!-- Kinetic Background Elements -->
+<div class="absolute inset-0 kinetic-gradient pointer-events-none"></div>
+<div class="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-[120px]"></div>
+<div class="absolute -bottom-24 -left-24 w-96 h-96 bg-secondary/5 rounded-full blur-[120px]"></div>
+<!-- Timer Section -->
+<div class="w-full max-w-lg flex flex-col items-center z-10">
+<div class="mb-2">
+<span class="font-headline text-on-surface-variant tracking-[0.3em] uppercase text-xs font-bold">RECOVERY PHASE</span>
+</div>
+<!-- Big Timer Display -->
+<div class="relative flex items-center justify-center mb-12">
+<svg class="w-72 h-72 md:w-80 md:h-80 -rotate-90">
+<circle class="text-surface-container-high" cx="50%" cy="50%" fill="transparent" r="48%" stroke="currentColor" stroke-width="2"></circle>
+<circle class="text-primary" cx="50%" cy="50%" fill="transparent" r="48%" stroke="currentColor" stroke-dasharray="1000" stroke-dashoffset="350" stroke-width="4"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="font-headline text-[100px] md:text-[120px] font-bold leading-none text-primary timer-text tracking-tighter">00:44</span>
+<div class="flex gap-1 mt-[-10px]">
+<span class="h-1 w-8 bg-primary rounded-full"></span>
+<span class="h-1 w-8 bg-surface-container-high rounded-full"></span>
+<span class="h-1 w-8 bg-surface-container-high rounded-full"></span>
+</div>
+</div>
+</div>
+<!-- Action Button -->
+<button class="group relative w-full py-5 bg-primary text-on-primary font-headline font-bold rounded-lg overflow-hidden shadow-[0_0_40px_rgba(139,92,246,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all">
+<div class="absolute inset-0 bg-gradient-to-r from-primary to-primary-container opacity-20"></div>
+<span class="relative z-10 flex items-center justify-center gap-2 tracking-widest uppercase">
+          SKIP REST
+          <span class="material-symbols-outlined text-xl">fast_forward</span>
+</span>
+</button>
+<!-- Next Up Section (Bento Style) -->
+<div class="w-full mt-12 grid grid-cols-1 gap-4">
+<div class="bg-surface-container border border-outline-variant/10 rounded-xl p-5 relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-6xl" data-icon="fitness_center">fitness_center</span>
+</div>
+<div class="relative z-10">
+<div class="flex items-center gap-2 mb-4">
+<span class="text-[10px] font-bold tracking-[0.2em] text-secondary uppercase bg-secondary/10 px-2 py-0.5 rounded">NEXT SET</span>
+<span class="text-[10px] font-bold tracking-[0.2em] text-on-surface-variant uppercase">SET 3 OF 4</span>
+</div>
+<h2 class="font-headline text-2xl font-bold text-on-surface mb-1">Incline Dumbbell Press</h2>
+<p class="text-on-surface-variant text-sm flex items-center gap-4">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">weight</span> 32.5 kg</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">repeat</span> 10 Reps</span>
+</p>
+</div>
+<div class="mt-6 flex gap-3 overflow-hidden">
+<div class="w-16 h-16 rounded-lg bg-surface-container-high flex-shrink-0 overflow-hidden">
+<img class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" data-alt="Muscular person performing incline dumbbell press in a dark gritty gym with dramatic red rim lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDvw-ywWmsbhOZvHKmp0qHag5NgazPAqSSpF34-St5dskteNiimhmxBCctHDrwE8hjtTebJONSjOKrUhy23ZK1IeVUUj7NLuPGM_dslKBhwMdnP2dWhr_sVZdK7sI5is03mTWD4gTIG4kbg-uetfk5tGZGUxaWBhBbKIAhvIEyS4ayIEZDSZZeRbmYKdiveU0PV0wPaz3INhrBTrmnMKbvdCF8BgcnGLdBDXvtIt5Mc5LzV-3eRdhSrihLqu-PvROkPLD3xl2E5nMRq"/>
+</div>
+<div class="flex flex-col justify-center">
+<span class="text-xs text-on-surface-variant leading-tight">Focus on slow eccentric movement and explosive push.</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-surface-container/50 border border-outline-variant/10 rounded-xl p-4 flex flex-col justify-between">
+<span class="text-[10px] font-bold tracking-[0.2em] text-on-surface-variant uppercase mb-2">HEART RATE</span>
+<div class="flex items-end gap-2">
+<span class="font-headline text-2xl font-bold text-tertiary">142</span>
+<span class="text-xs text-on-surface-variant mb-1">BPM</span>
+</div>
+</div>
+<div class="bg-surface-container/50 border border-outline-variant/10 rounded-xl p-4 flex flex-col justify-between">
+<span class="text-[10px] font-bold tracking-[0.2em] text-on-surface-variant uppercase mb-2">CALORIES</span>
+<div class="flex items-end gap-2">
+<span class="font-headline text-2xl font-bold text-on-surface">384</span>
+<span class="text-xs text-on-surface-variant mb-1">KCAL</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-[#131315]/80 backdrop-blur-xl shadow-[0_-8px_40px_rgba(0,0,0,0.5)] rounded-t-xl border-t border-outline-variant/10">
+<a class="flex flex-col items-center justify-center text-[#adaaad] opacity-60 hover:text-[#8B5CF6] transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="speed">speed</span>
+<span class="font-['Inter'] text-[10px] font-semibold tracking-tight">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#8B5CF6] bg-[#8B5CF6]/10 rounded-xl px-4 py-2" href="#">
+<span class="material-symbols-outlined" data-icon="fitness_center" style="font-variation-settings: 'FILL' 1;">fitness_center</span>
+<span class="font-['Inter'] text-[10px] font-semibold tracking-tight">Workouts</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#adaaad] opacity-60 hover:text-[#8B5CF6] transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="insights">insights</span>
+<span class="font-['Inter'] text-[10px] font-semibold tracking-tight">Stats</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#adaaad] opacity-60 hover:text-[#8B5CF6] transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span class="font-['Inter'] text-[10px] font-semibold tracking-tight">Social</span>
+</a>
+</nav>
+</body></html>

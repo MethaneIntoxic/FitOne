@@ -28,6 +28,18 @@ function buildSettingsPayload() {
     workoutGoal: settingNum("settingWorkoutGoal", 4),
     waterGoal: settingNum("settingWaterGoal", 2000),
     weightUnit: settingVal("settingWeightUnit", "kg"),
+    displayName: settingVal("settingDisplayName", settings.displayName || ""),
+    bio: settingVal("settingBio", settings.bio || ""),
+    avatar: settings.avatar || "",
+    
+    // W15 App Settings
+    defaultRestTime: settingNum("settingRestTime", 60),
+    plateSystem: settingVal("settingPlateSystem", "kg"),
+    autoLock: settingBool("settingAutoLock", true),
+    autoAdvance: settingBool("settingAutoAdvance", true),
+    focusMode: settingBool("settingFocusMode", false),
+    voiceCountdown: settingBool("settingVoiceCountdown", false),
+    pushNotifications: settingBool("settingPushPulse", false),
     measureUnit: settingVal("settingMeasureUnit", "cm"),
     darkMode: settingBool("settingTheme", true),
     bodyGoal: settings.bodyGoal || "maintain",

@@ -560,6 +560,81 @@ function drawReadinessGauge(score) {
   requestAnimationFrame(animate);
 }
 
+function drawEnergyGauge(score) {
+  const canvas = $("readinessGauge");
+  if (!canvas) return;
+  const safeScore = Math.max(0, Math.min(100, Number(score) || 0));
+  const targetPct = safeScore / 100;
+  const startTime = performance.now();
+  const duration = 950;
+
+  function animate(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const pct = targetPct * eased;
+    const shown = Math.round(safeScore * eased);
+
+    const ctx = canvas.getContext("2d");
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = 160 * dpr;
+    canvas.height = 160 * dpr;
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, 160, 160);
+
+    const cx = 80;
+    const cy = 80;
+    const baseR = 58;
+    const ringGap = 12;
+    const cs = getComputedStyle(document.documentElement);
+    const track = cs.getPropertyValue("--bg3").trim() || "#23283B";
+
+    const rings = [
+      { ratio: 1, color: "#b698ff", width: 8 },
+      { ratio: Math.min(0.88, pct), color: "#3fddb8", width: 8 },
+      { ratio: Math.min(0.72, pct), color: "#a5ee4c", width: 8 },
+    ];
+
+    for (let i = 0; i < 3; i++) {
+      const r = baseR - i * ringGap;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0.74 * Math.PI, 2.26 * Math.PI);
+      ctx.strokeStyle = track;
+      ctx.lineWidth = 8;
+      ctx.lineCap = "round";
+      ctx.stroke();
+    }
+
+    rings.forEach((ring, i) => {
+      const r = baseR - i * ringGap;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0.74 * Math.PI, (0.74 + 1.52 * ring.ratio) * Math.PI);
+      ctx.strokeStyle = ring.color;
+      ctx.lineWidth = ring.width;
+      ctx.lineCap = "round";
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = ring.color;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    });
+
+    ctx.fillStyle = "#f4f6fb";
+    ctx.font = "700 16px Space Grotesk, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(shown + "%", cx, cy - 4);
+
+    ctx.fillStyle = cs.getPropertyValue("--text2").trim() || "#A1A1AA";
+    ctx.font = "600 8px Space Grotesk, sans-serif";
+    ctx.letterSpacing = "0.12em";
+    ctx.fillText("DAILY ENERGY", cx, cy + 15);
+
+    if (progress < 1) requestAnimationFrame(animate);
+  }
+
+  requestAnimationFrame(animate);
+}
+
 // ========== CLOSE MODAL ==========
 function closeModal() {
   $("modalContainer").innerHTML = "";

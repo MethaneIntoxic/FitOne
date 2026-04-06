@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed": "#064200",
+                        "tertiary-dim": "#2be800",
+                        "outline": "#767577",
+                        "surface-container": "#19191c",
+                        "on-tertiary-fixed-variant": "#0d6200",
+                        "secondary-fixed-dim": "#00d7f0",
+                        "on-error-container": "#ffd2c8",
+                        "surface-container-highest": "#262528",
+                        "tertiary-container": "#2ff801",
+                        "on-surface-variant": "#adaaad",
+                        "secondary-container": "#006875",
+                        "on-error": "#450900",
+                        "inverse-surface": "#fcf8fb",
+                        "primary": "#8B5CF6",
+                        "on-primary": "#FFFFFF",
+                        "on-secondary-fixed-variant": "#005964",
+                        "tertiary-fixed": "#2ff801",
+                        "on-secondary": "#004d57",
+                        "error-dim": "#d53d18",
+                        "surface-container-low": "#131315",
+                        "surface-container-high": "#1f1f22",
+                        "surface-tint": "#8B5CF6",
+                        "secondary-fixed": "#26e6ff",
+                        "inverse-primary": "#4C1D95",
+                        "primary-dim": "#7C3AED",
+                        "on-tertiary": "#0d6100",
+                        "on-secondary-fixed": "#003a42",
+                        "on-primary-fixed": "#000000",
+                        "on-background": "#f9f5f8",
+                        "on-primary-fixed-variant": "#2E1065",
+                        "surface-variant": "#262528",
+                        "on-primary-container": "#1E1B4B",
+                        "primary-fixed-dim": "#A78BFA",
+                        "on-tertiary-container": "#0b5800",
+                        "surface-dim": "#0e0e10",
+                        "on-surface": "#f9f5f8",
+                        "surface-container-lowest": "#000000",
+                        "surface-bright": "#2c2c2f",
+                        "secondary-dim": "#00d4ec",
+                        "tertiary-fixed-dim": "#2be800",
+                        "secondary": "#00e3fd",
+                        "primary-fixed": "#C4B5FD",
+                        "tertiary": "#8eff71",
+                        "outline-variant": "#48474a",
+                        "on-secondary-container": "#e8fbff",
+                        "inverse-on-surface": "#565457",
+                        "surface": "#0e0e10",
+                        "primary-container": "#8B5CF6",
+                        "error-container": "#b92902",
+                        "background": "#0e0e10",
+                        "error": "#ff7351"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "9999px",
+                        "lg": "9999px",
+                        "xl": "9999px",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(25, 25, 28, 0.8);
+            backdrop-filter: blur(24px);
+        }
+        .kinetic-gradient {
+            background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary/30 min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<nav class="bg-[#0e0e10] dark:bg-[#0e0e10] flex justify-between items-center px-6 py-4 w-full docked full-width top-0 z-50 shadow-[0_4px_30px_rgba(139,92,246,0.08)]">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-high flex items-center justify-center">
+<img alt="Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDlLbmEIkYPGhlzzLkZ0sfr9Jw577G_MnQg4J94vtAym7a21MGrps_8o3mIviD24KBOaidwFuRYni2pUJvf71d5yCKwndyC6di8ZZalq0SidtMxeEjBR66sjTTzGCR3hqqse6VyUMH4ErAV8EzcN2F3QxLzHOwRJbur7qeuPjxm9aTWkmO46yYzmCvq59Q2TUVij1DRiHSS_TNmKLGjdZcDRpAsl8C1PCLs3Cb2eYwTFNtfgRvLLImXz0HJmxNIYPcNex_6PKQl_2sy"/>
+</div>
+<span class="text-xl font-black tracking-tighter text-[#8B5CF6] font-['Space_Grotesk'] tracking-widest uppercase">NEON PULSE</span>
+</div>
+<button class="text-[#8B5CF6] scale-95 active:scale-90 transition-transform p-2 hover:bg-[#1f1f22] transition-colors duration-200 rounded-full">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 flex flex-col items-center justify-center px-6 pb-24 pt-12 relative overflow-hidden">
+<!-- Kinetic Light Background Accents -->
+<div class="absolute top-1/4 -left-20 w-96 h-96 bg-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
+<div class="absolute bottom-1/4 -right-20 w-96 h-96 bg-secondary/5 rounded-full blur-[120px] pointer-events-none"></div>
+<!-- Routine Header -->
+<div class="w-full max-w-2xl mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+<div class="flex flex-col gap-2">
+<label class="font-headline text-[10px] uppercase tracking-[0.2em] text-on-surface-variant/60 font-bold">Routine Title</label>
+<input class="bg-transparent border-none p-0 font-headline text-4xl font-bold tracking-tight text-on-surface placeholder:text-surface-container-high focus:ring-0 w-full transition-all duration-300" placeholder="UNTITLED SEQUENCE" type="text"/>
+</div>
+</div>
+<!-- Empty State: Build Your Arsenal -->
+<div class="w-full max-w-2xl flex flex-col items-center text-center">
+<!-- Central Kinetic Element -->
+<div class="relative w-64 h-64 mb-8 flex items-center justify-center">
+<!-- Outer Decorative Rings -->
+<div class="absolute inset-0 border border-primary/10 rounded-full scale-100 animate-pulse"></div>
+<div class="absolute inset-4 border border-secondary/10 rounded-full scale-95 opacity-50"></div>
+<!-- Icon Core -->
+<div class="bg-surface-container w-32 h-32 rounded-3xl flex items-center justify-center shadow-2xl relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+<span class="material-symbols-outlined text-5xl text-on-surface-variant/40" data-icon="fitness_center" style="font-variation-settings: 'FILL' 0, 'wght' 200;">fitness_center</span>
+</div>
+</div>
+<h2 class="font-headline text-3xl font-bold tracking-tight text-on-surface mb-3">Build Your Arsenal</h2>
+<p class="text-on-surface-variant font-body max-w-sm mb-10 leading-relaxed">Design a precision workout template tailored for peak performance. Start by adding your first exercise below.</p>
+<!-- + Add Exercise Button -->
+<button class="kinetic-gradient text-on-primary px-10 py-4 rounded-full font-headline font-bold text-sm tracking-widest uppercase flex items-center gap-3 shadow-[0_8px_30px_rgba(139,92,246,0.3)] active:scale-95 transition-all duration-200 group">
+<span class="material-symbols-outlined font-bold" data-icon="add">add</span>
+<span>Add Exercise</span>
+</button>
+</div>
+<!-- Quick Suggestions (Bento Style) -->
+<div class="w-full max-w-4xl mt-20 grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="md:col-span-3 mb-2 px-1">
+<h3 class="font-headline text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold">Suggested Modules</h3>
+</div>
+<!-- Bento Card 1 -->
+<div class="bg-surface-container-low p-6 rounded-3xl hover:bg-surface-container transition-colors duration-300 border border-outline-variant/10 cursor-pointer group">
+<div class="flex items-start justify-between mb-8">
+<span class="material-symbols-outlined text-secondary" data-icon="bolt">bolt</span>
+<span class="font-headline text-[10px] text-on-surface-variant/50">01</span>
+</div>
+<h4 class="font-headline font-bold text-lg mb-2 group-hover:text-primary transition-colors">Hyper-Growth</h4>
+<p class="text-xs text-on-surface-variant leading-relaxed">Pre-built hypertrophy sequences for maximum muscle recruitment.</p>
+</div>
+<!-- Bento Card 2 -->
+<div class="bg-surface-container-low p-6 rounded-3xl hover:bg-surface-container transition-colors duration-300 border border-outline-variant/10 cursor-pointer group">
+<div class="flex items-start justify-between mb-8">
+<span class="material-symbols-outlined text-tertiary" data-icon="timer">timer</span>
+<span class="font-headline text-[10px] text-on-surface-variant/50">02</span>
+</div>
+<h4 class="font-headline font-bold text-lg mb-2 group-hover:text-primary transition-colors">Kinetic Flow</h4>
+<p class="text-xs text-on-surface-variant leading-relaxed">Timed endurance circuits designed to optimize metabolic rate.</p>
+</div>
+<!-- Bento Card 3 -->
+<div class="bg-surface-container-low p-6 rounded-3xl hover:bg-surface-container transition-colors duration-300 border border-outline-variant/10 cursor-pointer group">
+<div class="flex items-start justify-between mb-8">
+<span class="material-symbols-outlined text-primary" data-icon="shield">shield</span>
+<span class="font-headline text-[10px] text-on-surface-variant/50">03</span>
+</div>
+<h4 class="font-headline font-bold text-lg mb-2 group-hover:text-primary transition-colors">Iron Core</h4>
+<p class="text-xs text-on-surface-variant leading-relaxed">Heavy-duty compound lifts for foundational power and stability.</p>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-[#131315]/80 backdrop-blur-xl shadow-[0_-8px_40px_rgba(0,0,0,0.5)] rounded-t-3xl">
+<a class="flex flex-col items-center justify-center text-[#adaaad] opacity-60 hover:text-[#00e3fd] transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="speed">speed</span>
+<span class="font-['Inter'] text-[10px] font-semibold tracking-tight">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#8B5CF6] bg-[#8B5CF6]/10 rounded-full px-4 py-2 Active: scale-110 duration-200 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="fitness_center" style="font-variation-settings: 'FILL' 1;">fitness_center</span>
+<span class="font-['Inter'] text-[10px] font-semibold tracking-tight">Workouts</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#adaaad] opacity-60 hover:text-[#00e3fd] transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="insights">insights</span>
+<span class="font-['Inter'] text-[10px] font-semibold tracking-tight">Stats</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#adaaad] opacity-60 hover:text-[#00e3fd] transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span class="font-['Inter'] text-[10px] font-semibold tracking-tight">Social</span>
+</a>
+</nav>
+</body></html>

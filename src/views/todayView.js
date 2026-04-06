@@ -216,18 +216,19 @@ function drawReadinessSparkline() {
 
 function refreshReadiness() {
   const result = calculateReadiness();
-  drawReadinessGauge(result.score);
+  if (typeof drawEnergyGauge === "function") drawEnergyGauge(result.score);
+  else drawReadinessGauge(result.score);
   const statusEl = $("readinessStatus");
   if (statusEl) {
-    statusEl.textContent = getReadinessLabel(result.score);
+    statusEl.textContent = "Energy " + result.score + "%";
     statusEl.style.color = getReadinessColor(result.score);
   }
   const detailEl = $("readinessDetail");
   if (detailEl) {
     const parts = [];
-    if (result.wellnessBonus !== 0) parts.push("Wellness: " + (result.wellnessBonus > 0 ? "+" : "") + Math.round(result.wellnessBonus));
-    if (result.recoveryBonus !== 0) parts.push("Recovery: " + (result.recoveryBonus > 0 ? "+" : "") + Math.round(result.recoveryBonus));
-    parts.push("Freshness: " + (result.freshnessFactor > 0 ? "+" : "") + Math.round(result.freshnessFactor));
+    parts.push("Sleep " + (result.wellnessBonus > 0 ? "high" : "steady"));
+    parts.push("Recovery " + (result.recoveryBonus > 0 ? "ready" : "building"));
+    parts.push("Freshness " + (result.freshnessFactor >= 0 ? "stable" : "low"));
     detailEl.textContent = parts.join(" • ");
   }
   const w = loadWellnessToday();
@@ -498,6 +499,85 @@ function refreshToday() {
   updateMacroHints(totals);
   reorderTodayCards();
   checkGoalCelebrations(totals, workouts);
+
+  // W3.2 Update greeting
+  refreshGreeting();
+
+  // W3.5 Next workout preview
+  refreshNextWorkout();
+
+  // W3.6 Bottom stat boxes
+  refreshDashboardBottom(workouts);
+
+  // W3.1 Header avatar
+  refreshHeaderAvatar();
+}
+
+// ========== W3.1 HEADER AVATAR ==========
+function refreshHeaderAvatar() {
+  const el = $("headerAvatar");
+  if (!el) return;
+  if (settings.avatar) {
+    el.innerHTML = '<img src="' + settings.avatar + '" alt="Avatar" class="header-avatar-img">';
+  } else {
+    el.innerHTML = '<span class="material-symbols-outlined">person</span>';
+  }
+}
+
+// ========== W3.2 PERSONALIZED GREETING ==========
+function refreshGreeting() {
+  const el = $("greetingName");
+  if (!el) return;
+  const name = settings.displayName || "Athlete";
+  el.textContent = "Welcome " + name;
+}
+
+// ========== W3.5 NEXT WORKOUT PREVIEW ==========
+function refreshNextWorkout() {
+  const content = $("nextWorkoutContent");
+  if (!content) return;
+
+  const protocols = loadData(KEYS.protocols);
+  if (!protocols.length) {
+    content.innerHTML = '<div class="empty"><div class="empty-icon">\ud83c\udfcb\ufe0f</div><div class="empty-text">Create Your First Routine \u2192</div></div>';
+    return;
+  }
+
+  // Pick the first protocol as "next"
+  const proto = protocols[0];
+  const exercises = proto.exercises || [];
+  const exerciseCount = exercises.length;
+  const typeTag = (proto.type || "STRENGTH").toUpperCase();
+  const level = settings.experienceLevel || "intermediate";
+  const durationMinutes = Math.max(20, Number(proto.duration) || exerciseCount * 7 || 35);
+  const levelLabel = level.charAt(0).toUpperCase() + level.slice(1);
+  const intensityTag = typeTag === "HIIT" ? "HIGH INTENSITY" : typeTag;
+
+  content.innerHTML =
+    '<div class="next-workout-body next-workout-grid">' +
+    '<div class="next-workout-main">' +
+    '<span class="tag tag-purple">' + intensityTag + '</span>' +
+    '<div class="next-workout-name">' + esc(proto.name || "Workout") + '</div>' +
+    '<div class="next-workout-meta">' +
+    '<span class="material-symbols-outlined">schedule</span>' + durationMinutes + 'm ' +
+    '<span class="next-workout-dot">•</span>' +
+    '<span class="material-symbols-outlined">fitness_center</span>' + levelLabel +
+    '</div>' +
+    '<div class="next-workout-sub">' + exerciseCount + ' planned exercises</div>' +
+    '</div>' +
+    '<button class="next-workout-play" data-action="startProtocol" data-protocol-id="' + escAttr(proto.id) + '" aria-label="Start next workout">' +
+      '<span class="material-symbols-outlined">play_arrow</span>' +
+    '</button>' +
+    '</div>';
+}
+
+// ========== W3.6 BOTTOM STATS ==========
+function refreshDashboardBottom(workouts) {
+  const calBurn = $("dashCalBurn");
+  if (calBurn) {
+    const burned = (workouts || []).reduce(function (a, w) { return a + (w.caloriesBurned || 0); }, 0);
+    calBurn.textContent = burned + " cal";
+  }
 }
 
 // ========== EVENT DELEGATION ==========
@@ -516,6 +596,10 @@ function initTodayEvents() {
       else if (action === "undoWater") undoWater();
       else if (action === "addCustomWater") addCustomWater();
       else if (action === "saveWellness") saveWellness();
+      // W3 Dashboard v2 actions
+      else if (action === "igniteSession" && _goToLogWorkout) _goToLogWorkout();
+      else if (action === "viewAllRoutines") activateMainTab("protocols");
+      else if (action === "startProtocol" && _goToLogWorkout) _goToLogWorkout();
       return;
     }
 

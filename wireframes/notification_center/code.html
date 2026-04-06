@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Neon Pulse - Notification Center</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error-container": "#b92902",
+                        "inverse-on-surface": "#565457",
+                        "surface-container-high": "#1f1f22",
+                        "primary": "#8B5CF6",
+                        "surface-container-lowest": "#000000",
+                        "primary-fixed-dim": "#7c3aed",
+                        "outline-variant": "#48474a",
+                        "tertiary-fixed": "#2ff801",
+                        "on-secondary": "#004d57",
+                        "on-primary-fixed-variant": "#2e1065",
+                        "primary-dim": "#7c3aed",
+                        "on-primary-fixed": "#000000",
+                        "on-surface": "#f9f5f8",
+                        "secondary-fixed": "#26e6ff",
+                        "outline": "#767577",
+                        "background": "#0e0e10",
+                        "on-error": "#450900",
+                        "error-dim": "#d53d18",
+                        "tertiary": "#8eff71",
+                        "surface-bright": "#2c2c2f",
+                        "on-tertiary-fixed": "#064200",
+                        "on-secondary-container": "#e8fbff",
+                        "primary-fixed": "#a78bfa",
+                        "inverse-surface": "#fcf8fb",
+                        "surface-container": "#19191c",
+                        "tertiary-container": "#2ff801",
+                        "secondary": "#00e3fd",
+                        "on-background": "#f9f5f8",
+                        "surface-container-highest": "#262528",
+                        "on-tertiary-fixed-variant": "#0d6200",
+                        "inverse-primary": "#6d28d9",
+                        "on-secondary-fixed-variant": "#005964",
+                        "secondary-fixed-dim": "#00d7f0",
+                        "surface-variant": "#262528",
+                        "on-error-container": "#ffd2c8",
+                        "tertiary-fixed-dim": "#2be800",
+                        "primary-container": "#a78bfa",
+                        "on-tertiary-container": "#0b5800",
+                        "on-tertiary": "#0d6100",
+                        "on-primary": "#ffffff",
+                        "error": "#ff7351",
+                        "on-secondary-fixed": "#003a42",
+                        "on-surface-variant": "#adaaad",
+                        "on-primary-container": "#2e1065",
+                        "tertiary-dim": "#2be800",
+                        "surface-container-low": "#131315",
+                        "secondary-container": "#006875",
+                        "surface": "#0e0e10",
+                        "surface-dim": "#0e0e10",
+                        "surface-tint": "#8B5CF6",
+                        "secondary-dim": "#00d4ec"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .kinetic-obsidian-card {
+            background: linear-gradient(135deg, #19191c 0%, #131315 100%);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .kinetic-obsidian-card:hover {
+            background: linear-gradient(135deg, #1f1f22 0%, #19191c 100%);
+        }
+        .vibrant-glow {
+            text-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+        }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 bg-[#0e0e10]/80 backdrop-blur-xl flex justify-between items-center px-6 h-16">
+<div class="flex items-center gap-4">
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/20">
+<img alt="User profile photo" class="w-full h-full object-cover" data-alt="close-up portrait of a fitness enthusiast with dramatic low-key lighting and moody atmosphere" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2r8JUeUF4uKtXbQFqA32WR3BfHDPJq5gizZ5E1lkmG8_i_8wIQfbywhQM2rFcwEnUDi3owZ2NMlAFCmNf14cCNXHoWZr2f6fvkWJxS9SpY6-e-MEXhuEcME2oPwYhDkVxqu_fsBHs0yQtUL8MeZkTu4wbv6yOgvwhC-dq5RjY7lXg9AHOqwpXcTYnx2pigi1jdkOcrf-TYt52L2o7hovWnoboCHs9zzEkxGsmXEri-V4yeO9J25CehMj2SFw7dpDorSh3euTRFv1S"/>
+</div>
+<h1 class="text-2xl font-black italic text-primary vibrant-glow tracking-widest font-headline">KINETIC</h1>
+</div>
+<div class="flex items-center gap-6">
+<span class="material-symbols-outlined text-primary hover:text-primary-fixed transition-colors active:scale-95 cursor-pointer">notifications</span>
+</div>
+<div class="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#19191c] to-transparent opacity-10"></div>
+</header>
+<main class="pt-24 pb-32 px-6 max-w-2xl mx-auto">
+<!-- Notification Header -->
+<div class="mb-10">
+<h2 class="text-4xl font-headline font-bold tracking-tighter text-on-surface mb-2">Pulse Center</h2>
+<p class="text-on-surface-variant text-sm font-medium tracking-wide uppercase">All performance alerts and social activity</p>
+</div>
+<!-- Notification Groups -->
+<div class="space-y-12">
+<!-- Section: Recent -->
+<section>
+<div class="flex items-center justify-between mb-6">
+<h3 class="font-headline text-xs font-bold tracking-[0.2em] text-secondary uppercase">Recent Activity</h3>
+<span class="h-px flex-1 bg-outline-variant/10 ml-4"></span>
+</div>
+<div class="space-y-4">
+<!-- New Workout Liked -->
+<div class="kinetic-obsidian-card p-5 rounded-lg flex gap-4 group cursor-pointer border-l-2 border-primary">
+<div class="flex-shrink-0 w-12 h-12 rounded bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-start mb-1">
+<p class="font-headline font-semibold text-on-surface group-hover:text-primary transition-colors">New Workout Liked</p>
+<span class="text-[10px] font-bold text-on-surface-variant font-label tracking-tighter">2m AGO</span>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed">Elena and 4 others high-fived your <span class="text-on-surface font-medium">Upper Body Blast</span> session.</p>
+</div>
+</div>
+<!-- Friend Started Session -->
+<div class="kinetic-obsidian-card p-5 rounded-lg flex gap-4 group cursor-pointer">
+<div class="flex-shrink-0 w-12 h-12 rounded bg-secondary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary">play_circle</span>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-start mb-1">
+<p class="font-headline font-semibold text-on-surface group-hover:text-secondary transition-colors">Friend Started a Session</p>
+<span class="text-[10px] font-bold text-on-surface-variant font-label tracking-tighter">14m AGO</span>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed">Marcus just launched <span class="text-on-surface font-medium">AMRAP Finisher</span>. Tap to join the live leaderboard.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Section: Today -->
+<section>
+<div class="flex items-center justify-between mb-6">
+<h3 class="font-headline text-xs font-bold tracking-[0.2em] text-tertiary uppercase">Performance Metrics</h3>
+<span class="h-px flex-1 bg-outline-variant/10 ml-4"></span>
+</div>
+<div class="space-y-4">
+<!-- Weekly Performance Summary -->
+<div class="kinetic-obsidian-card p-5 rounded-lg flex gap-4 group cursor-pointer bg-surface-container-high/40 overflow-hidden relative">
+<div class="absolute top-0 right-0 p-2">
+<div class="px-2 py-0.5 bg-tertiary/10 rounded text-[9px] font-black text-tertiary tracking-widest uppercase">Action Required</div>
+</div>
+<div class="flex-shrink-0 w-12 h-12 rounded bg-tertiary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary">monitoring</span>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-start mb-1">
+<p class="font-headline font-semibold text-on-surface group-hover:text-tertiary transition-colors">Weekly Performance Summary Ready</p>
+<span class="text-[10px] font-bold text-on-surface-variant font-label tracking-tighter">4h AGO</span>
+</div>
+<p class="text-sm text-on-surface-variant mb-3 leading-relaxed">Your volume is up by <span class="text-tertiary font-bold">+12%</span> compared to last week. Review your metabolic breakdown.</p>
+<div class="h-12 w-full rounded bg-surface-container-lowest/50 flex items-end gap-1 p-2">
+<div class="w-1/6 bg-tertiary/20 h-[40%] rounded-t-sm"></div>
+<div class="w-1/6 bg-tertiary/40 h-[60%] rounded-t-sm"></div>
+<div class="w-1/6 bg-tertiary/60 h-[85%] rounded-t-sm"></div>
+<div class="w-1/6 bg-tertiary/30 h-[50%] rounded-t-sm"></div>
+<div class="w-1/6 bg-tertiary/70 h-[90%] rounded-t-sm"></div>
+<div class="w-1/6 bg-tertiary h-[100%] rounded-t-sm"></div>
+</div>
+</div>
+</div>
+<!-- Streak Reminder -->
+<div class="kinetic-obsidian-card p-5 rounded-lg flex gap-4 group cursor-pointer">
+<div class="flex-shrink-0 w-12 h-12 rounded bg-primary-dim/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-dim" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-start mb-1">
+<p class="font-headline font-semibold text-on-surface group-hover:text-primary-dim transition-colors">Streak Reminder</p>
+<span class="text-[10px] font-bold text-on-surface-variant font-label tracking-tighter">7h AGO</span>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed">Don't lose your <span class="text-on-surface font-medium">14-day streak</span>! Complete your mobility flow to stay on track.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Section: Yesterday -->
+<section>
+<div class="flex items-center justify-between mb-6">
+<h3 class="font-headline text-xs font-bold tracking-[0.2em] text-outline uppercase">Earlier</h3>
+<span class="h-px flex-1 bg-outline-variant/10 ml-4"></span>
+</div>
+<div class="space-y-4 opacity-70 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+<div class="kinetic-obsidian-card p-5 rounded-lg flex gap-4 group cursor-pointer">
+<div class="flex-shrink-0 w-12 h-12 rounded bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant">group</span>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-start mb-1">
+<p class="font-headline font-semibold text-on-surface group-hover:text-secondary transition-colors">New Tribe Invite</p>
+<span class="text-[10px] font-bold text-on-surface-variant font-label tracking-tighter">YESTERDAY</span>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed">You've been invited to join <span class="text-on-surface font-medium">The 5AM Club</span> private group by coach Sam.</p>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 h-20 pb-safe bg-[#131315]/90 backdrop-blur-2xl shadow-[0_-8px_30px_rgb(0,0,0,0.5)] rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-zinc-500 hover:text-primary active:scale-90 transition-transform duration-150 py-1 px-4" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest font-bold mt-1">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-zinc-500 hover:text-primary active:scale-90 transition-transform duration-150 py-1 px-4" href="#">
+<span class="material-symbols-outlined">fitness_center</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest font-bold mt-1">Workouts</span>
+</a>
+<a class="flex flex-col items-center justify-center text-zinc-500 hover:text-primary active:scale-90 transition-transform duration-150 py-1 px-4" href="#">
+<span class="material-symbols-outlined">monitoring</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest font-bold mt-1">Stats</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary bg-primary/10 rounded-lg py-1 px-4 active:scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">notifications</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest font-bold mt-1">Social</span>
+</a>
+</nav>
+</body></html>

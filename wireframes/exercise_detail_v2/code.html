@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Neon Pulse - Exercise Detail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&amp;family=Inter:wght@100;200;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-tertiary-fixed": "#064200",
+            "tertiary-dim": "#2be800",
+            "outline": "#767577",
+            "surface-container": "#19191c",
+            "on-tertiary-fixed-variant": "#0d6200",
+            "secondary-fixed-dim": "#00d7f0",
+            "on-error-container": "#ffd2c8",
+            "surface-container-highest": "#262528",
+            "tertiary-container": "#2ff801",
+            "on-surface-variant": "#adaaad",
+            "secondary-container": "#006875",
+            "on-error": "#450900",
+            "inverse-surface": "#fcf8fb",
+            "primary": "#8B5CF6",
+            "on-primary": "#2e0064",
+            "on-secondary-fixed-variant": "#005964",
+            "tertiary-fixed": "#2ff801",
+            "on-secondary": "#004d57",
+            "error-dim": "#d53d18",
+            "surface-container-low": "#131315",
+            "surface-container-high": "#1f1f22",
+            "surface-tint": "#8B5CF6",
+            "secondary-fixed": "#26e6ff",
+            "inverse-primary": "#4c00bf",
+            "primary-dim": "#6d28d9",
+            "on-tertiary": "#0d6100",
+            "on-secondary-fixed": "#003a42",
+            "on-primary-fixed": "#000000",
+            "on-background": "#f9f5f8",
+            "on-primary-fixed-variant": "#3c005f",
+            "surface-variant": "#262528",
+            "on-primary-container": "#2e0064",
+            "primary-fixed-dim": "#a78bfa",
+            "on-tertiary-container": "#0b5800",
+            "surface-dim": "#0e0e10",
+            "on-surface": "#f9f5f8",
+            "surface-container-lowest": "#000000",
+            "surface-bright": "#2c2c2f",
+            "secondary-dim": "#00d4ec",
+            "tertiary-fixed-dim": "#2be800",
+            "secondary": "#00e3fd",
+            "primary-fixed": "#c4b5fd",
+            "tertiary": "#8eff71",
+            "outline-variant": "#48474a",
+            "on-secondary-container": "#e8fbff",
+            "inverse-on-surface": "#565457",
+            "surface": "#0e0e10",
+            "primary-container": "#8B5CF6",
+            "error-container": "#b92902",
+            "background": "#0e0e10",
+            "error": "#ff7351"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.5rem",
+            "lg": "0.75rem",
+            "xl": "1rem",
+            "full": "9999px"
+          },
+          "fontFamily": {
+            "headline": ["Space Grotesk"],
+            "body": ["Inter"],
+            "label": ["Inter"]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    body {
+      background-color: #0e0e10;
+      color: #f9f5f8;
+      font-family: 'Inter', sans-serif;
+    }
+    .glass-effect {
+      backdrop-filter: blur(24px);
+    }
+    .asymmetric-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.5fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 768px) {
+      .asymmetric-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface selection:bg-primary/30">
+<!-- TopAppBar -->
+<header class="bg-[#0e0e10] dark:bg-[#0e0e10] docked full-width top-0 z-50 shadow-[0_4px_30px_rgba(139,92,246,0.12)] flex justify-between items-center px-6 py-4 w-full sticky border-b border-outline-variant/10">
+<div class="flex items-center gap-4">
+<button class="hover:bg-[#1f1f22] transition-colors duration-200 p-2 rounded-full scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-[#adaaad]">arrow_back</span>
+</button>
+<h1 class="text-[#8B5CF6] font-['Space_Grotesk'] tracking-widest uppercase font-bold text-xl font-black tracking-tighter">NEON PULSE</h1>
+</div>
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-container-high overflow-hidden border border-outline-variant/20">
+<img alt="Focused athlete" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4GVZ6aT71yegboFHZx04NI6aoORkJEGY8jATRC8H9Q9rQH5y7kKkaXubVddW49Jz56_QMNEN2IMjUu9RHJCcMn_KxU3_BNhthRQiPQ7Bwg8d-Hm4pEOpjgTm0wDY7m9KZFiznsxxkifx5OwhkR_ludJ_DwWrDOgyRiQ1ScRfhQzqlQw5HMdnDPD-vNhIet81FhYEocvpl5vWT2lHVWsdKTOfVd_oRJSsueVXKKK0pL91ABMTC5X030GL8HLnc1MkQkQ-sbVRveBkE"/>
+</div>
+<span class="material-symbols-outlined text-[#8B5CF6]">notifications</span>
+</div>
+</header>
+<main class="max-w-7xl mx-auto px-6 py-8 pb-32">
+<!-- Hero Section: Exercise Focus -->
+<div class="flex flex-col md:flex-row gap-8 mb-12 items-end">
+<div class="flex-1">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-tertiary/10 text-tertiary mb-4">
+<span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
+<span class="font-label text-[10px] font-bold tracking-widest uppercase">Compound Movement</span>
+</div>
+<h2 class="font-headline text-5xl md:text-7xl font-bold tracking-tighter text-on-surface leading-none mb-4">Barbell Bench Press</h2>
+<p class="text-on-surface-variant font-body text-lg max-w-xl">
+          The foundational movement for upper body power. Engineered for maximal pectoralis engagement and tricep recruitment.
+        </p>
+</div>
+<div class="flex gap-4">
+<div class="bg-surface-container-low p-4 rounded-xl border-l-4 border-primary">
+<p class="text-on-surface-variant text-[10px] uppercase tracking-wider font-bold mb-1">Personal Best</p>
+<p class="text-2xl font-headline font-bold">125 <span class="text-xs text-on-surface-variant">KG</span></p>
+</div>
+<div class="bg-surface-container-low p-4 rounded-xl border-l-4 border-secondary">
+<p class="text-on-surface-variant text-[10px] uppercase tracking-wider font-bold mb-1">Last Session</p>
+<p class="text-2xl font-headline font-bold">110 <span class="text-xs text-on-surface-variant">KG</span></p>
+</div>
+</div>
+</div>
+<!-- Main Content Layout -->
+<div class="asymmetric-grid">
+<!-- Left Column: Media & Muscles -->
+<div class="space-y-6">
+<!-- Loop/Video Placeholder -->
+<div class="relative aspect-square rounded-xl overflow-hidden bg-surface-container group">
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest to-transparent opacity-60"></div>
+<img alt="Cinematic slow-motion shot of exercise" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCRvF-RLp0xYRf3McX2E_acltevNk09xF3pkVjMu6xHrIkSgsuW9tID3SkFLz4E4btfvDAWya8h84D7Ycdz8809RFds5EISis6HQrYQzFmaP7XM6fd2kjqknl98evYO88wgNLcyfVMLxdj-pCEmxLPVVDjo3mm-AXaqdzKt6QfA0CE_UOBUjnSvfnNH2LzyygQb3QXtWNq41XNXe_Kkt1I57QP4s3hOjC-GDN-U3gvt8_VJqLEQtDsknJBCks-xnEdOJKDBnowzxJ1x"/>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="w-16 h-16 rounded-full bg-primary/20 backdrop-blur-md flex items-center justify-center border border-primary/40 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-4xl">play_arrow</span>
+</div>
+</div>
+<div class="absolute bottom-4 left-4 right-4 flex justify-between items-center">
+<span class="text-[10px] font-bold text-on-surface bg-black/40 px-2 py-1 rounded-full backdrop-blur-sm">TECHNIQUE LOOP</span>
+<span class="text-[10px] font-bold text-on-surface-variant">00:15 / 00:15</span>
+</div>
+</div>
+<!-- Muscles Worked Diagram -->
+<div class="bg-surface-container rounded-xl p-6">
+<h3 class="font-headline text-sm font-bold tracking-widest uppercase mb-6 flex items-center gap-2">
+<span class="w-1 h-4 bg-secondary rounded-full"></span> Primary Activation
+          </h3>
+<div class="flex gap-8 items-start">
+<div class="flex-1 space-y-4">
+<div class="space-y-1">
+<div class="flex justify-between text-[11px] font-bold">
+<span class="text-on-surface">Pectoralis Major</span>
+<span class="text-tertiary">95%</span>
+</div>
+<div class="h-1 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-tertiary w-[95%]"></div>
+</div>
+</div>
+<div class="space-y-1">
+<div class="flex justify-between text-[11px] font-bold">
+<span class="text-on-surface">Triceps Brachii</span>
+<span class="text-tertiary">70%</span>
+</div>
+<div class="h-1 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-tertiary w-[70%]"></div>
+</div>
+</div>
+<div class="space-y-1">
+<div class="flex justify-between text-[11px] font-bold">
+<span class="text-on-surface">Anterior Deltoids</span>
+<span class="text-secondary">45%</span>
+</div>
+<div class="h-1 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[45%]"></div>
+</div>
+</div>
+</div>
+<!-- Minimalist Body Diagram Placeholder -->
+<div class="w-24 h-48 bg-surface-container-high rounded-xl relative overflow-hidden border border-outline-variant/10">
+<div class="absolute top-12 left-1/2 -translate-x-1/2 w-16 h-12 bg-primary/20 blur-xl rounded-full"></div>
+<div class="w-full h-full opacity-20 flex items-center justify-center">
+<span class="material-symbols-outlined text-6xl">accessibility_new</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Instructions & Performance -->
+<div class="space-y-6">
+<!-- Instructions Card -->
+<div class="bg-surface-container rounded-xl overflow-hidden">
+<div class="bg-surface-container-high px-6 py-4 border-b border-outline-variant/10">
+<h3 class="font-headline text-sm font-bold tracking-widest uppercase">Execution Protocol</h3>
+</div>
+<div class="p-6 space-y-6">
+<div class="flex gap-4">
+<span class="font-headline text-2xl font-black text-primary/30">01</span>
+<div>
+<h4 class="font-bold text-on-surface text-sm mb-1">Set the Foundation</h4>
+<p class="text-on-surface-variant text-sm leading-relaxed">Lie flat on the bench. Eyes should be directly under the bar. Plant feet firmly into the floor creating a stable kinetic chain.</p>
+</div>
+</div>
+<div class="flex gap-4">
+<span class="font-headline text-2xl font-black text-primary/30">02</span>
+<div>
+<h4 class="font-bold text-on-surface text-sm mb-1">Grip &amp; Unrack</h4>
+<p class="text-on-surface-variant text-sm leading-relaxed">Grip the bar slightly wider than shoulder-width. Squeeze shoulder blades together to create a solid pressing platform. Unrack with locked elbows.</p>
+</div>
+</div>
+<div class="flex gap-4">
+<span class="font-headline text-2xl font-black text-primary/30">03</span>
+<div>
+<h4 class="font-bold text-on-surface text-sm mb-1">Controlled Descent</h4>
+<p class="text-on-surface-variant text-sm leading-relaxed">Lower the bar slowly to the mid-chest. Keep elbows tucked at a 45-degree angle. Inhale on the way down.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Performance Chart -->
+<div class="bg-surface-container rounded-xl p-6">
+<div class="flex justify-between items-center mb-8">
+<h3 class="font-headline text-sm font-bold tracking-widest uppercase">Performance Index</h3>
+<div class="flex gap-2">
+<span class="px-2 py-1 rounded-full bg-surface-container-high text-[10px] font-bold text-secondary">VOLUME</span>
+<span class="px-2 py-1 rounded-full bg-primary/10 text-[10px] font-bold text-primary">1RM EST.</span>
+</div>
+</div>
+<!-- Stylized Kinetic Chart -->
+<div class="h-48 w-full relative flex items-end justify-between gap-1">
+<!-- Simulated bars -->
+<div class="w-full h-24 bg-surface-container-high rounded-t-full relative group hover:bg-primary/20 transition-colors">
+<div class="absolute bottom-0 w-full h-[60%] bg-primary/40 rounded-t-full"></div>
+</div>
+<div class="w-full h-32 bg-surface-container-high rounded-t-full relative group hover:bg-primary/20 transition-colors">
+<div class="absolute bottom-0 w-full h-[75%] bg-primary/40 rounded-t-full"></div>
+</div>
+<div class="w-full h-28 bg-surface-container-high rounded-t-full relative group hover:bg-primary/20 transition-colors">
+<div class="absolute bottom-0 w-full h-[65%] bg-primary/40 rounded-t-full"></div>
+</div>
+<div class="w-full h-40 bg-surface-container-high rounded-t-full relative group hover:bg-primary/20 transition-colors">
+<div class="absolute bottom-0 w-full h-[90%] bg-primary/40 rounded-t-full"></div>
+</div>
+<div class="w-full h-36 bg-surface-container-high rounded-t-full relative group hover:bg-primary/20 transition-colors">
+<div class="absolute bottom-0 w-full h-[80%] bg-primary/40 rounded-t-full"></div>
+</div>
+<div class="w-full h-44 bg-surface-container-high rounded-t-full relative group hover:bg-primary/20 transition-colors border-x border-primary/20">
+<div class="absolute bottom-0 w-full h-[100%] bg-primary rounded-t-full shadow-[0_0_20px_rgba(139,92,246,0.4)]"></div>
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 text-[10px] font-bold text-primary whitespace-nowrap">MAX EFFORT</div>
+</div>
+</div>
+<div class="flex justify-between mt-4 text-[10px] font-bold text-on-surface-variant tracking-tighter uppercase">
+<span>Oct 12</span>
+<span>Oct 19</span>
+<span>Oct 26</span>
+<span>Nov 02</span>
+<span>Nov 09</span>
+<span class="text-on-surface">Today</span>
+</div>
+</div>
+<!-- Action Button -->
+<button class="w-full py-4 bg-gradient-to-r from-primary to-primary-dim text-white font-headline font-bold tracking-widest uppercase rounded-full shadow-[0_8px_30px_rgba(139,92,246,0.3)] active:scale-95 transition-all">
+          Start Workout with This Lift
+        </button>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-[#131315]/80 backdrop-blur-xl shadow-[0_-8px_40px_rgba(0,0,0,0.5)] rounded-t-xl border-t border-outline-variant/10">
+<a class="flex flex-col items-center justify-center text-[#adaaad] opacity-60 hover:text-[#8B5CF6] transition-all duration-300" href="#">
+<span class="material-symbols-outlined">speed</span>
+<span class="font-['Inter'] text-[10px] font-semibold tracking-tight">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#8B5CF6] bg-[#8B5CF6]/10 rounded-full px-4 py-2 scale-110 duration-200 ease-out" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">fitness_center</span>
+<span class="font-['Inter'] text-[10px] font-semibold tracking-tight">Workouts</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#adaaad] opacity-60 hover:text-[#8B5CF6] transition-all duration-300" href="#">
+<span class="material-symbols-outlined">insights</span>
+<span class="font-['Inter'] text-[10px] font-semibold tracking-tight">Stats</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#adaaad] opacity-60 hover:text-[#8B5CF6] transition-all duration-300" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span class="font-['Inter'] text-[10px] font-semibold tracking-tight">Social</span>
+</a>
+</nav>
+</body></html>

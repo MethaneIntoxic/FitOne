@@ -113,6 +113,7 @@ function defaultSettings() {
     weightUnit: "kg",
     measureUnit: "cm",
     darkMode: true,
+    experienceLevel: "beginner",
     bodyGoal: "maintain",
     localOnlyMode: true,
     localOnlyStrictMode: true,
@@ -128,6 +129,20 @@ function defaultSettings() {
     socialEnabled: false,
     disableCooldownSuggestions: false,
     gyms: [],
+    // W15.1 Profile Identity
+    displayName: "",
+    bio: "",
+    avatar: "",
+    age: "",
+    height: "",
+    // W16 Workout Settings
+    defaultRestTime: 90,
+    plateSystem: "20kg",
+    autoLock: false,
+    autoAdvance: false,
+    focusMode: false,
+    voiceCountdown: false,
+    pushNotifications: false,
   };
 }
 

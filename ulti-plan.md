@@ -2,7 +2,7 @@
 
 ## 1) Vibe Translation
 
-Goal: Continue wireframe-driven implementation in FitOne with W5.4 (Execution Protocol / Form Tips) as the immediate target, while preserving the current Kinetic Obsidian UX and local-only architecture.
+Goal: Continue wireframe-driven implementation in FitOne with full redesign Phase R completed (R1, R2, R3 complete) and Phase W function-level roadmap as the immediate target, while preserving the current Kinetic Obsidian UX and local-only architecture.
 
 Chosen stack (already established in repo):
 - Frontend: Vanilla JavaScript SPA
@@ -60,7 +60,13 @@ Current synced checkpoint (from `todo.md`):
 - W5.3 complete
 - W5.4 complete
 - W5.5 complete
-- W5.6 next target
+- W5.6 complete
+- W6.1 complete
+- W6.2 complete
+- R1 complete
+- R2 complete
+- R3 complete
+- Phase W next target
 
 ## 4) DO NOT List
 
@@ -68,7 +74,7 @@ Current synced checkpoint (from `todo.md`):
 - Do not regress W5.1/W5.2 modal behavior (back, close overlay, PB, last session)
 - Do not introduce paid APIs, backend dependencies, or new external services
 - Do not alter existing data keys in localStorage in a breaking way
-- Do not restyle global components outside exercise-detail scope
+- Do not restyle unrelated flows outside the currently targeted panel parity slice
 - Do not add placeholder TODO code; all logic must be complete and executable
 
 ## 5) Delegation Strategy

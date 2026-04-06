@@ -6,14 +6,34 @@
 function refreshAnalytics() {
   const activeSubTab = document.querySelector("#panel-analytics .sub-tab.active");
   if (activeSubTab) refreshSubTab(activeSubTab.dataset.subtab);
+
+  const timeRangeSel = $("statsTimeRange");
+  if (timeRangeSel && !timeRangeSel.dataset.bound) {
+    timeRangeSel.dataset.bound = "true";
+    timeRangeSel.addEventListener("change", () => refreshSubTab("analytics-performance"));
+  }
 }
 
 function refreshSubTab(sub) {
+  if (sub === "analytics-performance") drawPerformanceAnalytics();
   if (sub === "analytics-calories") drawCalorieChart();
   if (sub === "analytics-weight") drawWeightChart();
   if (sub === "analytics-workouts") drawWorkoutChart();
   if (sub === "analytics-timing") refreshMealTiming();
   if (sub === "analytics-tdee") refreshTDEE();
+}
+
+function drawPerformanceAnalytics() {
+  const timeRange = $("statsTimeRange") ? $("statsTimeRange").value : "3m"; // 3m, 6m, 1y
+  let daysBack = 90;
+  if (timeRange === "6m") daysBack = 180;
+  if (timeRange === "1y") daysBack = 365;
+
+  const workouts = loadData(KEYS.workouts);
+  
+  drawPerformanceTonnage(workouts, daysBack);
+  drawPerformanceConsistency(workouts);
+  drawPerformancePRs();
 }
 
 // ========== CALORIE CHART ==========
@@ -379,4 +399,157 @@ function initAnalyticsResize() {
       if (activeTab && activeTab.dataset.tab === "analytics") refreshAnalytics();
     }, 250);
   });
+}
+
+// ========== W9 STATS HUB V2 IMPLEMENTATIONS ==========
+
+function drawPerformanceTonnage(workouts, daysBack) {
+  const chartEl = $("chartTonnage");
+  if (!chartEl) return;
+  
+  const endD = new Date();
+  const startD = new Date();
+  startD.setDate(endD.getDate() - daysBack);
+  
+  const weeks = [];
+  const vals = [];
+  
+  let currentStart = new Date(startD);
+  while (currentStart <= endD) {
+     const currentEnd = new Date(currentStart);
+     currentEnd.setDate(currentEnd.getDate() + 6);
+     
+     const startStr = localDateStr(currentStart);
+     const endStr = localDateStr(currentEnd);
+     
+     let sum = 0;
+     workouts.forEach(w => {
+       if (w.date >= startStr && w.date <= endStr) {
+          (w.exercises||[]).forEach(ex => {
+             (ex.sets||[]).forEach(s => sum += (parseFloat(s.weight)||0)*(parseInt(s.reps)||0));
+          });
+       }
+     });
+     weeks.push(currentStart.toLocaleString('default', {month:'short', day:'numeric'}));
+     vals.push(sum / 1000); // Tons
+     
+     currentStart.setDate(currentStart.getDate() + 7);
+  }
+  
+  let totalTonnage = vals.reduce((a, b) => a + b, 0);
+  $("statsTonnageVal").textContent = totalTonnage.toFixed(1) + " TONS";
+  
+  const prevStart = new Date(startD); prevStart.setDate(prevStart.getDate() - daysBack);
+  const prevEnd = new Date(startD); prevEnd.setDate(prevEnd.getDate() - 1);
+  const psStr = localDateStr(prevStart); const peStr = localDateStr(prevEnd);
+  let prevSum = 0;
+  workouts.forEach(w => {
+    if (w.date >= psStr && w.date <= peStr) {
+      (w.exercises||[]).forEach(ex => {
+         (ex.sets||[]).forEach(s => prevSum += (parseFloat(s.weight)||0)*(parseInt(s.reps)||0));
+      });
+    }
+  });
+  prevSum /= 1000;
+  
+  const trendEl = $("statsTonnageTrend");
+  if (prevSum === 0) {
+     trendEl.textContent = "Baseline Established";
+     trendEl.style.color = "var(--text2)";
+  } else {
+     const pct = ((totalTonnage - prevSum) / prevSum) * 100;
+     trendEl.textContent = (pct>0?"+":"") + pct.toFixed(1) + "% vs prev " + (daysBack) + "d";
+     trendEl.style.color = pct >= 0 ? "var(--success)" : "var(--danger)";
+  }
+  
+  if (typeof drawLineChart === 'function') drawLineChart(chartEl, weeks, vals, "var(--primary)"); 
+}
+
+function drawPerformanceConsistency(workouts) {
+  const wrap = $("statsConsistencyHeatmap");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  
+  const endD = new Date();
+  const daysHash = {};
+  workouts.forEach(w => { daysHash[w.date] = (daysHash[w.date]||0) + 1; });
+  
+  let daysMatched = 0;
+  let activeWeeks = new Set();
+  
+  for (let c = 11; c >= 0; c--) {
+     for (let r = 0; r < 7; r++) {
+       const d = new Date();
+       d.setDate(endD.getDate() - (c * 7 + (6 - r))); 
+       
+       const dStr = localDateStr(d);
+       const block = document.createElement("div");
+       block.style.width = "12px";
+       block.style.height = "12px";
+       block.style.borderRadius = "2px";
+       block.title = dStr;
+       
+       if (daysHash[dStr]) {
+          const v = daysHash[dStr];
+          daysMatched++;
+          activeWeeks.add(c);
+          if (v > 2) block.style.background = "rgba(187,134,252,1)";
+          else if (v === 2) block.style.background = "rgba(187,134,252,0.6)";
+          else block.style.background = "rgba(187,134,252,0.3)";
+       } else {
+          block.style.background = "rgba(255,255,255,0.05)";
+       }
+       wrap.appendChild(block);
+     }
+  }
+  
+  const pct = Math.round((activeWeeks.size / 12) * 100);
+  $("statsConsistencyVal").textContent = pct + "% Target Consistency (12W)";
+}
+
+function drawPerformancePRs() {
+  const container = $("statsPRCards");
+  if (!container) return;
+  const workouts = loadData(KEYS.workouts);
+  
+  const maxes = {};
+  workouts.forEach(w => {
+    (w.exercises||[]).forEach(ex => {
+       (ex.sets||[]).forEach(s => {
+          const wt = parseFloat(s.weight)||0;
+          if (wt > 0) {
+             const key = (ex.name||"").trim().toLowerCase();
+             if (key) {
+               if (!maxes[key] || wt > maxes[key].wt) {
+                  maxes[key] = { wt: wt, date: w.date };
+               }
+             }
+          }
+       });
+    });
+  });
+  
+  const prs = Object.keys(maxes).map(k => ({ name: k, wt: maxes[k].wt, date: maxes[k].date }));
+  prs.sort((a,b) => b.wt - a.wt);
+  
+  if (!prs.length) return;
+  
+  container.innerHTML = prs.slice(0, 5).map(pr => {
+    const dDate = new Date(pr.date);
+    const ageDays = (new Date() - dDate) / (1000 * 3600 * 24);
+    const badge = ageDays <= 14 
+       ? '<span style="background:rgba(187,134,252,0.2);color:var(--primary);padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700">NEW HIGH</span>'
+       : '<span style="background:rgba(255,255,255,0.1);color:var(--text2);padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700">STABLE</span>';
+       
+    return '<div class="card" style="padding:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">' +
+             '<div>' +
+               '<div style="font-size:14px;font-weight:600;margin-bottom:4px;text-transform:capitalize">' + escAttr(pr.name) + '</div>' +
+               '<div style="font-size:12px;color:var(--text2)">' + fmtDate(pr.date) + '</div>' + 
+             '</div>' + 
+             '<div style="text-align:right">' + 
+               '<div style="font-size:20px;font-weight:700;color:var(--primary)">' + pr.wt + ' <span style="font-size:12px;color:var(--text2)">' + (settings.weightUnit||'kg') + '</span></div>' +
+               '<div style="margin-top:4px">' + badge + '</div>' +
+             '</div>' +
+           '</div>';
+  }).join('');
 }

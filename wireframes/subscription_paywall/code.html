@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Neon Pulse PRO - Kinetic Obsidian</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0e0e10;
+        }
+        .font-headline {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        /* Custom scrollbar for deep dark aesthetics */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0e0e10; }
+        ::-webkit-scrollbar-thumb { background: #1f1f22; border-radius: 10px; }
+    </style>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "error-container": "#b92902",
+                    "inverse-on-surface": "#565457",
+                    "surface-container-high": "#1f1f22",
+                    "primary": "#8B5CF6", // Updated to vibrant purple
+                    "surface-container-lowest": "#000000",
+                    "primary-fixed-dim": "#7C3AED",
+                    "outline-variant": "#48474a",
+                    "tertiary-fixed": "#2ff801",
+                    "on-secondary": "#004d57",
+                    "on-primary-fixed-variant": "#2e1065",
+                    "primary-dim": "#7c3aed",
+                    "on-primary-fixed": "#ffffff",
+                    "on-surface": "#f9f5f8",
+                    "secondary-fixed": "#26e6ff",
+                    "outline": "#767577",
+                    "background": "#0e0e10",
+                    "on-error": "#450900",
+                    "error-dim": "#d53d18",
+                    "tertiary": "#8eff71",
+                    "surface-bright": "#2c2c2f",
+                    "on-tertiary-fixed": "#064200",
+                    "on-secondary-container": "#e8fbff",
+                    "primary-fixed": "#a78bfa",
+                    "inverse-surface": "#fcf8fb",
+                    "surface-container": "#19191c",
+                    "tertiary-container": "#2ff801",
+                    "secondary": "#00e3fd",
+                    "on-background": "#f9f5f8",
+                    "surface-container-highest": "#262528",
+                    "on-tertiary-fixed-variant": "#0d6200",
+                    "inverse-primary": "#6d28d9",
+                    "on-secondary-fixed-variant": "#005964",
+                    "secondary-fixed-dim": "#00d7f0",
+                    "surface-variant": "#262528",
+                    "on-error-container": "#ffd2c8",
+                    "tertiary-fixed-dim": "#2be800",
+                    "primary-container": "#a78bfa",
+                    "on-tertiary-container": "#0b5800",
+                    "on-tertiary": "#0d6100",
+                    "on-primary": "#ffffff",
+                    "error": "#ff7351",
+                    "on-secondary-fixed": "#003a42",
+                    "on-surface-variant": "#adaaad",
+                    "on-primary-container": "#2e1065",
+                    "tertiary-dim": "#2be800",
+                    "surface-container-low": "#131315",
+                    "secondary-container": "#006875",
+                    "surface": "#0e0e10",
+                    "surface-dim": "#0e0e10",
+                    "surface-tint": "#8B5CF6",
+                    "secondary-dim": "#00d4ec"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface selection:bg-primary selection:text-on-primary min-h-screen flex flex-col">
+<!-- Header / TopAppBar -->
+<header class="bg-[#0e0e10]/80 backdrop-blur-xl flex justify-between items-center w-full px-6 h-16 fixed top-0 z-50">
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant active:scale-95 duration-200">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+<span class="font-headline font-bold tracking-tighter text-2xl font-black italic text-primary tracking-widest uppercase">KINETIC</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container overflow-hidden">
+<img alt="User" data-alt="close up portrait of a fit athletic woman with a confident expression in a dark high-tech gym environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXBzuSowdFyrXpTfKi2FOGur855Ic-CEtVC0AFxkHMipRsUM1aUL7PxtuxqHrLBzIdjszl5tVZokzg0khb9-MfHiZu19xKLCFvG6CmoY-cX-IJJYjE0LEbTjlihe2ylA7JGJNutTNXi0mLCZwm47xBQkciTMOZuXXdnC15r85vU9YRCkfo4EYew6RWh3u_6VNRXBkesnWn8R6yV1ncHHl5fetMj7e5Wz0NXvrF5U05Em972OYzfeFYcyJWTRNbt0lNtmhp8A4Grak6"/>
+</div>
+</div>
+<div class="bg-gradient-to-b from-[#19191c] to-transparent h-px w-full opacity-10 absolute bottom-0 left-0"></div>
+</header>
+<main class="flex-grow pt-16 pb-24 px-4 sm:px-8 max-w-7xl mx-auto w-full">
+<!-- Hero Section -->
+<section class="mt-8 mb-12 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+<div class="lg:col-span-7 relative">
+<div class="absolute -top-12 -left-12 w-64 h-64 bg-primary/10 rounded-full blur-[120px]"></div>
+<h1 class="font-headline text-5xl md:text-7xl font-bold tracking-tighter leading-[0.9] mb-6">
+                NEON PULSE <br/>
+<span class="text-primary italic">PRO</span>
+</h1>
+<p class="text-on-surface-variant text-lg md:text-xl max-w-lg mb-8 leading-relaxed">
+                Unlock the absolute peak of your performance. Precise data meets elite training tools for the modern athlete.
+            </p>
+<!-- Benefits Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="bg-surface-container-low p-6 rounded-xl border-l-2 border-primary/40">
+<span class="material-symbols-outlined text-primary mb-3" data-icon="analytics">analytics</span>
+<h3 class="font-headline text-lg font-bold mb-1">Advanced Analytics</h3>
+<p class="text-sm text-on-surface-variant">Real-time biometrics and performance trend forecasting.</p>
+</div>
+<div class="bg-surface-container-low p-6 rounded-xl border-l-2 border-secondary/40">
+<span class="material-symbols-outlined text-secondary mb-3" data-icon="architecture">architecture</span>
+<h3 class="font-headline text-lg font-bold mb-1">Custom Routine Builder</h3>
+<p class="text-sm text-on-surface-variant">Precision-engineered workouts tailored to your goals.</p>
+</div>
+<div class="bg-surface-container-low p-6 rounded-xl border-l-2 border-tertiary/40">
+<span class="material-symbols-outlined text-tertiary mb-3" data-icon="all_inclusive">all_inclusive</span>
+<h3 class="font-headline text-lg font-bold mb-1">Unlimited Saved Workouts</h3>
+<p class="text-sm text-on-surface-variant">Your entire library, synchronized across all devices.</p>
+</div>
+<div class="bg-surface-container-low p-6 rounded-xl border-l-2 border-primary-fixed-dim/40">
+<span class="material-symbols-outlined text-primary-fixed-dim mb-3" data-icon="block">block</span>
+<h3 class="font-headline text-lg font-bold mb-1">Ad-Free Experience</h3>
+<p class="text-sm text-on-surface-variant">Focus purely on the grind without interruptions.</p>
+</div>
+</div>
+</div>
+<div class="lg:col-span-5 relative group">
+<div class="absolute -inset-1 bg-gradient-to-r from-primary to-secondary rounded-xl blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
+<div class="relative bg-surface-container rounded-xl overflow-hidden shadow-2xl">
+<img alt="Training" class="w-full h-[500px] object-cover opacity-60 grayscale hover:grayscale-0 transition-all duration-700" data-alt="dramatic low angle shot of a muscular person lifting weights in a dark gym with sharp purple and cyan lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDANfMKIcqL1pYs3Wthcy5UzXnFrInffWpR2BLUyCzTD97EZegq43yPuceMRhOekhe_9dxMtn3-vRfI_KflxWC4c6S4iXYgsuczJuWiPFedfzNxx8N0uJLRdiq6V3QWUnpRIyfZ6oTQP0XL2j4BnXOXQ7DnXxXF_j4ve0DE5qIB_ztCvblG16D7LBZPBREGC7dfu3SX7SGZWHpF4SuHHjjwpOzgysWkxN--c68wBATTXDZrfL2beI9GMyxAUD2bRxfPZTWG60wHiMLJ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container via-transparent to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-8 w-full">
+<div class="flex items-center gap-2 mb-4">
+<span class="bg-tertiary/10 text-tertiary px-3 py-1 rounded text-[10px] font-bold tracking-widest uppercase">Live Metrics</span>
+</div>
+<div class="space-y-3">
+<div class="h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[75%] shadow-[0_0_10px_#8B5CF6]"></div>
+</div>
+<div class="flex justify-between text-[10px] font-headline font-bold text-on-surface-variant tracking-widest">
+<span>POWER OUTPUT</span>
+<span>880 WATTS</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Pricing Section -->
+<section class="max-w-4xl mx-auto">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Annual Plan -->
+<div class="bg-surface-container-high p-8 rounded-xl border border-outline-variant/20 relative overflow-hidden flex flex-col justify-between">
+<div class="absolute top-0 right-0 bg-primary text-on-primary text-[10px] font-bold px-4 py-1 rounded-bl-lg tracking-widest uppercase">Save 40%</div>
+<div>
+<h4 class="font-headline text-sm font-bold text-on-surface-variant mb-1 uppercase tracking-widest">Annual Access</h4>
+<div class="flex items-baseline gap-2 mb-6">
+<span class="text-4xl font-headline font-bold">$99.99</span>
+<span class="text-on-surface-variant text-sm">/ year</span>
+</div>
+<ul class="space-y-4 mb-8">
+<li class="flex items-center gap-3 text-sm">
+<span class="material-symbols-outlined text-tertiary text-lg" data-icon="check_circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            Equivalent to $8.33/mo
+                        </li>
+<li class="flex items-center gap-3 text-sm">
+<span class="material-symbols-outlined text-tertiary text-lg" data-icon="check_circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            Priority 1:1 Support
+                        </li>
+</ul>
+</div>
+<button class="w-full py-4 rounded-lg bg-gradient-to-r from-primary to-primary-fixed-dim text-on-primary font-bold tracking-widest uppercase text-xs hover:shadow-[0_0_20px_rgba(139,92,246,0.4)] active:scale-95 transition-all duration-200">
+                    GO PRO ANNUAL
+                </button>
+</div>
+<!-- Monthly Plan -->
+<div class="bg-surface-container p-8 rounded-xl border border-outline-variant/10 flex flex-col justify-between">
+<div>
+<h4 class="font-headline text-sm font-bold text-on-surface-variant mb-1 uppercase tracking-widest">Monthly Pulse</h4>
+<div class="flex items-baseline gap-2 mb-6">
+<span class="text-4xl font-headline font-bold">$14.99</span>
+<span class="text-on-surface-variant text-sm">/ month</span>
+</div>
+<ul class="space-y-4 mb-8">
+<li class="flex items-center gap-3 text-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-lg" data-icon="check_circle">check_circle</span>
+                            Full Access to all features
+                        </li>
+<li class="flex items-center gap-3 text-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-lg" data-icon="check_circle">check_circle</span>
+                            Cancel anytime
+                        </li>
+</ul>
+</div>
+<button class="w-full py-4 rounded-lg border border-primary/20 hover:bg-primary/10 text-primary font-bold tracking-widest uppercase text-xs active:scale-95 transition-all duration-200">
+                    START MONTHLY
+                </button>
+</div>
+</div>
+<p class="text-center mt-12 text-[10px] text-on-surface-variant uppercase tracking-[0.2em] leading-loose">
+            Secure checkout • Restore purchases • Terms of Service • Privacy Policy
+        </p>
+</section>
+</main>
+<!-- Floating Action for Quick Close -->
+<div class="fixed top-6 right-6 z-[60] md:hidden">
+<button class="bg-surface-container-highest/80 backdrop-blur shadow-xl w-10 h-10 rounded-full flex items-center justify-center text-on-surface active:scale-90 transition-transform">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</div>
+</body></html>

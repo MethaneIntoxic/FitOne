@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed": "#064200",
+                        "on-tertiary": "#0d6100",
+                        "surface-container": "#19191c",
+                        "background": "#0e0e10",
+                        "error": "#ff7351",
+                        "secondary-dim": "#00d4ec",
+                        "surface-container-highest": "#262528",
+                        "on-error": "#450900",
+                        "tertiary-fixed-dim": "#2be800",
+                        "tertiary": "#8eff71",
+                        "primary": "#8B5CF6",
+                        "surface-container-high": "#1f1f22",
+                        "outline": "#767577",
+                        "primary-dim": "#7C3AED",
+                        "outline-variant": "#48474a",
+                        "secondary": "#00e3fd",
+                        "on-tertiary-fixed-variant": "#0d6200",
+                        "on-secondary-container": "#e8fbff",
+                        "surface-container-low": "#131315",
+                        "on-secondary": "#004d57",
+                        "on-primary-fixed": "#000000",
+                        "tertiary-dim": "#2be800",
+                        "error-dim": "#d53d18",
+                        "tertiary-container": "#2ff801",
+                        "tertiary-fixed": "#2ff801",
+                        "surface-tint": "#8B5CF6",
+                        "primary-fixed-dim": "#A78BFA",
+                        "error-container": "#b92902",
+                        "surface": "#0e0e10",
+                        "inverse-surface": "#fcf8fb",
+                        "surface-dim": "#0e0e10",
+                        "on-background": "#f9f5f8",
+                        "inverse-primary": "#4C1D95",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#7C3AED",
+                        "on-surface-variant": "#adaaad",
+                        "inverse-on-surface": "#565457",
+                        "on-secondary-fixed": "#003a42",
+                        "on-primary-fixed-variant": "#2E1065",
+                        "on-secondary-fixed-variant": "#005964",
+                        "on-primary-container": "#ffffff",
+                        "surface-bright": "#2c2c2f",
+                        "secondary-fixed-dim": "#00d7f0",
+                        "primary-fixed": "#A78BFA",
+                        "secondary-container": "#006875",
+                        "on-surface": "#f9f5f8",
+                        "surface-variant": "#262528",
+                        "surface-container-lowest": "#000000",
+                        "on-tertiary-container": "#0b5800",
+                        "secondary-fixed": "#26e6ff",
+                        "on-error-container": "#ffd2c8"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .kinetic-gradient {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(124, 58, 237, 0.05) 100%);
+        }
+        .ghost-border {
+            border: 1px solid rgba(72, 71, 74, 0.12);
+        }
+        .glow-active:focus-within {
+            border-color: rgba(139, 92, 246, 0.4);
+            box-shadow: 0 0 12px rgba(139, 92, 246, 0.1);
+        }
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus {
+            -webkit-text-fill-color: #f9f5f8;
+            -webkit-box-shadow: 0 0 0px 1000px #131315 inset;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body min-h-screen flex items-center justify-center p-6 selection:bg-primary selection:text-on-primary">
+<!-- Auth Background Canvas -->
+<div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+<div class="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] rounded-full bg-primary/5 blur-[120px]"></div>
+<div class="absolute -bottom-[10%] -right-[5%] w-[50%] h-[50%] rounded-full bg-secondary/5 blur-[100px]"></div>
+</div>
+<!-- Auth Container -->
+<main class="relative z-10 w-full max-w-[440px] flex flex-col gap-8">
+<!-- Brand Identity -->
+<header class="flex flex-col items-center md:items-start gap-2">
+<h1 class="text-4xl md:text-5xl font-headline font-black tracking-tighter text-primary">
+                NEON PULSE
+            </h1>
+<p class="text-on-surface-variant font-label text-sm tracking-wide uppercase">
+                High-Performance Kineticism
+            </p>
+</header>
+<!-- Form Card -->
+<section class="bg-surface-container p-8 md:p-10 rounded-lg shadow-[0_40px_80px_rgba(0,0,0,0.4)] relative overflow-hidden">
+<!-- Glass Overlay Subtle Texture -->
+<div class="absolute inset-0 kinetic-gradient pointer-events-none"></div>
+<div class="relative z-10 flex flex-col gap-8">
+<!-- Toggle Tab Switcher -->
+<nav class="flex p-1 bg-surface-container-lowest rounded-md">
+<button class="flex-1 py-2 text-sm font-label font-semibold text-on-primary bg-primary rounded-sm transition-all duration-300">
+                        Log In
+                    </button>
+<button class="flex-1 py-2 text-sm font-label font-semibold text-on-surface-variant hover:text-on-surface transition-colors">
+                        Sign Up
+                    </button>
+</nav>
+<!-- Input Fields -->
+<form class="flex flex-col gap-5">
+<div class="flex flex-col gap-2">
+<label class="text-[10px] font-label font-bold uppercase tracking-widest text-on-surface-variant ml-1" for="email">Email Address</label>
+<div class="group relative flex items-center bg-surface-container-low rounded-lg transition-all duration-200 border border-transparent glow-active">
+<span class="material-symbols-outlined absolute left-4 text-on-surface-variant group-focus-within:text-primary transition-colors" data-icon="mail">mail</span>
+<input class="w-full bg-transparent border-none py-4 pl-12 pr-4 text-sm focus:ring-0 placeholder:text-outline/50 font-body" id="email" placeholder="name@example.com" type="email"/>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-end ml-1">
+<label class="text-[10px] font-label font-bold uppercase tracking-widest text-on-surface-variant" for="password">Password</label>
+<a class="text-[10px] font-label font-bold uppercase tracking-widest text-secondary hover:text-secondary-dim transition-colors" href="#">Forgot?</a>
+</div>
+<div class="group relative flex items-center bg-surface-container-low rounded-lg transition-all duration-200 border border-transparent glow-active">
+<span class="material-symbols-outlined absolute left-4 text-on-surface-variant group-focus-within:text-primary transition-colors" data-icon="lock">lock</span>
+<input class="w-full bg-transparent border-none py-4 pl-12 pr-12 text-sm focus:ring-0 placeholder:text-outline/50 font-body" id="password" placeholder="••••••••" type="password"/>
+<button class="absolute right-4 text-on-surface-variant hover:text-on-surface transition-colors" type="button">
+<span class="material-symbols-outlined text-xl" data-icon="visibility">visibility</span>
+</button>
+</div>
+</div>
+<!-- CTA Button -->
+<button class="mt-4 w-full bg-primary hover:bg-primary-container text-on-primary font-label font-bold py-4 rounded-lg flex items-center justify-center gap-2 transition-all duration-300 active:scale-95 shadow-[0_4px_20px_rgba(139,92,246,0.2)]" type="submit">
+<span>ACCESS TERMINAL</span>
+<span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</form>
+<!-- Divider -->
+<div class="flex items-center gap-4">
+<div class="h-[1px] flex-1 bg-outline-variant/10"></div>
+<span class="text-[10px] font-label font-bold text-on-surface-variant uppercase tracking-widest">or continue with</span>
+<div class="h-[1px] flex-1 bg-outline-variant/10"></div>
+</div>
+<!-- Social Logins -->
+<div class="grid grid-cols-2 gap-4">
+<button class="group flex items-center justify-center gap-3 py-3 px-4 rounded-lg bg-surface-container-high border border-outline-variant/10 hover:bg-surface-container-highest transition-all duration-200 active:scale-95">
+<img alt="Apple logo" class="w-4 h-4 invert" data-alt="minimalist white apple logo on dark background for high tech authentication" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDu8nR66Ri-1qvFAFhA_UGXy6hTY2FT0Jbse7tVRPR0Zyfn0pOYsS-6_whDX128XKuBQ0lMECS7d1YDYmm4kSKuQE4N-zOOndLkQjrMJS3MeOLLFuxItNj9uTkX1TK4DdkVeas-ZYf7CgWmDl_h5NZhGBaWvak4HkUTXcIAFd1H7JLiFPSkExQywBYTO50B2WNqqCpujlIcUwlJ2DZ_hiQJikrI_Gx3eedF7TaFosR2hpBYPeyfcaqaUUO2zdNJZjh_IXUVENesiye7"/>
+<span class="text-xs font-label font-semibold">APPLE</span>
+</button>
+<button class="group flex items-center justify-center gap-3 py-3 px-4 rounded-lg bg-surface-container-high border border-outline-variant/10 hover:bg-surface-container-highest transition-all duration-200 active:scale-95">
+<img alt="Google logo" class="w-4 h-4" data-alt="clean multi-color google icon for third party authentication platform" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDIrVUQrn8LjZGqwpv2YciNJ8e6nxcEOhVHFoViFb5v95_wA8Oj27NbEnZD2-JlehW4ZOa0YSWI6rbH7dOueENkZOWwavtVFCBmxzQJth116iXWr261kyR6JeaxRG749Vy3xmLNeAq5lA_aZVuf6Et0yr6fSdBbVAc2K26o_AHKhtdujhfYHO0UzsmgRTAxaWkjUka0470HlsYqOtWsgwzP0p5cDnJLFZMCNq18DTaD75Z92QAN8SWIoU-Z2eathAVgnVmCE82FTr1L"/>
+<span class="text-xs font-label font-semibold">GOOGLE</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Footer -->
+<footer class="flex flex-col items-center gap-4">
+<p class="text-xs text-on-surface-variant font-label text-center">
+                By entering, you agree to our 
+                <a class="text-on-surface hover:text-primary underline decoration-primary/30 underline-offset-4 transition-colors" href="#">Terms of Service</a> 
+                and 
+                <a class="text-on-surface hover:text-primary underline decoration-primary/30 underline-offset-4 transition-colors" href="#">Privacy Policy</a>.
+            </p>
+<!-- Security Badge -->
+<div class="flex items-center gap-2 px-3 py-1 bg-surface-container-low rounded-full border border-outline-variant/5">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="verified_user">verified_user</span>
+<span class="text-[10px] font-label font-bold text-primary uppercase tracking-tighter">Encrypted Kinetic Link</span>
+</div>
+</footer>
+</main>
+<!-- Side Graphic (Desktop Only) -->
+<aside class="hidden lg:flex fixed right-0 top-0 bottom-0 w-1/3 bg-surface-container-low overflow-hidden items-center justify-center">
+<div class="absolute inset-0 opacity-20">
+<img class="w-full h-full object-cover grayscale brightness-50" data-alt="abstract digital kinetic waves flowing with glowing particles and depth of field in deep obsidian tones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHBhtwlI3kKemwtY3YnsPBlDbkQHiqqZmJquHeOZmg6MK84A0nS4tyEmUytlNGmR6mburK116ilNgpMpBA-T0-TdtWGkHVyFDhRySDYsJMXTbE5BunoaWO_eIS3XpVrW_g7NP5qrzPUBiPUsorpUWrrWbulQ7WtmFmzMElBPdgZF_03x1X-IXCDyzdsQR3uqY6hOcsGh6tmCIggvIDsGMV9oI6e6iAh0XuH7QzUE4l1IL7J479HKkHEa7IW-dSB0dQKsoJDzAlSn2v"/>
+<div class="absolute inset-0 bg-gradient-to-r from-surface via-transparent to-transparent"></div>
+</div>
+<div class="relative z-10 p-12 flex flex-col gap-6">
+<div class="w-12 h-1 bg-primary"></div>
+<h2 class="text-5xl font-headline font-bold leading-tight">
+                THE FUTURE<br/>
+                IS <span class="text-secondary">ACCELERATING</span>
+</h2>
+<p class="text-on-surface-variant max-w-sm leading-relaxed">
+                Join the network of high-performance athletes and data enthusiasts. Experience biometric tracking evolved into cinematic visualization.
+            </p>
+<div class="flex flex-col gap-4 mt-8">
+<div class="flex items-center gap-4">
+<span class="w-8 h-[1px] bg-outline-variant"></span>
+<span class="text-[10px] font-label font-bold tracking-[0.2em] text-on-surface-variant">ESTABLISHED 2024</span>
+</div>
+</div>
+</div>
+</aside>
+</body></html>

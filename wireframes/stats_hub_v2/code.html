@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary": "#2b0065",
+                        "surface": "#060e20",
+                        "surface-container-highest": "#192540",
+                        "inverse-on-surface": "#4d556b",
+                        "on-tertiary-fixed-variant": "#463a78",
+                        "error-container": "#a70138",
+                        "primary-fixed": "#ae8dff",
+                        "on-primary-container": "#2b006e",
+                        "tertiary-container": "#c3b4fc",
+                        "on-tertiary": "#473a79",
+                        "primary-fixed-dim": "#a27cff",
+                        "on-secondary-fixed-variant": "#6514d6",
+                        "tertiary-fixed": "#c3b4fc",
+                        "outline": "#6d758c",
+                        "on-error-container": "#ffb2b9",
+                        "on-tertiary-container": "#3d306f",
+                        "surface-tint": "#ba9eff",
+                        "on-background": "#dee5ff",
+                        "secondary-dim": "#8a4cfc",
+                        "on-surface": "#dee5ff",
+                        "surface-container": "#0f1930",
+                        "inverse-surface": "#faf8ff",
+                        "on-primary": "#39008c",
+                        "tertiary-fixed-dim": "#b6a7ee",
+                        "error": "#ff6e84",
+                        "secondary-fixed-dim": "#d0b8ff",
+                        "inverse-primary": "#6e3bd7",
+                        "outline-variant": "#40485d",
+                        "on-secondary-container": "#e1d0ff",
+                        "secondary-fixed": "#dcc9ff",
+                        "surface-container-high": "#141f38",
+                        "surface-container-low": "#091328",
+                        "surface-dim": "#060e20",
+                        "surface-bright": "#1f2b49",
+                        "on-secondary-fixed": "#430097",
+                        "on-tertiary-fixed": "#281a58",
+                        "primary": "#ba9eff",
+                        "background": "#060e20",
+                        "secondary-container": "#6001d1",
+                        "surface-variant": "#192540",
+                        "on-primary-fixed": "#000000",
+                        "on-primary-fixed-variant": "#370086",
+                        "on-surface-variant": "#a3aac4",
+                        "surface-container-lowest": "#000000",
+                        "primary-container": "#ae8dff",
+                        "on-error": "#490013",
+                        "tertiary": "#d1c4ff",
+                        "error-dim": "#d73357",
+                        "tertiary-dim": "#b6a7ee",
+                        "primary-dim": "#8455ef",
+                        "secondary": "#af88ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Space Grotesk"],
+                        "label": ["Space Grotesk"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: linear-gradient(135deg, rgba(25, 37, 64, 0.4) 0%, rgba(9, 19, 40, 0.4) 100%);
+            backdrop-filter: blur(24px);
+        }
+        .kinetic-pulse {
+            position: relative;
+        }
+        .kinetic-pulse::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid #8B5CF6;
+            animation: pulse-ring 2s infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(2.5); opacity: 0; }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body selection:bg-primary-dim selection:text-white min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="bg-[#060e20] dark:bg-[#060e20] docked full-width top-0 tonal-shift bg-slate-900/50 flat no shadows flex justify-between items-center w-full px-6 py-4 sticky z-50">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest border border-outline-variant/15 overflow-hidden">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="close-up portrait of an athletic user with dramatic purple neon lighting profile picture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8Dcei1jMSolC3YxoZ2L2xG9_nuNAQ6Kij1pCuPbQXb62l5z9s-gV8MjINlnbeqPOeBVg_Gm0_uZvAe7ZvMMXtHsaQ172GBhdSOLWK-Iik3b-hpB--lIpeXluLGmiZHG3BoMABu3Q67tf1eYQjjjgu_LPDFzsPirFRu9mbj-YYVTA126k_ysO1CyrFxzf0kF6xZyMRsn0IP9Yr9kuezbvPHETEvMt1dJEPaI0OklQx_IF4Hg6hUTstUF3Abmqo8zeYYs72p7z8YmJq"/>
+</div>
+<h1 class="font-['Space_Grotesk'] tracking-tighter text-on-surface-variant text-2xl font-bold tracking-tighter text-white uppercase">NEON PULSE</h1>
+</div>
+<div class="flex items-center">
+<button class="material-symbols-outlined text-violet-500 dark:text-violet-400 text-2xl hover:bg-violet-500/10 transition-colors rounded-full p-2" data-icon="notifications">notifications</button>
+</div>
+</header>
+<main class="max-w-5xl mx-auto px-6 py-8 space-y-10">
+<!-- Header & Range Selector -->
+<section class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div>
+<h2 class="text-on-surface-variant font-headline text-sm uppercase tracking-[0.2em] mb-1">Performance Analytics</h2>
+<div class="text-4xl font-bold tracking-tighter text-white">Stats Hub</div>
+</div>
+<div class="inline-flex bg-surface-container-low p-1.5 rounded-full border border-outline-variant/10">
+<button class="px-6 py-2 rounded-full text-xs font-bold tracking-widest uppercase transition-all duration-300 text-slate-400 hover:text-white">3 Months</button>
+<button class="px-6 py-2 rounded-full text-xs font-bold tracking-widest uppercase transition-all duration-300 bg-violet-500/20 text-violet-400">6 Months</button>
+<button class="px-6 py-2 rounded-full text-xs font-bold tracking-widest uppercase transition-all duration-300 text-slate-400 hover:text-white">1 Year</button>
+</div>
+</section>
+<!-- Main Chart: Total Tonnage -->
+<section class="glass-card rounded-lg p-8 relative overflow-hidden">
+<div class="flex justify-between items-start mb-12">
+<div>
+<h3 class="text-2xl font-bold tracking-tight text-white mb-1">Total Tonnage</h3>
+<p class="text-on-surface-variant text-sm">Cumulative volume lifted across all muscle groups</p>
+</div>
+<div class="text-right">
+<div class="text-3xl font-bold text-primary">142.5 <span class="text-xs uppercase text-on-surface-variant tracking-widest ml-1">Tons</span></div>
+<div class="text-xs text-green-400 flex items-center justify-end gap-1">
+<span class="material-symbols-outlined text-sm">trending_up</span> +12% vs last period
+                    </div>
+</div>
+</div>
+<div class="h-64 flex items-end justify-between gap-2 md:gap-4 px-2">
+<!-- Bar 1 -->
+<div class="group relative flex-1 flex flex-col items-center gap-4">
+<div class="w-full bg-gradient-to-t from-surface-container-highest to-primary-dim/30 rounded-t-sm h-[40%] transition-all duration-500 group-hover:to-primary-dim/60"></div>
+<span class="text-[10px] text-on-surface-variant uppercase tracking-tighter">Apr</span>
+</div>
+<!-- Bar 2 -->
+<div class="group relative flex-1 flex flex-col items-center gap-4">
+<div class="w-full bg-gradient-to-t from-surface-container-highest to-primary-dim/30 rounded-t-sm h-[55%] transition-all duration-500 group-hover:to-primary-dim/60"></div>
+<span class="text-[10px] text-on-surface-variant uppercase tracking-tighter">May</span>
+</div>
+<!-- Bar 3 -->
+<div class="group relative flex-1 flex flex-col items-center gap-4">
+<div class="w-full bg-gradient-to-t from-surface-container-highest to-primary-dim/30 rounded-t-sm h-[48%] transition-all duration-500 group-hover:to-primary-dim/60"></div>
+<span class="text-[10px] text-on-surface-variant uppercase tracking-tighter">Jun</span>
+</div>
+<!-- Bar 4 -->
+<div class="group relative flex-1 flex flex-col items-center gap-4">
+<div class="w-full bg-gradient-to-t from-surface-container-highest to-primary-dim/30 rounded-t-sm h-[72%] transition-all duration-500 group-hover:to-primary-dim/60"></div>
+<span class="text-[10px] text-on-surface-variant uppercase tracking-tighter">Jul</span>
+</div>
+<!-- Bar 5 -->
+<div class="group relative flex-1 flex flex-col items-center gap-4">
+<div class="w-full bg-gradient-to-t from-surface-container-highest to-primary-dim/30 rounded-t-sm h-[65%] transition-all duration-500 group-hover:to-primary-dim/60"></div>
+<span class="text-[10px] text-on-surface-variant uppercase tracking-tighter">Aug</span>
+</div>
+<!-- Bar 6 (Today - Glowing) -->
+<div class="group relative flex-1 flex flex-col items-center gap-4">
+<div class="absolute -top-12 opacity-100 transition-opacity">
+<div class="bg-primary text-on-primary-container px-2 py-1 rounded-md text-[10px] font-bold shadow-[0_0_15px_rgba(186,158,255,0.5)]">TODAY</div>
+</div>
+<div class="w-full bg-gradient-to-t from-primary-dim to-primary rounded-t-sm h-[90%] shadow-[0_0_30px_rgba(139,92,246,0.4)] relative">
+<div class="absolute inset-0 bg-white/20 animate-pulse rounded-t-sm"></div>
+</div>
+<span class="text-[10px] text-primary font-bold uppercase tracking-tighter">Sep</span>
+</div>
+</div>
+<!-- Abstract background glow -->
+<div class="absolute -bottom-24 -right-24 w-64 h-64 bg-primary/5 rounded-full blur-[100px]"></div>
+</section>
+<!-- PR Cards Grid -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Bench Press PR -->
+<div class="glass-card rounded-lg p-6 flex items-center gap-6 group hover:bg-surface-container-highest transition-all duration-500">
+<div class="w-16 h-16 rounded-2xl bg-surface-container-high flex items-center justify-center text-primary border border-primary/10 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-3xl">fitness_center</span>
+</div>
+<div class="flex-1">
+<div class="text-[10px] text-on-surface-variant uppercase tracking-[0.2em] mb-1">Personal Record</div>
+<div class="text-xl font-bold text-white mb-2">Bench Press</div>
+<div class="flex items-baseline gap-2">
+<span class="text-3xl font-extrabold text-white">125</span>
+<span class="text-xs text-on-surface-variant font-medium">KG</span>
+</div>
+</div>
+<div class="text-right">
+<div class="text-[10px] text-primary font-bold uppercase tracking-widest mb-1">New High</div>
+<div class="text-xs text-on-surface-variant">2 days ago</div>
+</div>
+</div>
+<!-- Deadlift PR -->
+<div class="glass-card rounded-lg p-6 flex items-center gap-6 group hover:bg-surface-container-highest transition-all duration-500">
+<div class="w-16 h-16 rounded-2xl bg-surface-container-high flex items-center justify-center text-primary border border-primary/10 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-3xl">exercise</span>
+</div>
+<div class="flex-1">
+<div class="text-[10px] text-on-surface-variant uppercase tracking-[0.2em] mb-1">Personal Record</div>
+<div class="text-xl font-bold text-white mb-2">Deadlift</div>
+<div class="flex items-baseline gap-2">
+<span class="text-3xl font-extrabold text-white">180</span>
+<span class="text-xs text-on-surface-variant font-medium">KG</span>
+</div>
+</div>
+<div class="text-right">
+<div class="text-[10px] text-on-surface-variant font-bold uppercase tracking-widest mb-1">Stable</div>
+<div class="text-xs text-on-surface-variant">1 month ago</div>
+</div>
+</div>
+</section>
+<!-- Weekly Consistency Heatmap -->
+<section class="glass-card rounded-lg p-8">
+<div class="flex items-center justify-between mb-8">
+<div>
+<h3 class="text-xl font-bold text-white">Weekly Consistency</h3>
+<p class="text-on-surface-variant text-sm">Visualizing training frequency over 12 weeks</p>
+</div>
+<div class="flex gap-2 items-center">
+<span class="text-[10px] text-on-surface-variant uppercase tracking-widest">Less</span>
+<div class="flex gap-1">
+<div class="w-3 h-3 bg-surface-container-highest rounded-sm"></div>
+<div class="w-3 h-3 bg-primary-dim/20 rounded-sm"></div>
+<div class="w-3 h-3 bg-primary-dim/50 rounded-sm"></div>
+<div class="w-3 h-3 bg-primary rounded-sm"></div>
+</div>
+<span class="text-[10px] text-on-surface-variant uppercase tracking-widest">More</span>
+</div>
+</div>
+<div class="grid grid-cols-7 gap-2 md:gap-3">
+<!-- Day Headers -->
+<div class="text-[10px] text-center text-on-surface-variant uppercase font-bold">Mon</div>
+<div class="text-[10px] text-center text-on-surface-variant uppercase font-bold">Tue</div>
+<div class="text-[10px] text-center text-on-surface-variant uppercase font-bold">Wed</div>
+<div class="text-[10px] text-center text-on-surface-variant uppercase font-bold">Thu</div>
+<div class="text-[10px] text-center text-on-surface-variant uppercase font-bold">Fri</div>
+<div class="text-[10px] text-center text-on-surface-variant uppercase font-bold">Sat</div>
+<div class="text-[10px] text-center text-on-surface-variant uppercase font-bold">Sun</div>
+<!-- Heatmap Grid (Row 1) -->
+<div class="aspect-square bg-primary-dim rounded-md relative group">
+<div class="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+</div>
+<div class="aspect-square bg-surface-container-highest rounded-md"></div>
+<div class="aspect-square bg-primary-dim/50 rounded-md"></div>
+<div class="aspect-square bg-primary-dim rounded-md"></div>
+<div class="aspect-square bg-surface-container-highest rounded-md"></div>
+<div class="aspect-square bg-primary rounded-md"></div>
+<div class="aspect-square bg-primary-dim/20 rounded-md"></div>
+<!-- Heatmap Grid (Row 2) -->
+<div class="aspect-square bg-primary rounded-md"></div>
+<div class="aspect-square bg-primary-dim/50 rounded-md"></div>
+<div class="aspect-square bg-surface-container-highest rounded-md"></div>
+<div class="aspect-square bg-primary rounded-md"></div>
+<div class="aspect-square bg-primary-dim rounded-md"></div>
+<div class="aspect-square bg-surface-container-highest rounded-md"></div>
+<div class="aspect-square bg-primary-dim/50 rounded-md"></div>
+</div>
+<div class="mt-8 pt-6 border-t border-white/5 flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 bg-primary rounded-full kinetic-pulse"></div>
+<span class="text-sm font-medium text-on-surface">94% Target Consistency</span>
+</div>
+<button class="text-primary text-sm font-bold uppercase tracking-widest hover:underline transition-all">Download Report</button>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-[#091328]/80 backdrop-blur-xl docked full-width bottom-0 rounded-t-3xl shadow-[0_-8px_24px_rgba(139,92,246,0.08)] tonal-shift-border-t border-white/5">
+<!-- Feed -->
+<a class="flex flex-col items-center justify-center text-slate-500 hover:text-violet-300 transition-all" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="dynamic_feed">dynamic_feed</span>
+<span class="font-['Space_Grotesk'] text-[11px] font-medium uppercase tracking-widest">Feed</span>
+</a>
+<!-- Stats (Active) -->
+<a class="flex flex-col items-center justify-center text-violet-400 font-bold bg-violet-500/10 rounded-2xl px-4 py-1 Active: scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="equalizer">equalizer</span>
+<span class="font-['Space_Grotesk'] text-[11px] font-medium uppercase tracking-widest">Stats</span>
+</a>
+<!-- Workout -->
+<a class="flex flex-col items-center justify-center text-slate-500 hover:text-violet-300 transition-all" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="fitness_center">fitness_center</span>
+<span class="font-['Space_Grotesk'] text-[11px] font-medium uppercase tracking-widest">Workout</span>
+</a>
+<!-- Profile -->
+<a class="flex flex-col items-center justify-center text-slate-500 hover:text-violet-300 transition-all" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="person">person</span>
+<span class="font-['Space_Grotesk'] text-[11px] font-medium uppercase tracking-widest">Profile</span>
+</a>
+</nav>
+</body></html>

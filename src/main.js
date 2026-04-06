@@ -5,9 +5,10 @@
 // ========== TAB SWITCHING ==========
 function refreshCurrentTab(tab) {
   if (tab === "today") refreshToday();
-  else if (tab === "log") refreshLog();
+  else if (tab === "log") { refreshLog(); if (typeof refreshPhotos === 'function') refreshPhotos(); }
   else if (tab === "analytics") refreshAnalytics();
   else if (tab === "protocols") refreshProtocols();
+  else if (tab === "settings") { if (typeof renderAchievementGallery === 'function') renderAchievementGallery(); }
 }
 let _navState = { tab: "today", at: Date.now() };
 
@@ -24,6 +25,8 @@ window.addEventListener("fitone:dataChanged", () => {
   if (!activeMain) return;
   if (activeMain.dataset.tab === "analytics") refreshAnalytics();
   if (activeMain.dataset.tab === "protocols") refreshProtocols();
+  // Check achievements on any data change
+  if (typeof checkAchievements === 'function') setTimeout(checkAchievements, 500);
 });
 
 function activateMainTab(tab, options) {
@@ -36,9 +39,11 @@ function activateMainTab(tab, options) {
   document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
   const targetBtn = document.querySelector('[data-tab="' + tab + '"]');
   const targetPanel = $("panel-" + tab);
-  if (!targetBtn || !targetPanel) return;
-  targetBtn.classList.add("active");
-  targetBtn.setAttribute("aria-selected", "true");
+  if (!targetPanel) return;
+  if (targetBtn) {
+    targetBtn.classList.add("active");
+    targetBtn.setAttribute("aria-selected", "true");
+  }
   targetPanel.classList.add("active");
   _navState = { tab, at: now };
   if (shouldScroll) window.scrollTo({ top: 0, behavior: "smooth" });
@@ -64,17 +69,30 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
 });
 
 // ========== SUB-TABS ==========
-document.querySelectorAll(".sub-tab").forEach((btn) => {
+document.querySelectorAll(".tab-panel .sub-tab").forEach((btn) => {
   btn.addEventListener("click", () => {
     const parent = btn.parentElement;
     parent.querySelectorAll(".sub-tab").forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     const panel = btn.closest(".tab-panel");
     panel.querySelectorAll(".sub-panel").forEach((p) => p.classList.remove("active"));
-    $(btn.dataset.subtab).classList.add("active");
+    const target = $(btn.dataset.subtab);
+    if (target) target.classList.add("active");
     refreshSubTab(btn.dataset.subtab);
   });
 });
+
+function refreshSubTab(subtabId) {
+  if (subtabId === "library-list" && typeof refreshLibrary === "function") {
+    refreshLibrary();
+  } else if (subtabId === "protocols-list" && typeof refreshProtocols === "function") {
+    refreshProtocols();
+  } else if (subtabId === "log-food" && typeof refreshLog === "function") {
+    refreshLog();
+  } else if (subtabId === "log-workout" && typeof refreshLogWorkout === "function") {
+    // refreshLogWorkout(); // if needed
+  }
+}
 
 // ========== NAV HELPERS ==========
 function goToLog() {
@@ -201,6 +219,58 @@ function initSwipeGestures() {
 }
 
 // ========== INIT ==========
+function shouldShowWelcomeScreen() {
+  return !localStorage.getItem("ft_onboarding_complete");
+}
+
+function populateWelcomeStats() {
+  const workouts = loadData(KEYS.workouts);
+  const workoutCountEl = $("welcomeWorkoutCount");
+  const dayCountEl = $("welcomeDayCount");
+  if (workoutCountEl) workoutCountEl.textContent = String(workouts.length);
+  if (dayCountEl) {
+    const uniqueDays = new Set(workouts.map((w) => w.date).filter(Boolean));
+    dayCountEl.textContent = String(uniqueDays.size);
+  }
+}
+
+function showWelcomeScreen() {
+  const welcome = $("welcomeScreen");
+  const app = $("app");
+  if (!welcome || !app) return;
+  populateWelcomeStats();
+  welcome.classList.remove("hidden");
+  app.classList.add("app-hidden");
+
+  const startBtn = $("welcomeGetStarted");
+  const importBtn = $("welcomeImportData");
+
+  if (startBtn && !startBtn.dataset.bound) {
+    startBtn.dataset.bound = "1";
+    startBtn.addEventListener("click", () => {
+      welcome.classList.add("welcome-fade-out");
+      setTimeout(() => {
+        welcome.classList.add("hidden");
+        welcome.classList.remove("welcome-fade-out");
+        app.classList.remove("app-hidden");
+        if (typeof showOnboardingWizard === "function") showOnboardingWizard();
+      }, 320);
+    });
+  }
+
+  if (importBtn && !importBtn.dataset.bound) {
+    importBtn.dataset.bound = "1";
+    importBtn.addEventListener("click", () => {
+      const importTrigger = $("importDataBtn");
+      if (importTrigger) {
+        importTrigger.click();
+      } else {
+        showToast("Import tools are loading. Try again in a moment.", "warning");
+      }
+    });
+  }
+}
+
 function init() {
   $("headerDate").textContent = new Date().toLocaleDateString(undefined, {
     weekday: "long", month: "long", day: "numeric",
@@ -227,6 +297,23 @@ function init() {
   refreshFavorites();
   restoreCollapseState();
   initSwipeGestures();
+
+  // Init photos & achievements
+  if (typeof initPhotoEvents === 'function') initPhotoEvents();
+  if (typeof refreshPhotos === 'function') refreshPhotos();
+  if (typeof renderAchievementGallery === 'function') renderAchievementGallery();
+  if (typeof checkAchievements === 'function') setTimeout(checkAchievements, 1000);
+
+  // First-launch flow: welcome screen -> onboarding
+  if (shouldShowWelcomeScreen()) {
+    showWelcomeScreen();
+    return;
+  }
+
+  // Backward-compatible onboarding check for users who skipped older flow
+  if (typeof shouldShowOnboarding === 'function' && shouldShowOnboarding()) {
+    setTimeout(() => showOnboardingWizard(), 250);
+  }
 }
 
 init();

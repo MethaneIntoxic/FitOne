@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Social Flex</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "primary": "#8B5CF6",
+          "background-light": "#f8f5f6",
+          "background-dark": "#09090B",
+        },
+        fontFamily: {
+          "display": ["Space Grotesk", "sans-serif"]
+        },
+        borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "9999px"},
+        boxShadow: {
+            'neon-primary': '0 0 16px rgba(139, 92, 246, 0.4)',
+        }
+      },
+    },
+  }
+</script>
+<style>
+  body {
+    font-family: 'Space Grotesk', sans-serif;
+    background-color: #09090B;
+    color: #FAFAFA;
+  }
+  .bg-black-pitch {
+      background-color: #09090B;
+  }
+  .bg-surface {
+      background-color: #18181B;
+  }
+  .text-muted {
+      color: #52525B;
+  }
+  .border-muted {
+      border-color: #27272A;
+  }
+  .text-gradient {
+      background: linear-gradient(90deg, #8B5CF6, #C084FC);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+  }
+</style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-black-pitch text-white min-h-screen flex flex-col items-center justify-center overflow-hidden">
+<div class="relative flex h-full min-h-screen w-full max-w-md flex-col bg-black-pitch pt-4 pb-8 justify-between">
+<!-- Custom Header for Focused View -->
+<div class="flex items-center px-4 py-2 mb-4 justify-between z-10 relative">
+<button class="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface/50 border border-muted hover:bg-surface transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50">
+<span class="material-symbols-outlined text-white text-xl">arrow_back</span>
+</button>
+<h1 class="text-lg font-bold tracking-wider uppercase">Share Flex</h1>
+<div class="size-10"></div> <!-- Spacer for center alignment -->
+</div>
+<!-- Canvas Preview Area -->
+<div class="flex-1 w-full px-6 flex flex-col items-center justify-center overflow-hidden relative z-0">
+<!-- The 9:16 Card -->
+<div class="relative w-full aspect-[9/16] max-h-[618px] rounded-full overflow-hidden bg-surface border border-muted shadow-lg shrink-0 flex flex-col justify-end">
+<!-- Background Texture - Tinted Purple -->
+<div class="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-screen grayscale brightness-75 contrast-125" data-alt="abstract neon topographic map texture in purple and black flowing lines" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAKQnOp7_5OG4ctf47nQqDyO8dPzqAp-tCfplK3tqAomq5y1L45CJlt0oV4IAKBA3Eudi3iNYq6NYhrZDx7L3JIoO3d4Z3R4I1gWOZ1oPNIjrI4Q-VJryaXzE5UT0QNbJT1fmPxZlXpX9DKM1JXlZRSJf8X6mNyFyHtLKKd6HtEPxz3sTKZj5YV3FVdVjlIcBexR2gSBzAdOB_HCDEXXsEBho331hLZPMOKIEmnMMSrKa1lN-UqzWqmHCcAZNqHzlwBhWJl1I5__aQU'); filter: hue-rotate(60deg);">
+</div>
+<!-- Dark Overlay for Text Legibility -->
+<div class="absolute inset-0 bg-gradient-to-t from-black-pitch via-black-pitch/50 to-transparent"></div>
+<!-- Content Area -->
+<div class="relative z-10 p-8 flex flex-col gap-4">
+<div class="flex flex-col">
+<p class="text-xs font-bold tracking-[0.2em] text-primary mb-1 uppercase">Workout Complete</p>
+<h2 class="text-4xl sm:text-5xl font-black uppercase leading-none tracking-tighter text-gradient pb-2">
+                        DESTROYED<br/>LEGS
+                    </h2>
+</div>
+<div class="flex flex-col gap-3 mt-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-xl">timer</span>
+<p class="font-mono text-xl font-bold tracking-tight">45:00</p>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-xl">weight</span>
+<p class="font-mono text-xl font-bold tracking-tight">12,000<span class="text-sm text-gray-400 ml-1">KG</span></p>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#39FF14] text-xl">local_fire_department</span>
+<p class="font-mono text-xl font-bold tracking-tight text-[#39FF14]">2 NEW PRs</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Controls -->
+<div class="px-6 pt-8 pb-4 flex justify-center gap-6 z-10 relative">
+<button class="flex flex-col items-center gap-2 group focus:outline-none">
+<div class="size-16 rounded-full bg-surface border border-muted flex items-center justify-center group-hover:border-primary group-hover:shadow-neon-primary transition-all duration-300">
+<span class="material-symbols-outlined text-2xl text-white">download</span>
+</div>
+<span class="text-xs font-bold tracking-wider text-muted group-hover:text-white transition-colors">SAVE</span>
+</button>
+<button class="flex flex-col items-center gap-2 group focus:outline-none">
+<div class="size-16 rounded-full bg-primary flex items-center justify-center shadow-neon-primary hover:scale-105 transition-transform duration-300">
+<span class="material-symbols-outlined text-2xl text-white">share</span>
+</div>
+<span class="text-xs font-bold tracking-wider text-white">INSTAGRAM</span>
+</button>
+<button class="flex flex-col items-center gap-2 group focus:outline-none">
+<div class="size-16 rounded-full bg-surface border border-muted flex items-center justify-center group-hover:border-primary group-hover:shadow-neon-primary transition-all duration-300">
+<span class="material-symbols-outlined text-2xl text-white">link</span>
+</div>
+<span class="text-xs font-bold tracking-wider text-muted group-hover:text-white transition-colors">COPY</span>
+</button>
+</div>
+</div>
+</body></html>

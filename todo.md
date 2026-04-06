@@ -41,6 +41,24 @@
 
 ---
 
+## Phase R — Full Wireframe UI Redesign (Shipped Panels First)
+
+> Objective: Apply exact wireframe design language across current shipped panels before deeper function-level rewiring.
+
+- [x] **R1 — Foundation Tokens + Shell Primitives (Start Implementation)**
+  - Added explicit wireframe token layer and utility primitives in `styles/main.css`
+  - Updated shell visual foundations (header/nav/card baseline) toward wireframe parity
+  - Replaced initial inline layout styling in `index.html` with reusable classes (`water-ring-row`, `wellness-scale-note`)
+
+- [x] **R2 — Dashboard Visual Parity Pass (No Logic Rewrites)**
+  - Apply exact dashboard spacing, surface hierarchy, labels, and card framing to match wireframe
+  - Remove dashboard-specific inline styles from `index.html`
+
+- [x] **R3 — Workouts / Stats / Profile Visual Parity Passes**
+  - Complete UI parity slices per panel before function-contract refactors
+
+---
+
 ## Phase W — Wireframe Feature Implementation
 
 > Every feature visible in the 21 wireframe screens, adapted for FitOne's zero-cost architecture.
@@ -284,7 +302,7 @@
   - **Modify:** `src/views/exerciseDetailView.js` → `renderPerformanceChart()`
   - **Modify:** `src/ui.js` → reuse existing chart drawing utilities
 
-- [ ] **W5.6 — "START WORKOUT WITH THIS LIFT" CTA**
+- [x] **W5.6 — "START WORKOUT WITH THIS LIFT" CTA**
   - Full-width gradient button at bottom
   - Creates a new workout with this exercise pre-loaded → navigate to Workout form
   - **Modify:** `src/views/exerciseDetailView.js` → handler links to `logView.js`
@@ -295,14 +313,14 @@
 
 > Upgrade existing protocol creation with wireframe-quality UX.
 
-- [ ] **W6.1 — Editorial Empty State**
+- [x] **W6.1 — Editorial Empty State**
   - When protocol has no exercises yet:
     - Large dumbbell icon (Material Symbol, 80px, centered)
     - "Build Your Arsenal" headline
     - "Design a precision workout template tailored for peak performance. Start by adding your first exercise below." description
   - **Modify:** `src/views/protocolsView.js` → empty state rendering in protocol modal
 
-- [ ] **W6.2 — Editable Routine Title Field**
+- [x] **W6.2 — Editable Routine Title Field**
   - "ROUTINE TITLE" uppercase label
   - Large placeholder text: "UNTITLED SEQUENCE" (italic, faded)
   - Text input that becomes the protocol name

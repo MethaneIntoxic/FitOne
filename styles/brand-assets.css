@@ -1,78 +1,100 @@
 /* ============================================================
-   FITONE — Brand Design Tokens
+   FITONE — Kinetic Obsidian Design System
    ============================================================
-   Single source of truth for every colour, radius, shadow,
-   and spacing value used across the app.
-
-   Logo colour (extracted from icon):  #6C63FF  (Indigo / Periwinkle)
+   "The Neon Monolith" — High-performance machinery in a deep-space void.
+   Vibrant Purple (#8B5CF6) ecosystem with editorial typography.
+   
+   Based on wireframe: kinetic_obsidian/DESIGN.md
    ============================================================ */
 
-/* ---------- 1. BRAND PALETTE ---------- */
+/* ---------- 1. KINETIC OBSIDIAN PALETTE ---------- */
 :root {
-  /* ---- Primary (derived from logo #6C63FF) ---- */
-  --brand-primary:        #6C63FF;
-  --brand-primary-light:  #A5B4FC;
-  --brand-primary-dark:   #4F46E5;
-  --brand-primary-glow:   rgba(108, 99, 255, 0.35);
-  --brand-primary-subtle: rgba(108, 99, 255, 0.10);
-  --brand-primary-muted:  rgba(108, 99, 255, 0.05);
+  /* ---- Primary (Vibrant Purple Spectrum) ---- */
+  --brand-primary:        #8B5CF6;
+  --brand-primary-light:  #ba9eff;
+  --brand-primary-dark:   #6e3bd7;
+  --brand-primary-dim:    #8455ef;
+  --brand-primary-glow:   rgba(139, 92, 246, 0.35);
+  --brand-primary-subtle: rgba(139, 92, 246, 0.10);
+  --brand-primary-muted:  rgba(139, 92, 246, 0.05);
 
   /* ---- Semantic — status colours ---- */
-  --brand-success:        #34D399;   /* Emerald-400  */
-  --brand-success-dark:   #10B981;   /* Emerald-500  */
-  --brand-warning:        #FBBF24;   /* Amber-400    */
-  --brand-warning-dark:   #F59E0B;   /* Amber-500    */
-  --brand-danger:         #F87171;   /* Red-400      */
-  --brand-danger-dark:    #EF4444;   /* Red-500      */
-  --brand-info:           #60A5FA;   /* Blue-400     */
-  --brand-info-dark:      #3B82F6;   /* Blue-500     */
+  --brand-success:        #34D399;
+  --brand-success-dark:   #10B981;
+  --brand-warning:        #FBBF24;
+  --brand-warning-dark:   #F59E0B;
+  --brand-danger:         #ff6e84;
+  --brand-danger-dark:    #d73357;
+  --brand-info:           #60A5FA;
+  --brand-info-dark:      #3B82F6;
 
   /* ---- Macro colours (nutrition) ---- */
-  --brand-protein:        #34D399;   /* Emerald      */
-  --brand-carbs:          #FBBF24;   /* Amber        */
-  --brand-fat:            #60A5FA;   /* Blue         */
-  --brand-calories:       #6C63FF;   /* Primary      */
+  --brand-protein:        #34D399;
+  --brand-carbs:          #FBBF24;
+  --brand-fat:            #60A5FA;
+  --brand-calories:       #8B5CF6;
 
   /* ---- Meal-type colours ---- */
-  --brand-breakfast:      #FBBF24;   /* Amber        */
-  --brand-lunch:          #34D399;   /* Emerald      */
-  --brand-dinner:         #6C63FF;   /* Primary      */
-  --brand-snack:          #60A5FA;   /* Blue         */
+  --brand-breakfast:      #FBBF24;
+  --brand-lunch:          #34D399;
+  --brand-dinner:         #8B5CF6;
+  --brand-snack:          #60A5FA;
 
   /* ---- Celebration / confetti ---- */
-  --brand-confetti-1:     #6C63FF;
+  --brand-confetti-1:     #8B5CF6;
   --brand-confetti-2:     #34D399;
   --brand-confetti-3:     #60A5FA;
   --brand-confetti-4:     #FBBF24;
-  --brand-confetti-5:     #A78BFA;
-  --brand-confetti-6:     #F472B6;
+  --brand-confetti-5:     #ba9eff;
+  --brand-confetti-6:     #A78BFA;
 
-  /* ---- Surfaces (dark mode — defaults) ---- */
-  --brand-bg:             #09090B;
-  --brand-bg2:            #18181B;
-  --brand-bg3:            #27272A;
-  --brand-text:           #FAFAFA;
-  --brand-text2:          #A1A1AA;
-  --brand-border:         #27272A;
+  /* ---- Kinetic Obsidian Surfaces ---- */
+  --brand-bg:             #060e20;
+  --brand-bg2:            #0f1930;
+  --brand-bg3:            #192540;
+  --brand-text:           #dee5ff;
+  --brand-text2:          #a3aac4;
+  --brand-border:         rgba(255,255,255,0.04);
+
+  /* Surface System (Obsidian Plates) */
+  --surface-void:         #060e20;
+  --surface-lowest:       #000000;
+  --surface-low:          #091328;
+  --surface-mid:          #0f1930;
+  --surface-high:         #141f38;
+  --surface-highest:      #192540;
+  --surface-bright:       #1f2b49;
+  --surface-variant:      #192540;
+
+  /* ---- On-surface text ---- */
+  --on-surface:           #dee5ff;
+  --on-surface-variant:   #a3aac4;
+
+  /* ---- Ghost borders (15% opacity max) ---- */
+  --outline-variant:      rgba(64, 72, 93, 0.15);
 
   /* ---- Shared tokens ---- */
   --brand-radius-sm:      8px;
-  --brand-radius-md:      12px;
-  --brand-radius-lg:      20px;
-  --brand-radius-pill:    999px;
-  --brand-shadow:         0 4px 24px rgba(0,0,0,0.4);
-  --brand-shadow-lg:      0 8px 28px rgba(0,0,0,0.25);
-  --brand-tab-bg:         rgba(9,9,11,0.80);
+  --brand-radius-md:      1rem;
+  --brand-radius-lg:      1rem;
+  --brand-radius-pill:    9999px;
+  --brand-shadow:         0 0 40px -10px rgba(139, 92, 246, 0.15);
+  --brand-shadow-lg:      0 0 48px rgba(139, 92, 246, 0.08);
+  --brand-tab-bg:         rgba(9, 19, 40, 0.80);
+
+  /* ---- Gradients ---- */
+  --gradient-primary:     linear-gradient(135deg, #8455ef, #ba9eff);
+  --gradient-card:        linear-gradient(180deg, #0f1930, #091328);
 }
 
-/* ---------- 2. LIGHT-MODE OVERRIDES ---------- */
+/* ---------- 2. LIGHT MODE (kept minimal — Kinetic is dark-first) ---------- */
 [data-theme="light"] {
-  --brand-primary:        #4F46E5;
-  --brand-primary-light:  #818CF8;
-  --brand-primary-dark:   #4338CA;
-  --brand-primary-glow:   rgba(79, 70, 229, 0.30);
-  --brand-primary-subtle: rgba(79, 70, 229, 0.08);
-  --brand-primary-muted:  rgba(79, 70, 229, 0.04);
+  --brand-primary:        #7c3aed;
+  --brand-primary-light:  #a78bfa;
+  --brand-primary-dark:   #6d28d9;
+  --brand-primary-glow:   rgba(124, 58, 237, 0.30);
+  --brand-primary-subtle: rgba(124, 58, 237, 0.08);
+  --brand-primary-muted:  rgba(124, 58, 237, 0.04);
 
   --brand-success:        #10B981;
   --brand-warning:        #F59E0B;
@@ -82,13 +104,13 @@
   --brand-carbs:          #F59E0B;
   --brand-fat:            #3B82F6;
 
-  --brand-bg:             #FFFFFF;
-  --brand-bg2:            #F4F4F5;
-  --brand-bg3:            #E4E4E7;
-  --brand-text:           #09090B;
-  --brand-text2:          #52525B;
-  --brand-border:         #E4E4E7;
+  --brand-bg:             #f8f9fc;
+  --brand-bg2:            #eef0f5;
+  --brand-bg3:            #dfe2ea;
+  --brand-text:           #0f172a;
+  --brand-text2:          #64748b;
+  --brand-border:         rgba(0,0,0,0.06);
   --brand-shadow:         0 4px 20px rgba(0,0,0,0.06);
   --brand-shadow-lg:      0 8px 24px rgba(0,0,0,0.08);
-  --brand-tab-bg:         rgba(255,255,255,0.85);
+  --brand-tab-bg:         rgba(248,249,252,0.85);
 }

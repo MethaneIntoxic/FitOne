@@ -7,29 +7,99 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="FitOne">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#6C63FF">
+<meta name="theme-color" content="#8B5CF6">
 <title>FitOne</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
 <link rel="stylesheet" href="styles/brand-assets.css">
-<link rel="stylesheet" href="styles/main.css">
+<link rel="stylesheet" href="styles/main.css?v=20260406b">
 <link rel="manifest" href="pwa/manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 </head>
 <body>
+<section class="welcome-screen hidden" id="welcomeScreen" aria-label="Welcome">
+  <div class="welcome-hero">
+    <div class="welcome-brand-badge">
+      <span class="material-symbols-outlined">bolt</span>
+    </div>
+    <div class="welcome-brand">FITONE</div>
+    <h2 class="welcome-headline">IGNITE YOUR <span>POTENTIAL</span></h2>
+    <p class="welcome-subtitle">Experience the next evolution of performance tracking. Precision data meets high-velocity design for the modern athlete.</p>
+    <button class="btn btn-primary btn-block welcome-cta" id="welcomeGetStarted">GET STARTED <span class="material-symbols-outlined">arrow_forward</span></button>
+    <button class="welcome-import-link" id="welcomeImportData">I Have Existing Data</button>
+    <div class="welcome-stats-row">
+      <div class="welcome-stat">
+        <div class="welcome-stat-value" id="welcomeWorkoutCount">0</div>
+        <div class="welcome-stat-label">Total Workouts Logged</div>
+      </div>
+      <div class="welcome-stat">
+        <div class="welcome-stat-value" id="welcomeDayCount">0</div>
+        <div class="welcome-stat-label">Days Tracked</div>
+      </div>
+      <div class="welcome-stat">
+        <div class="welcome-stat-value">100% LOCAL</div>
+        <div class="welcome-stat-label">Zero Latency</div>
+      </div>
+    </div>
+  </div>
+  <div class="welcome-feature-wrap">
+    <div class="welcome-feature-label">ENGINEERED PRECISION</div>
+    <h3 class="welcome-feature-headline">A Terminal For Your Physical Peak</h3>
+    <article class="welcome-feature-card">
+      <div class="welcome-feature-tag"><span class="material-symbols-outlined">monitoring</span> BIOMETRIC INSIGHTS</div>
+      <p>Real-time data processing that adapts to your physiological response, providing immediate feedback on recovery and output.</p>
+    </article>
+    <article class="welcome-feature-card">
+      <div class="welcome-feature-tag"><span class="material-symbols-outlined">bolt</span> KINETIC VELOCITY</div>
+      <p>Track explosive power and movement efficiency with military-grade precision.</p>
+    </article>
+  </div>
+</section>
 <div class="app" id="app">
   <!-- Header -->
-  <div class="header">
-    <h1><img src="icons/icon-192.png" alt="F1" style="width:28px;height:28px;vertical-align:middle;border-radius:6px;margin-right:6px">FitOne</h1>
-    <span class="header-date" id="headerDate"></span>
-  </div>
+  <header class="header">
+    <div class="header-left">
+      <div class="header-avatar" id="headerAvatar" title="Profile">
+        <span class="material-symbols-outlined">person</span>
+      </div>
+      <h1 class="header-brand">FITONE</h1>
+    </div>
+    <div class="header-right">
+      <span class="header-date" id="headerDate"></span>
+      <button class="header-bell" id="headerBell" aria-label="Notifications" title="Pulse Center">
+        <span class="material-symbols-outlined">notifications</span>
+        <span class="bell-badge hidden" id="bellBadge">0</span>
+      </button>
+    </div>
+  </header>
 
   <!-- ========== TAB: TODAY ========== -->
-  <div class="tab-panel active" id="panel-today">
+  <div class="tab-panel active dashboard-panel" id="panel-today">
+    <!-- W3.2 Personalized Greeting -->
+    <div class="dashboard-greeting" id="dashboardGreeting" data-section="greeting">
+      <div class="greeting-label">READY TO PUSH?</div>
+      <div class="greeting-name" id="greetingName">Welcome, Athlete</div>
+    </div>
+    <!-- W3.4 IGNITE SESSION CTA -->
+    <button class="btn btn-primary btn-block btn-ignite" id="igniteSessionBtn" data-action="igniteSession">
+      <span class="material-symbols-outlined">bolt</span>
+      IGNITE SESSION
+    </button>
+    <!-- W3.5 Next Workout Preview -->
+    <div class="card next-workout-card" id="nextWorkoutCard" data-section="nextWorkout">
+      <div class="next-workout-header">
+        <span class="card-title">Next Workout</span>
+        <a class="view-all-link" id="viewAllRoutines" data-action="viewAllRoutines">VIEW ALL</a>
+      </div>
+      <div id="nextWorkoutContent">
+        <div class="empty"><div class="empty-icon">🏋️</div><div class="empty-text">Create Your First Routine</div></div>
+      </div>
+    </div>
     <div class="card" data-section="calories">
       <div class="card-title">Daily Calories</div>
       <div class="macro-rings" id="macroRings"></div>
-      <div class="calorie-progress"><div class="calorie-progress-bar" id="calorieProgressBar" style="width:0%"></div></div>
+      <div class="calorie-progress"><div class="calorie-progress-bar" id="calorieProgressBar"></div></div>
       <div class="calorie-progress-label" id="calorieProgressLabel"></div>
       <div class="net-cal" id="netCalDisplay"></div>
     </div>
@@ -40,12 +110,12 @@
           <div class="streak-number" id="streakNumber">0</div>
           <div class="streak-label" id="streakLabel">day streak</div>
         </div>
-        <div id="longestStreakInfo" class="text-xs" style="margin-left:auto;text-align:right"></div>
+        <div id="longestStreakInfo" class="text-xs longest-streak-info"></div>
       </div>
     </div>
     <div class="stat-row" id="todayStats" data-section="stats"></div>
     <div class="card" data-section="readiness">
-      <div class="card-title">🔋 Readiness Score</div>
+      <div class="card-title">Daily Energy</div>
       <div class="readiness-row">
         <div class="readiness-gauge-wrap"><canvas width="160" height="160" id="readinessGauge"></canvas></div>
         <div class="readiness-info">
@@ -58,8 +128,8 @@
     <div class="card" data-section="water">
       <div class="card-title">💧 Water Intake</div>
       <div class="water-tracker">
-        <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:8px">
-          <canvas width="128" height="128" id="waterRing" style="width:80px;height:80px"></canvas>
+        <div class="water-ring-row">
+          <canvas width="128" height="128" id="waterRing" class="water-ring-canvas"></canvas>
           <div>
             <div class="water-info" id="waterInfo">0 / 2000 ml</div>
             <div class="text-xs" id="waterPercent">0%</div>
@@ -69,11 +139,6 @@
           <button class="btn btn-outline btn-sm" data-action="addWater" data-amount="250">+250ml</button>
           <button class="btn btn-outline btn-sm" data-action="addWater" data-amount="500">+500ml</button>
           <button class="btn btn-outline btn-sm" data-action="addWater" data-amount="750">+750ml</button>
-          <button class="btn btn-outline btn-sm" data-action="undoWater">Undo</button>
-        </div>
-        <div class="water-custom">
-          <input type="number" id="customWater" placeholder="ml" min="1" step="1">
-          <button class="btn btn-outline btn-sm" data-action="addCustomWater">+ Add</button>
         </div>
       </div>
     </div>
@@ -88,6 +153,11 @@
     <div class="card" data-section="insights">
       <div class="card-title">Insights</div>
       <div id="todayInsights"><div class="empty"><div class="empty-icon">💡</div><div class="empty-text">Start logging to unlock personalized insights</div></div></div>
+    </div>
+    <!-- W3.6 Bottom Stat Boxes -->
+    <div class="stat-row" id="dashboardBottom" data-section="bottomStats">
+      <div class="stat-box"><div class="val" id="dashAvgHR">—</div><div class="lbl">AVG HEART RATE</div></div>
+      <div class="stat-box"><div class="val" id="dashCalBurn">0</div><div class="lbl">CALORIE BURN</div></div>
     </div>
     <div class="card" data-section="wellness">
       <div class="card-title">🧘 Daily Wellness Check-in <span id="wellnessSavedBadge" class="wellness-saved-badge hidden">✓ Saved</span></div>
@@ -108,7 +178,7 @@
           <span class="slider-val" id="energyVal">3</span>
         </div>
       </div>
-      <div class="text-xs" style="text-align:center;margin-top:6px">1 = Poor → 5 = Excellent (Soreness: 1 = Very sore → 5 = None)</div>
+      <div class="text-xs wellness-scale-note">1 = Poor → 5 = Excellent (Soreness: 1 = Very sore → 5 = None)</div>
       <div class="wellness-btn-row">
         <button class="btn btn-primary btn-sm" data-action="saveWellness">Save Check-in</button>
       </div>
@@ -116,7 +186,7 @@
   </div>
 
   <!-- ========== TAB: LOG ========== -->
-  <div class="tab-panel" id="panel-log">
+  <div class="tab-panel workouts-panel" id="panel-log">
     <div class="sub-tabs">
       <button class="sub-tab active" data-subtab="log-food">Food</button>
       <button class="sub-tab" data-subtab="log-workout">Workout</button>
@@ -323,16 +393,74 @@
   </div>
 
   <!-- ========== TAB: ANALYTICS ========== -->
-  <div class="tab-panel" id="panel-analytics">
+  <div class="tab-panel stats-panel" id="panel-analytics">
     <div class="sub-tabs">
-      <button class="sub-tab active" data-subtab="analytics-calories">Calories</button>
-      <button class="sub-tab" data-subtab="analytics-weight">Weight</button>
-      <button class="sub-tab" data-subtab="analytics-workouts">Workouts</button>
-      <button class="sub-tab" data-subtab="analytics-timing">Timing</button>
-      <button class="sub-tab" data-subtab="analytics-tdee">TDEE</button>
+      <button class="sub-tab active" data-subtab="analytics-performance">Performance</button>
+      <button class="sub-tab" data-subtab="analytics-calories">Diet</button>
+      <button class="sub-tab" data-subtab="analytics-weight">Body</button>
+      <button class="sub-tab" data-subtab="analytics-workouts">Old Workouts</button>
     </div>
 
-    <div class="sub-panel active" id="analytics-calories">
+    <!-- W9 Stats Hub v2 (Performance Analytics) -->
+    <div class="sub-panel active" id="analytics-performance">
+      <div class="flex-between mb-16 stats-header-row">
+        <div>
+          <div class="text-xs stats-kicker">PERFORMANCE ANALYTICS</div>
+          <h2 class="stats-title">Stats Hub</h2>
+        </div>
+        <select id="statsTimeRange" class="stats-time-sel">
+          <option value="3m">3 Months</option>
+          <option value="6m">6 Months</option>
+          <option value="1y">1 Year</option>
+        </select>
+      </div>
+
+      <!-- Total Tonnage -->
+      <div class="card mb-16 stats-tonnage-card">
+        <div class="text-sm stats-muted-label">TOTAL TONNAGE</div>
+        <div class="stats-tonnage-row">
+          <span class="stats-tonnage-val" id="statsTonnageVal">— TONS</span>
+          <span class="stats-tonnage-trend" id="statsTonnageTrend"></span>
+        </div>
+        <div class="chart-container stats-tonnage-chart"><canvas id="chartTonnage"></canvas></div>
+      </div>
+
+      <!-- Consistency Heatmap -->
+      <div class="card mb-16">
+        <div class="card-title">Weekly Consistency</div>
+        <div class="consistency-heatmap-wrap stats-heatmap-wrap">
+          <div id="statsConsistencyHeatmap" class="consistency-heatmap stats-heatmap-grid"></div>
+        </div>
+        <div class="flex-between mt-12 stats-heatmap-legend">
+          <div class="stats-consistency-target" id="statsConsistencyVal">— Target Consistency</div>
+          <div class="stats-legend-scale">
+            LESS 
+            <div class="stats-legend-swatches">
+              <span class="stats-legend-swatch lvl-1"></span>
+              <span class="stats-legend-swatch lvl-2"></span>
+              <span class="stats-legend-swatch lvl-3"></span>
+              <span class="stats-legend-swatch lvl-4"></span>
+            </div>
+            MORE
+          </div>
+        </div>
+      </div>
+
+      <!-- Personal Records -->
+      <div class="card mb-16">
+        <div class="flex-between mb-12">
+          <div class="card-title stats-pr-title">Personal Records</div>
+        </div>
+        <div id="statsPRCards" class="stats-pr-cards">
+           <div class="empty text-sm stats-pr-empty">Log workouts to see your PRs here.</div>
+        </div>
+      </div>
+      
+      <button class="btn btn-outline btn-block stats-download-report" onclick="window.print()">DOWNLOAD REPORT</button>
+    </div>
+
+    <!-- Legacy Sub-panels -->
+    <div class="sub-panel" id="analytics-calories">
       <div class="card" id="weeklySummaryCard"></div>
       <div class="card">
         <div class="card-title">Calorie Trend (Last 14 Days)</div>
@@ -383,13 +511,50 @@
     </div>
   </div>
 
-  <!-- ========== TAB: PROTOCOLS ========== -->
+  <!-- ========== TAB: PROTOCOLS / LIBRARY ========== -->
   <div class="tab-panel" id="panel-protocols">
-    <div class="flex-between mb-12">
-      <span style="font-weight:600">Workout Protocols</span>
-      <button class="btn btn-primary btn-sm" data-action="showProtocolModal">+ New</button>
+    <div class="sub-tabs">
+      <button class="sub-tab active" data-subtab="protocols-list">My Protocols</button>
+      <button class="sub-tab" data-subtab="library-list">Workout Library</button>
     </div>
-    <div id="protocolList"></div>
+
+    <!-- My Protocols -->
+    <div class="sub-panel active" id="protocols-list">
+      <div class="flex-between mb-12">
+        <span class="section-label">PERSONAL PROTOCOLS</span>
+        <button class="btn btn-primary btn-sm" data-action="showProtocolModal">+ New</button>
+      </div>
+      <div id="protocolList"></div>
+    </div>
+
+    <!-- Workout Library (W4) -->
+    <div class="sub-panel" id="library-list">
+      <!-- W4.2 Search Bar -->
+      <div class="search-wrap mb-16">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchExercises" placeholder="Search exercise database..." title="Search exercises">
+      </div>
+
+      <!-- W4.3 Filter Chips -->
+      <div class="filter-chips-container mb-20">
+        <div class="filter-chips" id="libraryFilters">
+          <button class="filter-chip active" data-filter="ALL">ALL</button>
+          <button class="filter-chip" data-filter="SAVED">SAVED</button>
+          <button class="filter-chip" data-filter="STRENGTH">STRENGTH</button>
+          <button class="filter-chip" data-filter="HIIT">HIIT</button>
+          <button class="filter-chip" data-filter="STABILITY">STABILITY</button>
+          <button class="filter-chip" data-filter="POWER">POWER</button>
+          <button class="filter-chip" data-filter="RECOVERY">RECOVERY</button>
+        </div>
+      </div>
+
+      <!-- W4.4 Featured Workout Hero Card -->
+      <div id="featuredRoutineContainer"></div>
+
+      <!-- W4.5 Routine List Cards -->
+      <div class="section-label mb-12">EXPLORE ROUTINES</div>
+      <div id="libraryRoutineList"></div>
+    </div>
   </div>
 
   <!-- ========== TAB: EXPORT/IMPORT ========== -->
@@ -404,7 +569,11 @@
       <div class="card-title">Import (CSV / JSON)</div>
       <div class="form-group">
         <label>Entity Type</label>
-        <select id="dataImportType"></select>
+        <select id="logPhotoType" title="Select photo type">
+          <option value="front">Front View</option>
+          <option value="side">Side View</option>
+          <option value="back">Back View</option>
+        </select>
       </div>
       <div class="form-group">
         <label>Merge Mode</label>
@@ -444,11 +613,34 @@
   </div>
 
   <!-- ========== TAB: SETTINGS ========== -->
-  <div class="tab-panel" id="panel-settings">
+  <div class="tab-panel profile-panel" id="panel-settings">
+    <!-- W15.1 Profile Identity -->
+    <div class="card" id="profileIdentityCard">
+      <div class="section-label">PROFILE IDENTITY</div>
+      <div class="profile-identity-section">
+        <div class="profile-avatar-large" id="profileAvatarLarge" title="Change avatar">
+          <span class="material-symbols-outlined">person</span>
+          <div class="profile-avatar-edit"><span class="material-symbols-outlined profile-avatar-edit-icon">edit</span></div>
+        </div>
+        <input type="file" id="avatarFileInput" accept="image/*" style="display:none">
+      </div>
+      <div class="form-group">
+        <label>DISPLAY NAME</label>
+        <input type="text" id="settingDisplayName" placeholder="Enter your name" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>KINETIC BIO</label>
+        <textarea id="settingBio" placeholder="Pushing limits in the obsidian dawn..." rows="2"></textarea>
+      </div>
+    </div>
+    <div class="section-label profile-section-label">SYSTEM CALIBRATION</div>
+    <div class="card" id="achievementCard">
+      <div id="achievementGallery"></div>
+    </div>
     <div class="card">
-      <div class="card-title">Appearance</div>
+      <div class="card-title">Kinetic Mode</div>
       <div class="toggle-row">
-        <span>Dark Mode</span>
+        <span>Obsidian Theme</span>
         <label class="toggle">
           <input type="checkbox" id="settingTheme" checked>
           <span class="toggle-slider"></span>
@@ -462,7 +654,49 @@
         <button class="goal-option active" data-goal="maintain">⚖️ Maintain</button>
         <button class="goal-option" data-goal="gain">📈 Gain</button>
       </div>
-      <div class="text-xs" style="text-align:center">Used by Adaptive TDEE for personalized recommendations</div>
+      <div class="text-xs goal-note">Used by Adaptive TDEE for personalized recommendations</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Workout Settings</div>
+      <div class="form-group">
+        <label>Default Rest Time</label>
+        <select id="settingRestTime">
+          <option value="30">30 Seconds</option>
+          <option value="60">60 Seconds</option>
+          <option value="90">90 Seconds</option>
+          <option value="120">120 Seconds</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Plate System</label>
+        <select id="settingPlateSystem">
+          <option value="kg">Kilograms (Standard)</option>
+          <option value="lbs">Pounds (Standard)</option>
+        </select>
+      </div>
+      <div class="toggle-row mt-12">
+        <span>Auto-Lock completed sets</span>
+        <label class="toggle"><input type="checkbox" id="settingAutoLock"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row mt-12">
+        <span>Auto-Advance exercise</span>
+        <label class="toggle"><input type="checkbox" id="settingAutoAdvance"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row mt-12">
+        <span>Focus Mode</span>
+        <label class="toggle"><input type="checkbox" id="settingFocusMode"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row mt-12">
+        <span>Voice Countdown</span>
+        <label class="toggle"><input type="checkbox" id="settingVoiceCountdown"><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Notifications</div>
+      <div class="toggle-row">
+        <span>Notification Pulse (Push)</span>
+        <label class="toggle"><input type="checkbox" id="settingPushPulse"><span class="toggle-slider"></span></label>
+      </div>
     </div>
     <div class="card">
       <div class="card-title">Goals</div>
@@ -534,33 +768,43 @@
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
 </button>
 
-<!-- Tab Bar -->
+<!-- Tab Bar (Kinetic Obsidian 4-Tab Nav) -->
 <nav class="tab-bar" role="tablist" aria-label="Main navigation">
-  <button class="tab-btn active" data-tab="today" role="tab" aria-label="Today overview" aria-selected="true">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-    Today
+  <button class="tab-btn active" data-tab="today" role="tab" aria-label="Dashboard" aria-selected="true">
+    <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">dashboard</span>
+    Dashboard
   </button>
-  <button class="tab-btn" data-tab="log" role="tab" aria-label="Log food, workouts, and body" aria-selected="false">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-    Log
+  <button class="tab-btn" data-tab="log" role="tab" aria-label="Workouts" aria-selected="false">
+    <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">fitness_center</span>
+    Workouts
   </button>
-  <button class="tab-btn" data-tab="analytics" role="tab" aria-label="View analytics and charts" aria-selected="false">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
-    Analytics
+  <button class="tab-btn" data-tab="analytics" role="tab" aria-label="Stats" aria-selected="false">
+    <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">equalizer</span>
+    Stats
   </button>
-  <button class="tab-btn" data-tab="protocols" role="tab" aria-label="Workout protocols" aria-selected="false">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-    Protocols
-  </button>
-  <button class="tab-btn" data-tab="data" role="tab" aria-label="Export and import data" aria-selected="false">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-    Data
-  </button>
-  <button class="tab-btn" data-tab="settings" role="tab" aria-label="App settings" aria-selected="false">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-    Settings
+  <button class="tab-btn" data-tab="settings" role="tab" aria-label="Profile" aria-selected="false">
+    <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">person</span>
+    Profile
   </button>
 </nav>
+
+<!-- W7 Timer Overlay -->
+<div class="timer-overlay hidden" id="timerOverlay">
+  <div class="timer-overlay-header">RECOVERY PHASE</div>
+  <div class="timer-circle-wrap">
+    <canvas width="300" height="300" id="timerCircleCanvas"></canvas>
+    <div class="timer-circle-text" id="timerCircleText">0:00</div>
+  </div>
+  <button class="btn btn-primary btn-block btn-skip-rest" id="skipRestBtn">SKIP REST ▸▸</button>
+  <div class="timer-next-set" id="timerNextSet"></div>
+  <div class="timer-bottom-stats">
+    <div class="stat-box"><div class="val" id="timerHR">— BPM</div><div class="lbl">HEART RATE</div></div>
+    <div class="stat-box"><div class="val" id="timerCal">0 KCAL</div><div class="lbl">CALORIES</div></div>
+  </div>
+</div>
+
+<!-- W8 Post-Workout Summary Overlay -->
+<div class="post-workout-overlay hidden" id="postWorkoutOverlay"></div>
 
 <!-- Modal Container -->
 <div id="modalContainer"></div>
@@ -568,13 +812,24 @@
 <script src="src/dataStore.js"></script>
 <script src="src/syncService.js"></script>
 <script src="src/wearableIntegration.js"></script>
-<script src="src/ui.js"></script>
-<script src="src/views/todayView.js"></script>
+<script src="src/foodDatabase.js"></script>
+<script src="src/barcodeScanner.js"></script>
+<script src="src/exerciseDatabase.js"></script>
+<script src="src/starterRoutines.js"></script>
+<script src="src/prTracker.js"></script>
+<script src="src/achievements.js"></script>
+<script src="src/shareCard.js"></script>
+<script src="src/workoutIntelligence.js"></script>
+<script src="src/ui.js?v=20260406b"></script>
+<script src="src/onboarding.js?v=20260406b"></script>
+<script src="src/views/todayView.js?v=20260406b"></script>
 <script src="src/views/logView.js"></script>
+<script src="src/views/exerciseDetailView.js"></script>
 <script src="src/views/settingsView.js"></script>
 <script src="src/views/protocolsView.js"></script>
 <script src="src/views/analyticsView.js"></script>
 <script src="src/views/exportView.js"></script>
-<script src="src/main.js"></script>
+<script src="src/views/postWorkoutView.js"></script>
+<script src="src/main.js?v=20260406b"></script>
 </body>
 </html>

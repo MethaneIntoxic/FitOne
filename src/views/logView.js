@@ -95,12 +95,16 @@ function getExerciseRowHtml(index, seed, planned) {
   const ex = seed || {};
   const ps = planned || {};
   return '' +
-    '<div class="form-group dense-col-5"><input type="text" placeholder="Exercise name" id="exname_' + index + '" value="' + escAttr(ex.name || "") + '"></div>' +
+    '<div class="form-group dense-col-4"><input type="text" placeholder="Exercise name" id="exname_' + index + '" value="' + escAttr(ex.name || "") + '"></div>' +
+    '<button class="btn btn-outline btn-sm dense-col-1" onclick="if(typeof showExerciseDetailModal === \'function\') showExerciseDetailModal($(\'exname_' + index + '\').value)" aria-label="Exercise info" title="View Details" style="font-size:16px;padding:0">ℹ️</button>' +
     '<div class="form-group dense-col-2"><input type="number" placeholder="Sets" id="exsets_' + index + '" value="' + (ex.sets || "") + '"></div>' +
     '<div class="form-group dense-col-2"><input type="number" placeholder="Reps" id="exreps_' + index + '" value="' + (ex.reps || "") + '"></div>' +
     '<div class="form-group dense-col-2"><input type="number" placeholder="Wt" id="exwt_' + index + '" value="' + (ex.weight || "") + '"></div>' +
     '<button class="btn btn-outline btn-sm dense-col-1" data-remove-row aria-label="Remove exercise row">✕</button>' +
-    '<div class="dense-col-12 exercise-advanced-toggle-wrap"><button class="btn btn-outline btn-sm exercise-advanced-toggle" data-action="toggle-ex-advanced" aria-expanded="false">Advanced targets & setup</button></div>' +
+    '<div class="dense-col-12 exercise-advanced-toggle-wrap" style="display:flex; justify-content:space-between; align-items:center;">' +
+      '<button class="btn btn-outline btn-sm exercise-advanced-toggle" data-action="toggle-ex-advanced" aria-expanded="false">Advanced targets & setup</button>' +
+      '<button class="btn btn-primary btn-sm" onclick="startTimer(settings.defaultRestTime || 60, $(\'exname_' + index + '\').value)" style="border-radius:20px; padding:2px 12px; font-size:11px;">⏱️ Rest</button>' +
+    '</div>' +
     '<div class="dense-col-12 exercise-advanced hidden" id="exadv_' + index + '">' +
       '<div class="stat-row stat-row-dense exercise-advanced-grid">' +
         '<div class="form-group dense-col-2"><input type="number" placeholder="RPE" id="exrpe_' + index + '" value="' + (ex.rpe || ps.targetRPE || "") + '"></div>' +
@@ -365,16 +369,37 @@ function autoCalcCalories() {
 }
 
 // ========== LOG WORKOUT ==========
-function addExerciseRow() {
+function addExerciseRow(seed) {
   exerciseRowCount++;
   const row = document.createElement("div");
   row.className = "stat-row stat-row-dense mb-8";
   row.id = "exrow_" + exerciseRowCount;
-  row.innerHTML = getExerciseRowHtml(exerciseRowCount);
+  row.innerHTML = getExerciseRowHtml(exerciseRowCount, seed);
   $("exerciseRows").appendChild(row);
   bindExerciseInputShortcuts(row);
   bindExerciseRowAdvancedToggle(row, exerciseRowCount);
   bindExerciseRowSetupHandlers(exerciseRowCount);
+  // Wire exercise autocomplete
+  if (typeof createExerciseAutocomplete === 'function') {
+    createExerciseAutocomplete('exname_' + exerciseRowCount, exerciseRowCount);
+  }
+  // Wire progressive overload suggestion on name blur
+  const nameInput = $('exname_' + exerciseRowCount);
+  const idx = exerciseRowCount;
+  if (nameInput) {
+    nameInput.addEventListener('change', () => {
+      const name = nameInput.value.trim();
+      if (!name) return;
+      const suggestion = typeof getSuggestedProgression === 'function' ? getSuggestedProgression(name) : null;
+      if (suggestion) {
+        const setsEl = $('exsets_' + idx), repsEl = $('exreps_' + idx), wtEl = $('exwt_' + idx);
+        if (setsEl && !setsEl.value) setsEl.value = suggestion.sets || '';
+        if (repsEl && !repsEl.value) repsEl.value = suggestion.reps || '';
+        if (wtEl && !wtEl.value) wtEl.value = suggestion.weight || '';
+        if (suggestion.note) showToast(suggestion.note, 'info');
+      }
+    });
+  }
 }
 
 function logWorkout() {
@@ -450,7 +475,52 @@ function logWorkout() {
   const card = $("workoutFormCard");
   if (card) { card.classList.add("log-success"); setTimeout(() => card.classList.remove("log-success"), 600); }
   notifyDataChangedFromLog("logWorkout");
-  showToast("Workout logged! 💪");
+  // Check for personal records
+  if (typeof checkWorkoutForPRs === 'function') {
+    const prs = checkWorkoutForPRs(exercises, date);
+    if (prs.length > 0 && typeof celebratePRs === 'function') {
+      celebratePRs(prs);
+    } else {
+      showToast("Workout logged! 💪");
+    }
+    // W8.6 — Show post-workout summary overlay
+    if (typeof showPostWorkoutSummary === 'function') {
+      // Convert exercises to include sets array for the summary view
+      const summaryEntry = { ...entry };
+      summaryEntry.exercises = exercises.map(function (ex) {
+        return {
+          name: ex.name,
+          sets: [{ weight: ex.weight, reps: ex.reps, rpe: ex.rpe }],
+        };
+      });
+      setTimeout(function () { showPostWorkoutSummary(summaryEntry); }, prs.length > 0 ? 2500 : 800);
+    }
+    // Always offer share if module available
+    if (typeof showShareCardModal === 'function') {
+      setTimeout(() => {
+        const shareBtn = document.createElement('button');
+        shareBtn.className = 'btn btn-outline btn-sm share-workout-btn';
+        shareBtn.textContent = '📤 Share Workout';
+        shareBtn.addEventListener('click', () => { showShareCardModal(entry, prs || []); shareBtn.remove(); });
+        const card = $('workoutFormCard');
+        if (card) card.appendChild(shareBtn);
+        setTimeout(() => shareBtn.remove(), 10000);
+      }, prs.length > 0 ? 2000 : 500);
+    }
+  } else {
+    showToast("Workout logged! 💪");
+    // W8.6 — Show post-workout summary even without PR tracker
+    if (typeof showPostWorkoutSummary === 'function') {
+      const summaryEntry = { ...entry };
+      summaryEntry.exercises = exercises.map(function (ex) {
+        return {
+          name: ex.name,
+          sets: [{ weight: ex.weight, reps: ex.reps, rpe: ex.rpe }],
+        };
+      });
+      setTimeout(function () { showPostWorkoutSummary(summaryEntry); }, 800);
+    }
+  }
   if (entry.protocolId) {
     const base = loadData(KEYS.protocols).find((p) => p.id === entry.protocolId);
     if (base && JSON.stringify((base.exercises || []).map((e) => e.name + "|" + e.sets + "|" + e.reps + "|" + e.weight)) !== JSON.stringify(exercises.map((e) => e.name + "|" + e.sets + "|" + e.reps + "|" + e.weight))) {
@@ -588,43 +658,125 @@ function deleteBody(id) {
   });
 }
 
-// ========== REST TIMER ==========
+// ========== W7 REST TIMER LOGIC ==========
 let _timerInterval = null;
 let _timerRemaining = 0;
+let _timerTotal = 0;
+let _timerCanvasContext = null;
 
-function startTimer(seconds) {
+function startTimer(seconds, nextExName) {
   stopTimer();
-  _timerRemaining = seconds;
+  _timerTotal = seconds || (settings.defaultRestTime || 60);
+  _timerRemaining = _timerTotal;
+  
+  const overlay = $("timerOverlay");
+  if (overlay) {
+    overlay.classList.remove("hidden");
+    document.body.classList.add("overlay-open");
+    // Populate stats
+    const durInput = $("workoutDuration");
+    if ($("timerCal") && durInput) {
+       const userBodyweight = getPrimaryBodyweight ? getPrimaryBodyweight() : 70;
+       const burned = ((parseFloat(durInput.value)||0) * (userBodyweight * 0.1)).toFixed(0);
+       $("timerCal").textContent = burned + " KCAL";
+    }
+    // Populate next set
+    if ($("timerNextSet")) {
+      const activeName = nextExName || ($("workoutName") ? $("workoutName").value : "Next Exercise");
+      $("timerNextSet").innerHTML = "PREPARE FOR<br/><b>" + escAttr(activeName || "LIFT") + "</b>";
+    }
+    
+    if (!$("skipRestBtn").hasAttribute('data-bound')) {
+      $("skipRestBtn").addEventListener("click", stopTimer);
+      $("skipRestBtn").setAttribute('data-bound', 'true');
+    }
+  }
+
   const disp = $("timerDisplay");
-  if (!disp) return;
-  disp.className = "timer-display active";
+  if (disp) { disp.className = "timer-display active"; }
+  
   updateTimerDisplay();
+  
   _timerInterval = setInterval(() => {
     _timerRemaining--;
     updateTimerDisplay();
     if (_timerRemaining <= 0) {
-      clearInterval(_timerInterval);
-      _timerInterval = null;
-      disp.className = "timer-display done";
-      disp.textContent = "✓ Done!";
-      showToast("Rest timer done! 💪", "info");
+      finishTimer();
     }
   }, 1000);
 }
 
-function stopTimer() {
-  if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
-  const disp = $("timerDisplay");
-  if (disp) { disp.textContent = "0:00"; disp.className = "timer-display"; }
-  _timerRemaining = 0;
-}
-
 function updateTimerDisplay() {
-  const disp = $("timerDisplay");
-  if (!disp) return;
   const m = Math.floor(_timerRemaining / 60);
   const s = _timerRemaining % 60;
-  disp.textContent = m + ":" + String(s).padStart(2, "0");
+  const tStr = m + ":" + String(s).padStart(2, "0");
+  
+  const disp = $("timerDisplay");
+  if (disp) disp.textContent = tStr;
+
+  const txt = $("timerCircleText");
+  if (txt) txt.textContent = tStr;
+  
+  drawTimerCanvas();
+}
+
+function drawTimerCanvas() {
+  const canvas = $("timerCircleCanvas");
+  if (!canvas) return;
+  if (!_timerCanvasContext) _timerCanvasContext = canvas.getContext('2d');
+  const ctx = _timerCanvasContext;
+  const cw = canvas.width;
+  const ch = canvas.height;
+  const cx = cw / 2;
+  const cy = ch / 2;
+  const radius = cx - 15;
+  
+  ctx.clearRect(0, 0, cw, ch);
+  
+  // Ring background
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+  ctx.strokeStyle = "rgba(255,255,255,0.05)";
+  ctx.lineWidth = 14;
+  ctx.stroke();
+  
+  // Ring progress
+  if (_timerTotal > 0 && _timerRemaining > 0) {
+    const pct = Math.max(0, _timerRemaining / _timerTotal);
+    const startAngle = -Math.PI / 2;
+    const endAngle = startAngle + (pct * 2 * Math.PI);
+    
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, startAngle, endAngle);
+    ctx.strokeStyle = "var(--primary)";
+    ctx.lineWidth = 14;
+    ctx.lineCap = "round";
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = "var(--primary)";
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+}
+
+function stopTimer() {
+  if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
+  _timerRemaining = 0;
+  _timerTotal = 0;
+  
+  const disp = $("timerDisplay");
+  if (disp) { disp.textContent = "0:00"; disp.className = "timer-display"; }
+  
+  const overlay = $("timerOverlay");
+  if (overlay) {
+    overlay.classList.add("hidden");
+    document.body.classList.remove("overlay-open");
+  }
+}
+
+function finishTimer() {
+  stopTimer();
+  if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  showToast("Rest complete! Let's go! 💪", "info");
 }
 
 // ========== SEARCH / FILTER ==========
@@ -724,6 +876,7 @@ function initLogEvents() {
       else if (action === "focusFood" && $("foodName")) $("foodName").focus();
       else if (action === "focusWorkout" && $("workoutName")) $("workoutName").focus();
       else if (action === "focusBody" && $("bodyWeight")) $("bodyWeight").focus();
+      else if (action === "scanBarcode" && typeof showBarcodeScanner === 'function') showBarcodeScanner();
       return;
     }
 
@@ -765,6 +918,9 @@ function initLogEvents() {
   });
   refreshCalorieGuidance();
 
+  // Init food database search
+  if (typeof initFoodSearch === 'function') initFoodSearch();
+
   // Search
   const searchFood = $("searchFood");
   if (searchFood) searchFood.addEventListener("input", filterRecentFood);
@@ -804,3 +960,4 @@ function initLogEvents() {
 // Give access to exerciseRowCount for protocols
 function getExerciseRowCount() { return exerciseRowCount; }
 function setExerciseRowCount(val) { exerciseRowCount = val; }
+

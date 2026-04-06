@@ -34,8 +34,11 @@ function showProtocolModal() {
     '<div class="modal-overlay" id="protoModalOverlay">' +
     '<div class="modal" role="dialog" aria-label="New Protocol">' +
     '<div class="modal-drag-handle"></div>' +
-    '<div class="modal-title">New Protocol <button class="modal-close" id="protoModalClose" aria-label="Close modal">×</button></div>' +
-    '<div class="form-group"><label>Protocol Name</label><input type="text" id="protoName" placeholder="e.g., PPL Push Day"></div>' +
+    '<div class="modal-title"><span class="proto-modal-kicker">Routine Builder</span><button class="modal-close" id="protoModalClose" aria-label="Close modal">×</button></div>' +
+    '<div class="proto-title-field">' +
+    '<label class="proto-title-label" for="protoName">Routine Title</label>' +
+    '<input class="proto-title-input" type="text" id="protoName" placeholder="UNTITLED SEQUENCE">' +
+    '</div>' +
     '<div class="form-group"><label>Description</label><textarea id="protoDesc" placeholder="Describe this workout..."></textarea></div>' +
     '<div class="flex-between mb-8 mt-12"><span class="card-title" style="margin-bottom:0">Exercises</span><button class="btn btn-outline btn-sm" id="protoAddEx">+ Add</button></div>' +
     '<div id="protoExercises"></div>' +
@@ -49,8 +52,32 @@ function showProtocolModal() {
   $("protoModalClose").addEventListener("click", closeModal);
   $("protoAddEx").addEventListener("click", addProtoExercise);
   $("protoSaveBtn").addEventListener("click", saveProtocol);
+  renderProtocolBuilderEmptyState();
 
   setTimeout(() => { if ($("protoName")) $("protoName").focus(); }, 200);
+}
+
+function renderProtocolBuilderEmptyState() {
+  const container = $("protoExercises");
+  if (!container) return;
+
+  const hasExerciseRows = container.querySelector(".stat-row");
+  const existingEmpty = container.querySelector(".proto-empty-state");
+
+  if (!hasExerciseRows && !existingEmpty) {
+    const empty = document.createElement("div");
+    empty.className = "proto-empty-state";
+    empty.innerHTML =
+      '<span class="material-symbols-outlined proto-empty-icon" aria-hidden="true">fitness_center</span>' +
+      '<h4 class="proto-empty-title">Build Your Arsenal</h4>' +
+      '<p class="proto-empty-desc">Design a precision workout template tailored for peak performance. Start by adding your first exercise below.</p>';
+    container.appendChild(empty);
+    return;
+  }
+
+  if (hasExerciseRows && existingEmpty) {
+    existingEmpty.remove();
+  }
 }
 
 function addProtoExercise() {
@@ -67,7 +94,11 @@ function addProtoExercise() {
       '<div class="form-group dense-col-2"><input type="number" placeholder="RPE" id="pexrpe_' + n + '"></div>' +
       '<button class="btn btn-outline btn-sm dense-col-2" data-remove-row>✕</button>';
   $("protoExercises").appendChild(row);
-  row.querySelector("[data-remove-row]").addEventListener("click", () => row.remove());
+  row.querySelector("[data-remove-row]").addEventListener("click", () => {
+    row.remove();
+    renderProtocolBuilderEmptyState();
+  });
+  renderProtocolBuilderEmptyState();
 }
 
 function saveProtocol() {
@@ -132,9 +163,210 @@ function deleteProtocol(id) {
   });
 }
 
+// ========== WORKOUT LIBRARY (W4) ==========
+let libraryFilter = "ALL";
+let librarySearchQuery = "";
+
+function refreshLibrary() {
+  const userProtos = loadData(KEYS.protocols).map(p => ({ ...p, isUser: true }));
+  const starterProtos = (window.STARTER_ROUTINES || []).map(p => ({ ...p, isUser: false }));
+  
+  let allRoutines = [...userProtos, ...starterProtos];
+
+  // W4.2 Search
+  if (librarySearchQuery) {
+    const q = librarySearchQuery.toLowerCase();
+    allRoutines = allRoutines.filter(r => 
+      r.name.toLowerCase().includes(q) || 
+      (r.description && r.description.toLowerCase().includes(q)) ||
+      (r.category && r.category.toLowerCase().includes(q))
+    );
+  }
+
+  // W4.3 Filters
+  if (libraryFilter !== "ALL") {
+    if (libraryFilter === "SAVED") {
+      allRoutines = allRoutines.filter(r => r.isUser);
+    } else {
+      allRoutines = allRoutines.filter(r => (r.category || "").toUpperCase() === libraryFilter);
+    }
+  }
+
+  renderFeaturedRoutine([...userProtos, ...starterProtos]);
+  renderLibraryCards(allRoutines);
+}
+
+function renderFeaturedRoutine(all) {
+  const container = $("featuredRoutineContainer");
+  if (!container) return;
+  
+  // Pick one featured (prefer starters for discovery)
+  const featured = all.find(r => r.isStarter) || all[0];
+  if (!featured) {
+    container.innerHTML = "";
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="featured-routine-card" onclick="useProtocol('${featured.id}')">
+      <div class="featured-badge">PREMIUM ROUTINE</div>
+      <div class="featured-routine-name">${esc(featured.name)}</div>
+      <div class="featured-routine-metadata">
+        <span><span class="material-symbols-outlined">schedule</span> ${featured.duration || 45} MIN</span>
+        <span><span class="material-symbols-outlined">fitness_center</span> ${featured.category || "Full Body"}</span>
+        <span><span class="material-symbols-outlined">trending_up</span> ${featured.level || "Any"}</span>
+      </div>
+      <button class="btn btn-primary btn-block mt-8">START NOW ▶</button>
+    </div>
+  `;
+}
+
+function renderLibraryCards(routines) {
+  const list = $("libraryRoutineList");
+  if (!list) return;
+
+  if (routines.length === 0) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">No routines found matching your pulse</div></div>';
+    return;
+  }
+
+  list.innerHTML = '<div class="routine-list-grid">' + routines.map(r => `
+    <div class="routine-card" data-open-routine="${escAttr(r.id)}">
+      <div class="routine-icon-wrap">
+        <span class="material-symbols-outlined">${r.category === "HIIT" ? "bolt" : "fitness_center"}</span>
+      </div>
+      <div class="routine-info">
+        <div class="routine-name">${esc(r.name)}</div>
+        <div class="routine-desc">${esc(r.description || "Experimental performance protocol")}</div>
+        <div class="routine-tags">
+          <span class="routine-tag level">${esc(r.level || "Any")}</span>
+          <span class="routine-tag category">${esc(r.category || "General")}</span>
+        </div>
+      </div>
+      <span class="material-symbols-outlined" style="color:var(--text2)">chevron_right</span>
+    </div>
+  `).join("") + '</div>';
+}
+
+function getRoutineById(id) {
+  let routine = loadData(KEYS.protocols).find((p) => p.id === id);
+  if (!routine && window.STARTER_ROUTINES) {
+    routine = window.STARTER_ROUTINES.find((r) => r.id === id);
+  }
+  return routine || null;
+}
+
+function openRoutineDetail(id) {
+  const routine = getRoutineById(id);
+  if (!routine) return;
+
+  const exercises = routine.exercises || [];
+  const html =
+    '<div class="modal-overlay" id="routineDetailOverlay">' +
+    '<div class="modal routine-detail-modal" role="dialog" aria-label="Routine Detail">' +
+    '<div class="routine-detail-head">' +
+    '<button class="routine-detail-back" id="routineDetailBack" aria-label="Back">' +
+    '<span class="material-symbols-outlined">arrow_back</span>' +
+    '</button>' +
+    '<div>' +
+    '<div class="routine-detail-kicker">ROUTINE DETAIL</div>' +
+    '<h3 class="routine-detail-name">' + esc(routine.name) + '</h3>' +
+    '</div>' +
+    '</div>' +
+    '<p class="routine-detail-desc">' + esc(routine.description || "No description available.") + '</p>' +
+    '<div class="routine-detail-meta">' +
+    '<span>' + esc(String(routine.duration || 45)) + ' MIN</span>' +
+    '<span>' + esc(routine.level || "Any") + '</span>' +
+    '<span>' + esc(routine.category || "General") + '</span>' +
+    '</div>' +
+    '<div class="routine-detail-ex-list">' +
+    exercises.map((ex) =>
+      '<button class="routine-detail-ex-item" data-open-exercise-detail="' + escAttr(ex.name || "") + '">' +
+      '<span class="name">' + esc(ex.name || "Exercise") + '</span>' +
+      '<span class="meta">' + esc(String(ex.sets || 0)) + 'x' + esc(String(ex.reps || 0)) + '</span>' +
+      '</button>'
+    ).join("") +
+    '</div>' +
+    '<button class="btn btn-primary btn-block mt-12" data-start-routine="' + escAttr(routine.id) + '">START NOW ▶</button>' +
+    '</div>' +
+    '</div>';
+
+  $("modalContainer").innerHTML = html;
+  const overlay = $("routineDetailOverlay");
+  const back = $("routineDetailBack");
+
+  if (back) back.addEventListener("click", closeModal);
+  if (overlay) {
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) closeModal();
+      const exBtn = e.target.closest("[data-open-exercise-detail]");
+      if (exBtn) {
+        const exName = exBtn.dataset.openExerciseDetail;
+        if (typeof showExerciseDetailModal === "function") showExerciseDetailModal(exName);
+        return;
+      }
+      const startBtn = e.target.closest("[data-start-routine]");
+      if (startBtn) {
+        closeModal();
+        useProtocol(startBtn.dataset.startRoutine);
+      }
+    });
+  }
+}
+
+function initLibraryEvents() {
+  const searchInput = $("searchExercises");
+  if (searchInput) {
+    searchInput.addEventListener("input", (e) => {
+      librarySearchQuery = e.target.value.trim();
+      refreshLibrary();
+    });
+  }
+
+  const filterContainer = $("libraryFilters");
+  if (filterContainer) {
+    filterContainer.addEventListener("click", (e) => {
+      const chip = e.target.closest(".filter-chip");
+      if (!chip) return;
+      filterContainer.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
+      chip.classList.add("active");
+      libraryFilter = chip.dataset.filter;
+      refreshLibrary();
+    });
+  }
+}
+
+// ========== EVENT DELEGATION ==========
+function initProtocolEvents() {
+  const panel = $("panel-protocols");
+  if (!panel) return;
+
+  panel.addEventListener("click", (e) => {
+    const openRoutine = e.target.closest("[data-open-routine]");
+    if (openRoutine) { openRoutineDetail(openRoutine.dataset.openRoutine); return; }
+    const useBtn = e.target.closest("[data-use-protocol]");
+    if (useBtn) { useProtocol(useBtn.dataset.useProtocol); return; }
+    const delBtn = e.target.closest("[data-delete-protocol]");
+    if (delBtn) { deleteProtocol(delBtn.dataset.deleteProtocol); return; }
+    const actionBtn = e.target.closest("[data-action]");
+    if (actionBtn && (actionBtn.dataset.action === "newProtocol" || actionBtn.dataset.action === "showProtocolModal")) {
+      showProtocolModal();
+      return;
+    }
+  });
+
+  initLibraryEvents();
+  refreshLibrary();
+}
+
 function useProtocol(id) {
-  const proto = loadData(KEYS.protocols).find((p) => p.id === id);
+  // Support both user protocols and starter routines
+  let proto = loadData(KEYS.protocols).find((p) => p.id === id);
+  if (!proto && window.STARTER_ROUTINES) {
+    proto = window.STARTER_ROUTINES.find(r => r.id === id);
+  }
   if (!proto) return;
+  
   if (typeof window.activateMainTab === "function") {
     window.activateMainTab("log", { scroll: false });
   } else {
@@ -161,10 +393,10 @@ function useProtocol(id) {
   $("workoutName").value = proto.name;
   $("workoutProtocol").value = proto.id;
   $("exerciseRows").innerHTML = "";
-  let exerciseRowCount = 0;
+  let rowIdx = 0;
   proto.exercises.forEach((ex) => {
-    exerciseRowCount++;
-    const n = exerciseRowCount;
+    rowIdx++;
+    const n = rowIdx;
     const row = document.createElement("div");
     row.className = "stat-row stat-row-dense mb-8";
     row.id = "exrow_" + n;
@@ -193,23 +425,5 @@ function useProtocol(id) {
     if (typeof bindExerciseRowAdvancedToggle === "function") bindExerciseRowAdvancedToggle(row, n);
     if (typeof bindExerciseRowSetupHandlers === "function") bindExerciseRowSetupHandlers(n);
   });
-  setExerciseRowCount(exerciseRowCount);
-}
 
-// ========== EVENT DELEGATION ==========
-function initProtocolEvents() {
-  const panel = $("panel-protocols");
-  if (!panel) return;
-
-  panel.addEventListener("click", (e) => {
-    const useBtn = e.target.closest("[data-use-protocol]");
-    if (useBtn) { useProtocol(useBtn.dataset.useProtocol); return; }
-    const delBtn = e.target.closest("[data-delete-protocol]");
-    if (delBtn) { deleteProtocol(delBtn.dataset.deleteProtocol); return; }
-    const actionBtn = e.target.closest("[data-action]");
-    if (actionBtn && (actionBtn.dataset.action === "newProtocol" || actionBtn.dataset.action === "showProtocolModal")) {
-      showProtocolModal();
-      return;
-    }
-  });
 }

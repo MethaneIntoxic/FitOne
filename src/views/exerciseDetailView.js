@@ -423,6 +423,60 @@ function renderPerformanceChart(exerciseName) {
   return { html, sessions };
 }
 
+function inferWorkoutTypeFromExercise(exerciseName, info) {
+  const category = (info && info.category ? String(info.category) : "").toLowerCase();
+  const lower = (exerciseName || "").toLowerCase();
+  if (category.includes("cardio") || /(run|bike|cycle|row|hiit|sprint)/.test(lower)) return "cardio";
+  if (category.includes("mobility") || /(stretch|mobility|yoga)/.test(lower)) return "mobility";
+  return "strength";
+}
+
+function prefillWorkoutLogWithLift(exerciseName, info) {
+  const cleanName = (exerciseName || "").trim();
+  if (!cleanName) return;
+
+  if (typeof goToLogWorkout === "function") goToLogWorkout();
+
+  const applyPrefill = () => {
+    const workoutNameEl = $("workoutName");
+    if (workoutNameEl && !workoutNameEl.value.trim()) {
+      workoutNameEl.value = cleanName + " Focus Session";
+    }
+
+    const workoutTypeEl = $("workoutType");
+    if (workoutTypeEl) workoutTypeEl.value = inferWorkoutTypeFromExercise(cleanName, info);
+
+    const protocolEl = $("workoutProtocol");
+    if (protocolEl) protocolEl.value = "";
+
+    const currentRows = Array.from(document.querySelectorAll('[id^="exname_"]'));
+    const emptyRow = currentRows.find((rowInput) => !rowInput.value.trim());
+    if (emptyRow) {
+      emptyRow.value = cleanName;
+      const idx = String(emptyRow.id).split("_")[1] || "";
+      const setsEl = $("exsets_" + idx);
+      const repsEl = $("exreps_" + idx);
+      if (setsEl && !setsEl.value) setsEl.value = "3";
+      if (repsEl && !repsEl.value) repsEl.value = "8";
+      emptyRow.focus();
+      return;
+    }
+
+    if (typeof addExerciseRow === "function") {
+      let seedWeight = "";
+      if (typeof getLastSessionForExercise === "function") {
+        const last = getLastSessionForExercise(cleanName);
+        if (last && Number.isFinite(last.weight) && last.weight > 0) seedWeight = last.weight;
+      }
+      addExerciseRow({ name: cleanName, sets: 3, reps: 8, weight: seedWeight });
+      const latest = Array.from(document.querySelectorAll('[id^="exname_"]')).pop();
+      if (latest) latest.focus();
+    }
+  };
+
+  setTimeout(applyPrefill, 40);
+}
+
 window.showExerciseDetailModal = function (exerciseName) {
   const cleanName = (exerciseName || "").trim();
   if (!cleanName) {
@@ -474,6 +528,7 @@ window.showExerciseDetailModal = function (exerciseName) {
     muscleMapHtml +
     protocolHtml +
     perf.html +
+    '<button class="exercise-detail-start-btn" id="exerciseDetailStartBtn">START WORKOUT WITH THIS LIFT</button>' +
     '</div>' +
     '</div>' +
     '</div>' +
@@ -492,4 +547,12 @@ window.showExerciseDetailModal = function (exerciseName) {
   }
 
   attachPerformanceChartHandlers(perf.sessions);
+
+  const startBtn = $("exerciseDetailStartBtn");
+  if (startBtn) {
+    startBtn.addEventListener("click", () => {
+      closeModal();
+      prefillWorkoutLogWithLift(cleanName, info);
+    });
+  }
 };
