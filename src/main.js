@@ -12,6 +12,34 @@ function refreshCurrentTab(tab) {
 }
 let _navState = { tab: "today", at: Date.now() };
 
+function tabFromHash(hash) {
+  const clean = (hash || "").replace(/^#/, "").toLowerCase();
+  const map = {
+    today: "today",
+    dashboard: "today",
+    log: "log",
+    workouts: "log",
+    analytics: "analytics",
+    stats: "analytics",
+    settings: "settings",
+    profile: "settings",
+    protocols: "protocols",
+    library: "protocols",
+  };
+  return map[clean] || null;
+}
+
+function hashForTab(tab) {
+  const map = {
+    today: "#today",
+    log: "#log",
+    analytics: "#analytics",
+    settings: "#settings",
+    protocols: "#protocols",
+  };
+  return map[tab] || "#today";
+}
+
 window.notifyDataChanged = function (detail) {
   window.dispatchEvent(new CustomEvent("fitone:dataChanged", { detail: detail || {} }));
 };
@@ -32,6 +60,7 @@ window.addEventListener("fitone:dataChanged", () => {
 function activateMainTab(tab, options) {
   const now = Date.now();
   const shouldScroll = !(options && options.scroll === false);
+  const shouldUpdateHash = !(options && options.updateHash === false);
   document.querySelectorAll(".tab-btn").forEach((b) => {
     b.classList.remove("active");
     b.setAttribute("aria-selected", "false");
@@ -46,6 +75,12 @@ function activateMainTab(tab, options) {
   }
   targetPanel.classList.add("active");
   _navState = { tab, at: now };
+  if (shouldUpdateHash) {
+    const nextHash = hashForTab(tab);
+    if (window.location.hash !== nextHash) {
+      window.history.replaceState(null, "", nextHash);
+    }
+  }
   if (shouldScroll) window.scrollTo({ top: 0, behavior: "smooth" });
   refreshCurrentTab(tab);
   const fab = $("fabBtn");
@@ -66,6 +101,12 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
     }
     activateMainTab(btn.dataset.tab);
   });
+});
+
+window.addEventListener("hashchange", () => {
+  const requested = tabFromHash(window.location.hash);
+  if (!requested || requested === _navState.tab) return;
+  activateMainTab(requested, { scroll: false, updateHash: false });
 });
 
 // ========== SUB-TABS ==========
@@ -223,6 +264,10 @@ function shouldShowWelcomeScreen() {
   return !localStorage.getItem("ft_onboarding_complete");
 }
 
+function setWelcomeUiState(isActive) {
+  document.body.classList.toggle("welcome-active", !!isActive);
+}
+
 function populateWelcomeStats() {
   const workouts = loadData(KEYS.workouts);
   const workoutCountEl = $("welcomeWorkoutCount");
@@ -239,6 +284,7 @@ function showWelcomeScreen() {
   const app = $("app");
   if (!welcome || !app) return;
   populateWelcomeStats();
+  setWelcomeUiState(true);
   welcome.classList.remove("hidden");
   app.classList.add("app-hidden");
 
@@ -253,6 +299,7 @@ function showWelcomeScreen() {
         welcome.classList.add("hidden");
         welcome.classList.remove("welcome-fade-out");
         app.classList.remove("app-hidden");
+        setWelcomeUiState(false);
         if (typeof showOnboardingWizard === "function") showOnboardingWizard();
       }, 320);
     });
@@ -310,10 +357,15 @@ function init() {
     return;
   }
 
+  setWelcomeUiState(false);
+
   // Backward-compatible onboarding check for users who skipped older flow
   if (typeof shouldShowOnboarding === 'function' && shouldShowOnboarding()) {
     setTimeout(() => showOnboardingWizard(), 250);
   }
+
+  const requestedTab = tabFromHash(window.location.hash) || "today";
+  activateMainTab(requestedTab, { scroll: false, updateHash: false });
 }
 
 init();

@@ -114,6 +114,13 @@ body {
 
 .app.app-hidden { display: none; }
 
+body.welcome-active .tab-bar,
+body.welcome-active .fab,
+body.welcome-active .fab-menu,
+body.welcome-active .fab-backdrop {
+  display: none !important;
+}
+
 /* ========== W1 — WELCOME SCREEN ========== */
 .welcome-screen {
   min-height: 100vh;
