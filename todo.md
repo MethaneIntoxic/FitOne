@@ -831,7 +831,7 @@
 
 ### Workout Tracking
 
-- [ ] **#6 🔴 Built-in Exercise Database with Muscle Group Tags**
+- [x] **#6 🔴 Built-in Exercise Database with Muscle Group Tags**
   - **API:** [Wger REST API](https://wger.de/api/v2/) (free, open-source, 600+ exercises with muscle group data and images)
   - Bundle top 200 exercises as offline fallback JSON
   - Autocomplete on exercise name fields
@@ -841,7 +841,7 @@
   - **New file:** `src/exerciseDatabase.js`
   - **Modify:** `logView.js` — autocomplete on exercise name inputs
 
-- [ ] **#7 🔴 Personal Records (PR) Tracking & Alerts**
+- [x] **#7 🔴 Personal Records (PR) Tracking & Alerts**
   - Compare each exercise's weight×reps against all history on log
   - Auto-detect: weight PR, rep PR, volume PR (sets×reps×weight), estimated 1RM PR
   - Trigger celebration (reuse confetti system)
@@ -851,7 +851,7 @@
   - **New file:** `src/prTracker.js`
   - **Modify:** `logView.js` → `logWorkout()`, `analyticsView.js`
 
-- [ ] **#9 🟠 Progressive Overload Suggestions**
+- [x] **#9 🟠 Progressive Overload Suggestions**
   - Auto-populate exercise rows from most recent session
   - Configurable progression scheme per exercise:
     - **Beginner:** Linear (+2.5kg/session or +1 rep)
@@ -862,7 +862,7 @@
 
 ### User Experience
 
-- [ ] **#39 🟠 Onboarding Flow for New Users**
+- [x] **#39 🟠 Onboarding Flow for New Users**
   - First-launch wizard steps:
     1. Experience level (beginner / intermediate / advanced / competitor)
     2. Primary goal (lose fat / maintain / build muscle / compete)
@@ -884,7 +884,7 @@
 
 ### Progress & Body Tracking
 
-- [ ] **#13 🔴 Progress Photos with Before/After Comparison**
+- [x] **#13 🔴 Progress Photos with Before/After Comparison**
   - Camera capture or file upload on Body tab
   - Store as base64 or blob URL with date + tags (front/side/back/most muscular/rear lat spread)
   - Side-by-side comparison slider
@@ -894,7 +894,7 @@
   - **New file:** `src/views/photosView.js`
   - **Modify:** `index.html` — sub-tab on Body panel
 
-- [ ] **#14 🟠 Body Composition Visualization (Spider Chart)**
+- [x] **#14 🟠 Body Composition Visualization (Spider Chart)**
   - Radar chart of all body measurements over time
   - Show directional arrows for each measurement
   - Symmetry analysis: left arm vs right arm, proportions
@@ -902,7 +902,7 @@
   - **Pro value:** Symmetry is judged on stage — track and correct imbalances
   - **Modify:** `ui.js` (new chart fn), `analyticsView.js`
 
-- [ ] **#15 🟠 Interactive Chart Tooltips**
+- [x] **#15 🟠 Interactive Chart Tooltips**
   - Touch/mouse handlers on all canvas charts
   - Tap bar/point → tooltip with exact values + date
   - Long press → compare with previous period
@@ -910,14 +910,14 @@
 
 ### Social & Sharing (Zero-Cost, No Backend)
 
-- [ ] **#18 🟠 Shareable Workout Summary Cards**
+- [x] **#18 🟠 Shareable Workout Summary Cards**
   - Generate branded image card after logging workout
   - Canvas-to-PNG, download directly — no server needed
   - Include: exercises, volume, duration, PR badges, FitOne branding
   - **New file:** `src/shareCard.js`
   - **Modify:** `logView.js` post-workout flow
 
-- [ ] **#19 🟡 Achievement Badges & Milestone System**
+- [x] **#19 🟡 Achievement Badges & Milestone System**
   - 40+ achievements across all levels:
     - **Beginner:** First workout, first food log, 3-day streak, logged every meal for a day
     - **Intermediate:** 30-day streak, 100 workouts, bodyweight bench press, 1000lb total
@@ -928,21 +928,21 @@
 
 ### Habit & Consistency
 
-- [ ] **#29 🟠 Daily Goal Rings**
+- [x] **#29 🟠 Daily Goal Rings**
   - 4 rings: Nutrition | Training | Hydration | Recovery
   - Track "perfect days" and "ring streaks"
   - **Beginner value:** Simple visual — "close your rings"
   - **Pro value:** Adherence tracking across all pillars of prep
   - **Modify:** `todayView.js` → `refreshToday()`
 
-- [ ] **#30 🟠 Streak Freeze / Rest Day Protection**
+- [x] **#30 🟠 Streak Freeze / Rest Day Protection**
   - 1-2 freezes per week. Rest day with wellness check-in or body log counts
   - Configurable: "What counts as an active day?" (any log / workout only / food + workout)
   - **Beginner value:** Doesn't punish rest days — important for habit formation
   - **Pro value:** Rest days are part of the program, not a failure
   - **Modify:** `dataStore.js` → `calculateStreak()`
 
-- [ ] **#40 🟠 Quick-Log Widget**
+- [x] **#40 🟠 Quick-Log Widget**
   - FAB menu → "Quick Add" → minimal modal: name + calories + meal → done
   - Also: "Quick Water" already exists, add "Quick Bodyweight" (just weight, one field)
   - **Beginner value:** Lowest possible friction entry point
@@ -956,7 +956,7 @@
 
 ### Workout Intelligence
 
-- [ ] **#8 🟠 Estimated 1RM Calculation**
+- [x] **#8 🟠 Estimated 1RM Calculation**
   - Epley formula: `weight × (1 + reps/30)`
   - Display alongside every logged set
   - Track estimated 1RM trends per exercise over time
@@ -965,7 +965,7 @@
   - **Add:** `calculate1RM()` in `dataStore.js`
   - **Modify:** `logView.js`, `analyticsView.js`
 
-- [ ] **#10 🟠 Volume Tracking Per Muscle Group**
+- [x] **#10 🟠 Volume Tracking Per Muscle Group**
   - Using exercise database muscle tags (#6)
   - Weekly sets per muscle group, with science-based volume landmarks:
     - **Minimum Effective Volume (MEV):** ~6-8 sets/muscle/week
@@ -975,13 +975,13 @@
   - **Pro value:** Volume periodization, strategic overreaching, deload timing
   - **Modify:** `analyticsView.js`, `dataStore.js`
 
-- [ ] **#11 🟡 Workout Timer with Auto-Start**
+- [x] **#11 🟡 Workout Timer with Auto-Start**
   - Auto-start rest timer after set completion (Enter key / field blur)
   - Vibration + audio on completion
   - Configurable default rest per exercise type (strength: 2-3min, hypertrophy: 60-90s)
   - **Modify:** `logView.js` → `bindExerciseInputShortcuts()`, `startTimer()`
 
-- [ ] **#12 🟡 Superset / Circuit / Drop Set Grouping**
+- [x] **#12 🟡 Superset / Circuit / Drop Set Grouping**
   - "Link with next" toggle on exercise rows
   - Support types: superset, giant set, drop set, rest-pause
   - Visual bracket connector, rest between groups not exercises

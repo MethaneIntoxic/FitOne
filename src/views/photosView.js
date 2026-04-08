@@ -1,7 +1,15 @@
 // ========== PROGRESS PHOTOS ==========
 // Photo capture/upload with before/after comparison slider
 
-const PHOTO_TAGS = ['front', 'side', 'back', 'most-muscular', 'other'];
+const PHOTO_TAGS = ['front', 'side', 'back', 'most-muscular', 'rear-lat-spread', 'other'];
+
+function formatPhotoTag(tag) {
+  return String(tag || 'photo')
+    .split('-')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
 
 function refreshPhotos() {
   const container = $('photosContainer');
@@ -36,7 +44,7 @@ function refreshPhotos() {
     groups[date].forEach(p => {
       html += '<div class="photo-thumb" data-photo-id="' + p.id + '">' +
         '<img src="' + p.uri + '" alt="' + esc(p.label || p.tag || '') + '" loading="lazy">' +
-        '<div class="photo-thumb-tag">' + esc(p.tag || 'photo') + '</div>' +
+        '<div class="photo-thumb-tag">' + esc(formatPhotoTag(p.tag)) + '</div>' +
         '</div>';
     });
     html += '</div></div>';
@@ -56,7 +64,7 @@ function showAddPhotoModal() {
       '<div class="modal-title">Add Progress Photo <button class="modal-close" id="photoModalClose" aria-label="Close">×</button></div>' +
       '<div class="form-group"><label>Date</label><input type="date" id="photoDate" value="' + today() + '"></div>' +
       '<div class="form-group"><label>Pose / Tag</label><select id="photoTag">' +
-        PHOTO_TAGS.map(t => '<option value="' + t + '">' + t.charAt(0).toUpperCase() + t.slice(1).replace('-', ' ') + '</option>').join('') +
+        PHOTO_TAGS.map(t => '<option value="' + t + '">' + formatPhotoTag(t) + '</option>').join('') +
       '</select></div>' +
       '<div class="form-group"><label>Notes (optional)</label><input type="text" id="photoNotes" placeholder="e.g., 12 weeks out"></div>' +
       '<div class="photo-upload-area" id="photoUploadArea">' +
@@ -151,10 +159,10 @@ function showComparePhotos() {
       '</div>' +
       '<div class="compare-select mt-12">' +
         '<div class="form-group" style="flex:1"><label>Before</label><select id="compareBefore">' +
-          photos.map((p, i) => '<option value="' + i + '"' + (i === 0 ? ' selected' : '') + '>' + fmtDate(p.date) + ' — ' + (p.tag || '') + '</option>').join('') +
+          photos.map((p, i) => '<option value="' + i + '"' + (i === 0 ? ' selected' : '') + '>' + fmtDate(p.date) + ' — ' + formatPhotoTag(p.tag) + '</option>').join('') +
         '</select></div>' +
         '<div class="form-group" style="flex:1"><label>After</label><select id="compareAfterSel">' +
-          photos.map((p, i) => '<option value="' + i + '"' + (i === photos.length - 1 ? ' selected' : '') + '>' + fmtDate(p.date) + ' — ' + (p.tag || '') + '</option>').join('') +
+          photos.map((p, i) => '<option value="' + i + '"' + (i === photos.length - 1 ? ' selected' : '') + '>' + fmtDate(p.date) + ' — ' + formatPhotoTag(p.tag) + '</option>').join('') +
         '</select></div>' +
       '</div>' +
     '</div></div>';

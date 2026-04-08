@@ -109,6 +109,11 @@ function defaultSettings() {
     proteinGoal: 150,
     carbsGoal: 250,
     fatGoal: 65,
+    goalDayProfile: "training",
+    goalMacroProfiles: null,
+    lastGoalSyncAt: 0,
+    lastGoalSyncConfidence: 0,
+    lastGoalSyncTDEE: 0,
     workoutGoal: 4,
     waterGoal: 2000,
     weightUnit: "kg",
@@ -138,6 +143,8 @@ function defaultSettings() {
     height: "",
     // W16 Workout Settings
     defaultRestTime: 90,
+    defaultCompoundRestTime: 150,
+    defaultIsolationRestTime: 75,
     plateSystem: "kg",
     autoLock: false,
     autoLockActiveOnly: true,
@@ -146,6 +153,9 @@ function defaultSettings() {
     voiceCountdown: false,
     pushNotifications: false,
     emailSummaries: false,
+    streakActiveRule: "any-log",
+    streakFreezesPerWeek: 2,
+    streakRestProtection: true,
   };
 }
 
@@ -222,6 +232,24 @@ function computeEffectiveLoad(exercise, set, userBodyweight) {
   if (!exercise || !exercise.isAssistedBodyweight) return rawWeight;
   const bw = Number(userBodyweight) || 0;
   return Math.max(0, bw - rawWeight);
+}
+
+function calculate1RM(weight, reps) {
+  const w = Number(weight);
+  const r = Number(reps);
+  if (!Number.isFinite(w) || w <= 0 || !Number.isFinite(r) || r <= 0) return 0;
+  if (r === 1) return Math.round(w * 10) / 10;
+  return Math.round(w * (1 + r / 30) * 10) / 10;
+}
+
+function calculateExerciseEstimated1RM(exercise) {
+  if (!exercise) return 0;
+  if (Array.isArray(exercise.sets) && exercise.sets.length) {
+    return exercise.sets.reduce((best, set) => {
+      return Math.max(best, calculate1RM(set && set.weight, set && set.reps));
+    }, 0);
+  }
+  return calculate1RM(exercise.weight, exercise.reps);
 }
 
 function trackUXTelemetry(path) {
@@ -525,6 +553,171 @@ function getWeeklyPerformanceSummary(referenceDate) {
   };
 }
 
+const MUSCLE_VOLUME_WEEKLY_LANDMARKS = {
+  chest: { label: "Chest", mev: 8, mrv: 22 },
+  back: { label: "Back", mev: 8, mrv: 24 },
+  lats: { label: "Lats", mev: 6, mrv: 22 },
+  shoulders: { label: "Shoulders", mev: 6, mrv: 20 },
+  biceps: { label: "Biceps", mev: 6, mrv: 18 },
+  triceps: { label: "Triceps", mev: 6, mrv: 18 },
+  quads: { label: "Quads", mev: 8, mrv: 24 },
+  hamstrings: { label: "Hamstrings", mev: 6, mrv: 18 },
+  glutes: { label: "Glutes", mev: 6, mrv: 20 },
+  calves: { label: "Calves", mev: 6, mrv: 16 },
+  abs: { label: "Abs", mev: 6, mrv: 20 },
+};
+
+function getFallbackMuscleTags(exerciseName) {
+  const name = String(exerciseName || "").toLowerCase();
+  if (!name) return { primary: [], secondary: [] };
+
+  if (name.includes("bench") || name.includes("fly") || name.includes("dip") || name.includes("push-up")) {
+    return { primary: ["chest"], secondary: ["triceps", "shoulders"] };
+  }
+  if (name.includes("row") || name.includes("pull-up") || name.includes("pulldown") || name.includes("chin-up")) {
+    return { primary: ["back", "lats"], secondary: ["biceps"] };
+  }
+  if (name.includes("squat") || name.includes("lunge") || name.includes("leg press") || name.includes("leg extension")) {
+    return { primary: ["quads", "glutes"], secondary: ["hamstrings"] };
+  }
+  if (name.includes("deadlift") || name.includes("rdl") || name.includes("hip thrust") || name.includes("leg curl")) {
+    return { primary: ["hamstrings", "glutes"], secondary: ["back"] };
+  }
+  if (name.includes("curl")) {
+    return { primary: ["biceps"], secondary: [] };
+  }
+  if (name.includes("tricep") || name.includes("pushdown") || name.includes("skull")) {
+    return { primary: ["triceps"], secondary: [] };
+  }
+  if (name.includes("press") || name.includes("raise") || name.includes("shoulder")) {
+    return { primary: ["shoulders"], secondary: ["triceps"] };
+  }
+  if (name.includes("calf")) {
+    return { primary: ["calves"], secondary: [] };
+  }
+  if (name.includes("plank") || name.includes("crunch") || name.includes("ab") || name.includes("core")) {
+    return { primary: ["abs"], secondary: [] };
+  }
+  return { primary: [], secondary: [] };
+}
+
+function resolveExerciseMuscleTags(exerciseName) {
+  const info = typeof getExerciseInfo === "function" ? getExerciseInfo(exerciseName) : null;
+  const primary = Array.isArray(info && info.primary)
+    ? info.primary.filter((m) => MUSCLE_VOLUME_WEEKLY_LANDMARKS[m])
+    : [];
+  const secondary = Array.isArray(info && info.secondary)
+    ? info.secondary.filter((m) => MUSCLE_VOLUME_WEEKLY_LANDMARKS[m] && !primary.includes(m))
+    : [];
+
+  if (primary.length || secondary.length) {
+    return { primary, secondary };
+  }
+
+  return getFallbackMuscleTags(exerciseName);
+}
+
+function classifyMuscleVolumeStatus(setCount, mev, mrv) {
+  if (setCount > mrv) return "over";
+  if (setCount < mev) return "under";
+  return "in-range";
+}
+
+function getWeeklyMuscleVolumeStats(weeksBack) {
+  const back = Math.max(0, Number(weeksBack) || 0);
+  const weekStart = new Date();
+  weekStart.setHours(0, 0, 0, 0);
+  weekStart.setDate(weekStart.getDate() - weekStart.getDay() - back * 7);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 7);
+
+  const startDate = localDateStr(weekStart);
+  const endExclusive = localDateStr(weekEnd);
+  const endDisplay = localDateStr(new Date(weekEnd.getTime() - 24 * 60 * 60 * 1000));
+
+  const muscles = {};
+  Object.keys(MUSCLE_VOLUME_WEEKLY_LANDMARKS).forEach((key) => {
+    muscles[key] = 0;
+  });
+
+  const workouts = loadData(KEYS.workouts).filter((w) => w.date >= startDate && w.date < endExclusive);
+  let totalSetEntries = 0;
+
+  workouts.forEach((workout) => {
+    (workout.exercises || []).forEach((exercise) => {
+      const setCount = Array.isArray(exercise.sets)
+        ? exercise.sets.length
+        : Math.max(0, Number(exercise.sets) || 0);
+      if (setCount <= 0) return;
+
+      const tags = resolveExerciseMuscleTags(exercise.name);
+      let primary = (tags.primary || []).filter((m) => MUSCLE_VOLUME_WEEKLY_LANDMARKS[m]);
+      let secondary = (tags.secondary || []).filter((m) => MUSCLE_VOLUME_WEEKLY_LANDMARKS[m] && !primary.includes(m));
+
+      if (!primary.length && secondary.length) {
+        primary = [secondary[0]];
+        secondary = secondary.slice(1);
+      }
+      if (!primary.length && !secondary.length) return;
+
+      totalSetEntries += setCount;
+      primary.forEach((muscle) => {
+        muscles[muscle] = (muscles[muscle] || 0) + setCount;
+      });
+      secondary.forEach((muscle) => {
+        muscles[muscle] = (muscles[muscle] || 0) + setCount * 0.5;
+      });
+    });
+  });
+
+  const rows = Object.keys(MUSCLE_VOLUME_WEEKLY_LANDMARKS)
+    .map((muscle) => {
+      const landmark = MUSCLE_VOLUME_WEEKLY_LANDMARKS[muscle];
+      const sets = Math.round((muscles[muscle] || 0) * 10) / 10;
+      const status = classifyMuscleVolumeStatus(sets, landmark.mev, landmark.mrv);
+      const pctOfMrv = landmark.mrv > 0 ? Math.min(100, (sets / landmark.mrv) * 100) : 0;
+      return {
+        key: muscle,
+        label: landmark.label,
+        sets,
+        mev: landmark.mev,
+        mrv: landmark.mrv,
+        status,
+        pctOfMrv,
+      };
+    })
+    .sort((a, b) => b.sets - a.sets);
+
+  const activeRows = rows.filter((row) => row.sets > 0);
+  const overCount = activeRows.filter((row) => row.status === "over").length;
+  const underCount = activeRows.filter((row) => row.status === "under").length;
+
+  let statusTone = "neutral";
+  let statusMessage = "Log weighted sets to unlock weekly muscle volume guidance.";
+  if (totalSetEntries > 0) {
+    if (overCount > 0) {
+      statusTone = "over";
+      statusMessage = overCount + " active muscle group" + (overCount === 1 ? "" : "s") + " above MRV this week.";
+    } else if (underCount > 0) {
+      statusTone = "under";
+      statusMessage = underCount + " active muscle group" + (underCount === 1 ? "" : "s") + " below MEV this week.";
+    } else {
+      statusTone = "in-range";
+      statusMessage = "Active muscle groups are inside the MEV-MRV weekly target zone.";
+    }
+  }
+
+  return {
+    startDate,
+    endDate: endDisplay,
+    workouts: workouts.length,
+    totalSetEntries,
+    muscles: rows,
+    statusTone,
+    statusMessage,
+  };
+}
+
 function getNotifications(limit) {
   const maxItems = Number(limit) > 0 ? Number(limit) : 24;
   const notifications = [];
@@ -610,22 +803,70 @@ function getNotifications(limit) {
 function calculateStreak() {
   const food = loadData(KEYS.food);
   const workouts = loadData(KEYS.workouts);
-  const allDates = new Set([
-    ...food.map((f) => f.date),
-    ...workouts.map((w) => w.date),
-  ]);
+  const body = loadData(KEYS.body);
+  const wellness = loadData(KEYS.wellness);
+  const foodDates = new Set(food.map((f) => f.date));
+  const workoutDates = new Set(workouts.map((w) => w.date));
+  const bodyDates = new Set(body.map((b) => b.date));
+  const wellnessDates = new Set(wellness.map((w) => w.date));
+
+  const rule = String(settings.streakActiveRule || "any-log");
+  const freezeLimit = Math.max(0, Math.min(2, Number(settings.streakFreezesPerWeek) || 0));
+  const restProtection = settings.streakRestProtection !== false;
+
+  function isDayCounted(dateStr) {
+    const hasFood = foodDates.has(dateStr);
+    const hasWorkout = workoutDates.has(dateStr);
+    const hasRecoveryLog = bodyDates.has(dateStr) || wellnessDates.has(dateStr);
+
+    let active = false;
+    if (rule === "workout-only") {
+      active = hasWorkout;
+    } else if (rule === "food-workout") {
+      active = hasFood && hasWorkout;
+    } else {
+      active = hasFood || hasWorkout;
+    }
+
+    if (!active && restProtection && hasRecoveryLog) {
+      active = true;
+    }
+    return active;
+  }
+
+  function weekKey(dateObj) {
+    const start = new Date(dateObj);
+    start.setHours(12, 0, 0, 0);
+    start.setDate(start.getDate() - start.getDay());
+    return localDateStr(start);
+  }
+
   let streak = 0;
+  const freezeUsage = {};
   const d = new Date();
+
   // If today has no activity yet, start from yesterday (tolerance)
-  if (!allDates.has(localDateStr(d))) {
+  if (!isDayCounted(localDateStr(d))) {
     d.setDate(d.getDate() - 1);
   }
+
   while (true) {
     const dateStr = localDateStr(d);
-    if (allDates.has(dateStr)) {
+    if (isDayCounted(dateStr)) {
       streak++;
       d.setDate(d.getDate() - 1);
-    } else break;
+      continue;
+    }
+
+    const wKey = weekKey(d);
+    const used = Number(freezeUsage[wKey] || 0);
+    if (freezeLimit > 0 && used < freezeLimit) {
+      freezeUsage[wKey] = used + 1;
+      streak++;
+      d.setDate(d.getDate() - 1);
+      continue;
+    }
+    break;
   }
   return streak;
 }
@@ -882,6 +1123,161 @@ function calculateAdaptiveTDEE() {
   };
 }
 
+function getBodyweightKgForGoalPlanning() {
+  const raw = Number(getPrimaryBodyweight()) || 0;
+  const fallback = (settings.weightUnit || "kg") === "lbs" ? 154 : 70;
+  const base = raw > 0 ? raw : fallback;
+  const kg = (settings.weightUnit || "kg") === "lbs" ? base * 0.453592 : base;
+  return Math.max(40, Math.min(220, kg));
+}
+
+function normalizeCompeteDayProfile(value) {
+  const raw = String(value || "").toLowerCase().trim();
+  if (raw === "rest" || raw === "rest-day" || raw === "rest day") return "rest";
+  if (raw === "carb-up" || raw === "carbup" || raw === "carb up") return "carb-up";
+  if (raw === "peak-week" || raw === "peakweek" || raw === "peak week") return "peak-week";
+  return "training";
+}
+
+function calculateMacroTargetsForProfile(estimatedTDEE, bodyweightKg, profile) {
+  const p = profile || {};
+  const calories = Math.max(1200, Math.min(6000, Math.round(Number(estimatedTDEE || 0) + Number(p.delta || 0))));
+  const proteinPerKg = Number.isFinite(Number(p.proteinPerKg)) ? Number(p.proteinPerKg) : 2;
+  const fatPerKg = Number.isFinite(Number(p.fatPerKg)) ? Number(p.fatPerKg) : 0.8;
+  const minCarbs = Math.max(40, Number(p.minCarbs) || 40);
+
+  let protein = Math.max(60, Math.min(360, Math.round(Number(bodyweightKg || 70) * proteinPerKg)));
+  let fat = Math.max(35, Math.min(180, Math.round(Number(bodyweightKg || 70) * fatPerKg)));
+  let carbs = Math.round((calories - protein * 4 - fat * 9) / 4);
+
+  if (carbs < minCarbs) {
+    carbs = minCarbs;
+    fat = Math.round((calories - protein * 4 - carbs * 4) / 9);
+  }
+  if (fat < 35) {
+    fat = 35;
+    carbs = Math.round((calories - protein * 4 - fat * 9) / 4);
+  }
+
+  return {
+    calories,
+    protein,
+    carbs: Math.max(minCarbs, carbs),
+    fat,
+  };
+}
+
+function calculateCompeteMacroProfilesFromTDEE(estimatedTDEE, bodyweightKg) {
+  const templates = {
+    training: { delta: -220, proteinPerKg: 2.6, fatPerKg: 0.7, minCarbs: 140 },
+    rest: { delta: -450, proteinPerKg: 2.8, fatPerKg: 0.9, minCarbs: 80 },
+    "carb-up": { delta: 180, proteinPerKg: 2.2, fatPerKg: 0.55, minCarbs: 220 },
+    "peak-week": { delta: -80, proteinPerKg: 2.4, fatPerKg: 0.65, minCarbs: 180 },
+  };
+
+  const profiles = {};
+  Object.keys(templates).forEach((key) => {
+    profiles[key] = calculateMacroTargetsForProfile(estimatedTDEE, bodyweightKg, templates[key]);
+  });
+  return profiles;
+}
+
+function calculateGoalMacroTargetsFromTDEE(estimatedTDEE, goal, bodyweightKg, options) {
+  const g = String(goal || "maintain").toLowerCase();
+  const opts = options || {};
+
+  if (g === "compete") {
+    const profiles = calculateCompeteMacroProfilesFromTDEE(estimatedTDEE, bodyweightKg);
+    const dayType = normalizeCompeteDayProfile(opts.dayType || settings.goalDayProfile || "training");
+    const selected = profiles[dayType] || profiles.training;
+    const result = {
+      ...selected,
+      dayType,
+    };
+    if (opts.includeProfiles) {
+      result.profiles = profiles;
+    }
+    return result;
+  }
+
+  const profiles = {
+    lose: { delta: -400, proteinPerKg: 2.4, fatPerKg: 0.8, minCarbs: 60 },
+    maintain: { delta: 0, proteinPerKg: 2.0, fatPerKg: 0.9, minCarbs: 60 },
+    gain: { delta: 300, proteinPerKg: 2.0, fatPerKg: 0.8, minCarbs: 80 },
+    performance: { delta: 200, proteinPerKg: 2.0, fatPerKg: 0.8, minCarbs: 90 },
+  };
+  return calculateMacroTargetsForProfile(
+    estimatedTDEE,
+    bodyweightKg,
+    profiles[g] || profiles.maintain
+  );
+}
+
+function syncGoalToAdaptiveTDEE(options) {
+  const opts = options || {};
+  const minConfidence = Number.isFinite(Number(opts.minConfidence)) ? Number(opts.minConfidence) : 0.65;
+  const force = !!opts.force;
+  const tdeeResult = calculateAdaptiveTDEE();
+
+  if (!tdeeResult || tdeeResult.status !== "ready") {
+    return {
+      status: "insufficient",
+      tdeeResult,
+      message: tdeeResult && tdeeResult.message ? tdeeResult.message : "Not enough data",
+    };
+  }
+
+  const confidence = Number(tdeeResult.confidence) || 0;
+  if (!force && confidence < minConfidence) {
+    return {
+      status: "low-confidence",
+      tdeeResult,
+      minConfidence,
+    };
+  }
+
+  const bodyweightKg = getBodyweightKgForGoalPlanning();
+  const goal = settings.bodyGoal || "maintain";
+  const targets = calculateGoalMacroTargetsFromTDEE(
+    tdeeResult.estimatedTDEE,
+    goal,
+    bodyweightKg,
+    {
+      dayType: settings.goalDayProfile || "training",
+      includeProfiles: goal === "compete",
+    }
+  );
+
+  const next = {
+    ...settings,
+    calorieGoal: targets.calories,
+    proteinGoal: targets.protein,
+    carbsGoal: targets.carbs,
+    fatGoal: targets.fat,
+    goalDayProfile: targets.dayType || normalizeCompeteDayProfile(settings.goalDayProfile || "training"),
+    goalMacroProfiles: targets.profiles || null,
+    lastGoalSyncAt: Date.now(),
+    lastGoalSyncConfidence: confidence,
+    lastGoalSyncTDEE: tdeeResult.estimatedTDEE,
+  };
+
+  updateSettings(next);
+  try {
+    localStorage.setItem(KEYS.settings, JSON.stringify(next));
+  } catch {
+    // silent
+  }
+
+  return {
+    status: "ready",
+    tdeeResult,
+    targets,
+    dayType: next.goalDayProfile,
+    profiles: next.goalMacroProfiles,
+    settings: next,
+  };
+}
+
 // ========== PLATEAU DETECTION ==========
 function detectPlateau() {
   const plateaus = [];
@@ -1068,7 +1464,7 @@ function generateRecommendations(tdeeResult, plateaus) {
   const calGoal = settings.calorieGoal;
   const diff = calGoal - tdee;
 
-  if (goal === "lose") {
+  if (goal === "lose" || goal === "compete") {
     if (diff > -200)
       recs.push({
         icon: "📉",
@@ -1110,7 +1506,7 @@ function generateRecommendations(tdeeResult, plateaus) {
   }
 
   if (plateaus.some((p) => p.type === "weight")) {
-    if (goal === "lose")
+    if (goal === "lose" || goal === "compete")
       recs.push({
         icon: "💡",
         text: "Weight plateau detected. Try: reduce intake by 150\u2013200 cal, add 1 cardio session, or eat at TDEE for 1\u20132 weeks (diet break).",

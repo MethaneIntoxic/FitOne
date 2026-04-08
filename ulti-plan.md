@@ -79,7 +79,7 @@ Current synced checkpoint (from `todo.md`):
 - R1 complete
 - R2 complete
 - R3 complete
-- Phase W next target: #6 (Built-in Exercise Database with Muscle Group Tags)
+- Phase W next target: #25 (Smart Calorie/Macro Adjustment)
 
 ## 4) DO NOT List
 

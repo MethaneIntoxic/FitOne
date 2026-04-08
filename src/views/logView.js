@@ -17,6 +17,236 @@ function getSetupSelectOptions(exerciseName) {
   return ['<option value="">Last setup suggestion</option>'].concat(opts).join("");
 }
 
+const EXERCISE_GROUP_TYPES = [
+  { value: "superset", label: "Superset" },
+  { value: "circuit", label: "Circuit" },
+  { value: "giant", label: "Giant Set" },
+  { value: "drop", label: "Drop Set" },
+  { value: "rest-pause", label: "Rest-Pause" },
+];
+
+function getExerciseGroupTypeLabel(type) {
+  const match = EXERCISE_GROUP_TYPES.find((opt) => opt.value === String(type || "").toLowerCase());
+  return match ? match.label : "Superset";
+}
+
+function getExerciseGroupTypeOptionsHtml(selectedType) {
+  const selected = String(selectedType || "superset").toLowerCase();
+  return EXERCISE_GROUP_TYPES
+    .map((opt) => {
+      const sel = opt.value === selected ? " selected" : "";
+      return '<option value="' + opt.value + '"' + sel + ">" + opt.label + "</option>";
+    })
+    .join("");
+}
+
+function getExerciseRowIndex(row) {
+  if (!row || !row.id) return 0;
+  return Number(String(row.id).replace("exrow_", "")) || 0;
+}
+
+function getAdjacentExerciseRow(row, direction) {
+  if (!row) return null;
+  let cursor = direction > 0 ? row.nextElementSibling : row.previousElementSibling;
+  while (cursor) {
+    if (cursor.id && cursor.id.indexOf("exrow_") === 0) return cursor;
+    cursor = direction > 0 ? cursor.nextElementSibling : cursor.previousElementSibling;
+  }
+  return null;
+}
+
+function getExerciseRowName(row) {
+  const input = row ? row.querySelector('[id^="exname_"]') : null;
+  return (input && input.value ? String(input.value) : "").trim();
+}
+
+function isExerciseRowLinkedWithNext(row) {
+  const input = row ? row.querySelector('[id^="exlinknext_"]') : null;
+  return !!(input && input.checked);
+}
+
+function getExerciseRowGroupType(row) {
+  const select = row ? row.querySelector('[id^="exgrouptype_"]') : null;
+  const raw = (select && select.value ? String(select.value) : "superset").toLowerCase();
+  if (EXERCISE_GROUP_TYPES.some((opt) => opt.value === raw)) return raw;
+  return "superset";
+}
+
+function getExerciseGroupContext(row) {
+  if (!row) return null;
+
+  let startRow = row;
+  while (startRow) {
+    const prev = getAdjacentExerciseRow(startRow, -1);
+    if (!prev) break;
+    if (!isExerciseRowLinkedWithNext(prev)) break;
+    if (!getExerciseRowName(prev) || !getExerciseRowName(startRow)) break;
+    startRow = prev;
+  }
+
+  let endRow = row;
+  while (endRow) {
+    const next = getAdjacentExerciseRow(endRow, 1);
+    if (!next) break;
+    if (!isExerciseRowLinkedWithNext(endRow)) break;
+    if (!getExerciseRowName(endRow) || !getExerciseRowName(next)) break;
+    endRow = next;
+  }
+
+  const rows = [];
+  let cursor = startRow;
+  while (cursor) {
+    rows.push(cursor);
+    if (cursor === endRow) break;
+    cursor = getAdjacentExerciseRow(cursor, 1);
+  }
+
+  const isGrouped = rows.length > 1;
+  const groupType = getExerciseRowGroupType(startRow);
+
+  return {
+    isGrouped,
+    isGroupStart: isGrouped && row === startRow,
+    isGroupEnd: isGrouped && row === endRow,
+    groupType,
+    groupLabel: getExerciseGroupTypeLabel(groupType),
+    rows,
+    startRow,
+    endRow,
+    startIndex: getExerciseRowIndex(startRow),
+    endIndex: getExerciseRowIndex(endRow),
+  };
+}
+
+function focusNextExerciseRow(row) {
+  const nextRow = getAdjacentExerciseRow(row, 1);
+  if (!nextRow) return false;
+  const nextName = nextRow.querySelector('[id^="exname_"]');
+  if (!nextName) return false;
+  nextName.focus();
+  nextName.scrollIntoView({ block: "center", behavior: "smooth" });
+  return true;
+}
+
+function getGroupedRestSeconds(groupContext) {
+  if (!groupContext || !groupContext.isGrouped || !Array.isArray(groupContext.rows)) return 0;
+  let best = 0;
+  groupContext.rows.forEach((memberRow) => {
+    const name = getExerciseRowName(memberRow);
+    if (!name) return;
+    best = Math.max(best, getRestTimerSecondsForExercise(name));
+  });
+  return best;
+}
+
+function refreshExerciseGroupVisuals() {
+  const root = $("exerciseRows");
+  if (!root) return;
+  const rows = Array.from(root.querySelectorAll('.stat-row[id^="exrow_"]'));
+
+  rows.forEach((row) => {
+    row.classList.remove(
+      "exercise-group-linked",
+      "exercise-group-member",
+      "exercise-group-start",
+      "exercise-group-middle",
+      "exercise-group-end"
+    );
+    row.removeAttribute("data-group-type");
+    const badge = row.querySelector('[id^="exgroupbadge_"]');
+    if (badge) {
+      badge.textContent = "";
+      badge.classList.add("hidden");
+    }
+  });
+
+  rows.forEach((row) => {
+    const linkToggle = row.querySelector('[id^="exlinknext_"]');
+    const typeSelect = row.querySelector('[id^="exgrouptype_"]');
+
+    if (typeSelect) {
+      typeSelect.disabled = !(linkToggle && linkToggle.checked);
+    }
+  });
+
+  rows.forEach((row) => {
+    const context = getExerciseGroupContext(row);
+    if (!context || !context.isGrouped) return;
+
+    row.classList.add("exercise-group-member");
+    row.dataset.groupType = context.groupType;
+
+    if (context.isGroupStart) row.classList.add("exercise-group-start");
+    else if (context.isGroupEnd) row.classList.add("exercise-group-end");
+    else row.classList.add("exercise-group-middle");
+
+    if (isExerciseRowLinkedWithNext(row)) row.classList.add("exercise-group-linked");
+
+    const badge = row.querySelector('[id^="exgroupbadge_"]');
+    if (badge) {
+      badge.textContent = context.groupLabel;
+      badge.classList.remove("hidden");
+    }
+  });
+}
+
+function getRestTimerSecondsForExercise(exerciseName) {
+  const base = Math.max(30, Number(settings.defaultRestTime) || 90);
+  const compound = Math.max(60, Number(settings.defaultCompoundRestTime) || Math.max(base, 150));
+  const isolation = Math.max(30, Number(settings.defaultIsolationRestTime) || Math.max(30, Math.min(base, 90)));
+
+  const info = typeof getExerciseInfo === "function" ? getExerciseInfo(exerciseName) : null;
+  if (info && info.category === "compound") return compound;
+  if (info && info.category === "isolation") return isolation;
+
+  if (!info && typeof getSmartRestTime === "function") {
+    const smart = Number(getSmartRestTime(exerciseName)) || 0;
+    if (smart > 0) return smart;
+  }
+
+  return base;
+}
+
+function triggerAutoRestTimer(row, source) {
+  if (!row) return;
+  const rowId = String(row.id || "");
+  const rowIndex = Number(rowId.replace("exrow_", "")) || 0;
+  if (!rowIndex) return;
+
+  const nameInput = row.querySelector('[id^="exname_"]');
+  const setsInput = row.querySelector('[id^="exsets_"]');
+  const repsInput = row.querySelector('[id^="exreps_"]');
+  const exerciseName = (nameInput && nameInput.value ? String(nameInput.value) : "").trim();
+  const sets = Number(setsInput && setsInput.value) || 0;
+  const reps = Number(repsInput && repsInput.value) || 0;
+  if (!exerciseName || sets <= 0 || reps <= 0) return;
+
+  const groupContext = getExerciseGroupContext(row);
+  if (groupContext && groupContext.isGrouped && !groupContext.isGroupEnd) {
+    if (focusNextExerciseRow(row)) {
+      if (source === "enter") {
+        showToast(groupContext.groupLabel + " linked. Finish the group before resting.", "info");
+      }
+    }
+    return;
+  }
+
+  const now = Date.now();
+  const lastTs = Number(row.dataset.autoRestTs || 0);
+  if (now - lastTs < 900) return;
+  row.dataset.autoRestTs = String(now);
+
+  const restSeconds = groupContext && groupContext.isGrouped
+    ? (getGroupedRestSeconds(groupContext) || getRestTimerSecondsForExercise(exerciseName))
+    : getRestTimerSecondsForExercise(exerciseName);
+  const timerRowIndex = groupContext && groupContext.isGrouped ? groupContext.endIndex : rowIndex;
+  startTimer(restSeconds, exerciseName, timerRowIndex);
+
+  if (source === "enter") {
+    focusNextExerciseRow(row);
+  }
+}
+
 function bindExerciseInputShortcuts(row) {
   const numberInputs = row.querySelectorAll('input[type="number"]');
   Array.from(numberInputs).forEach((input) => {
@@ -26,14 +256,23 @@ function bindExerciseInputShortcuts(row) {
       if (e.key === "Enter") {
         e.preventDefault();
         const next = fields[idx + 1];
-        if (next) next.focus();
-        else logWorkout();
+        if (next) {
+          next.focus();
+        } else {
+          triggerAutoRestTimer(row, "enter");
+        }
       } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
         const step = input.id.includes("wt_") || input.id.includes("targetwt_") ? 2.5 : 1;
         const sign = e.key === "ArrowUp" ? 1 : -1;
         const val = Number(input.value || 0) + sign * step;
         input.value = String(Math.max(0, Math.round(val * 10) / 10));
         e.preventDefault();
+      }
+    });
+
+    input.addEventListener("blur", () => {
+      if (input.id && input.id.indexOf("exwt_") === 0) {
+        triggerAutoRestTimer(row, "blur");
       }
     });
   });
@@ -82,6 +321,75 @@ function renderTargetChip(exercise) {
   return '<div class="target-chip ' + cls + '">Target: ' + targets.join(" • ") + "</div>";
 }
 
+function summarizeExerciseSets(exercise) {
+  if (!exercise) return "";
+  if (Array.isArray(exercise.sets) && exercise.sets.length) {
+    const rows = exercise.sets
+      .map((set) => ({ weight: Number(set && set.weight) || 0, reps: Number(set && set.reps) || 0 }))
+      .filter((set) => set.weight > 0 || set.reps > 0);
+    if (!rows.length) return "";
+    const bestSet = rows.reduce((best, set) => {
+      const bestScore = typeof calculate1RM === "function" ? calculate1RM(best.weight, best.reps) : best.weight;
+      const nextScore = typeof calculate1RM === "function" ? calculate1RM(set.weight, set.reps) : set.weight;
+      return nextScore > bestScore ? set : best;
+    }, rows[0]);
+    if (bestSet.weight > 0 && bestSet.reps > 0) {
+      return rows.length + " sets • best " + bestSet.weight + "x" + bestSet.reps;
+    }
+    return rows.length + " sets";
+  }
+
+  const setCount = Math.max(1, parseInt(exercise.sets, 10) || 1);
+  const reps = Number(exercise.reps) || 0;
+  const weight = Number(exercise.weight) || 0;
+  if (weight > 0 && reps > 0) return setCount + "x" + reps + " @ " + weight;
+  if (reps > 0) return setCount + "x" + reps;
+  if (weight > 0) return setCount + " sets @ " + weight;
+  return setCount + " sets";
+}
+
+function getExercise1RMForDisplay(exercise) {
+  if (!exercise) return 0;
+  const existing = Number(exercise.est1RM);
+  if (Number.isFinite(existing) && existing > 0) return existing;
+  if (typeof calculateExerciseEstimated1RM === "function") {
+    return calculateExerciseEstimated1RM(exercise);
+  }
+  if (typeof calculate1RM !== "function") return 0;
+  if (Array.isArray(exercise.sets) && exercise.sets.length) {
+    return exercise.sets.reduce((best, set) => {
+      return Math.max(best, calculate1RM(set && set.weight, set && set.reps));
+    }, 0);
+  }
+  return calculate1RM(exercise.weight, exercise.reps);
+}
+
+function renderWorkoutSetPreview(workout) {
+  const exercises = workout && Array.isArray(workout.exercises) ? workout.exercises : [];
+  if (!exercises.length) return "";
+
+  const unit = settings.weightUnit || "kg";
+  const lines = exercises
+    .map((ex) => {
+      const name = (ex && ex.name ? String(ex.name) : "").trim();
+      if (!name) return "";
+      const setSummary = summarizeExerciseSets(ex);
+      const est1RM = getExercise1RMForDisplay(ex);
+      if (!setSummary && est1RM <= 0) return "";
+      const detail = setSummary + (est1RM > 0 ? " • 1RM " + est1RM.toFixed(1) + " " + unit : "");
+      return '<div class="workout-set-line"><span class="workout-set-name">' + esc(name) + '</span><span class="workout-set-detail">' + esc(detail) + "</span></div>";
+    })
+    .filter(Boolean);
+
+  if (!lines.length) return "";
+
+  const visible = lines.slice(0, 2).join("");
+  const more = lines.length > 2
+    ? '<div class="workout-set-more">+' + (lines.length - 2) + " more exercise" + (lines.length - 2 === 1 ? "" : "s") + "</div>"
+    : "";
+  return '<div class="workout-set-preview">' + visible + "</div>" + more;
+}
+
 function notifyDataChangedFromLog(reason) {
   if (typeof window.notifyDataChanged === "function") {
     window.notifyDataChanged({ source: "log", reason: reason || "mutation" });
@@ -94,18 +402,33 @@ function notifyDataChangedFromLog(reason) {
 function getExerciseRowHtml(index, seed, planned) {
   const ex = seed || {};
   const ps = planned || {};
+  const beginnerMode = (settings && settings.experienceLevel || 'beginner') === 'beginner';
+  const linkWithNext = !!ex.linkWithNext;
+  const groupType = ex.groupType || "superset";
   return '' +
-    '<div class="form-group dense-col-4"><input type="text" placeholder="Exercise name" id="exname_' + index + '" value="' + escAttr(ex.name || "") + '"></div>' +
+    '<div class="form-group dense-col-3"><input type="text" placeholder="Exercise name" id="exname_' + index + '" value="' + escAttr(ex.name || "") + '"></div>' +
+    '<button class="btn btn-outline btn-sm dense-col-1" data-browse-row="' + index + '" aria-label="Browse exercises" title="Browse by muscle group" style="font-size:13px;padding:0">LIB</button>' +
     '<button class="btn btn-outline btn-sm dense-col-1" onclick="if(typeof showExerciseDetailModal === \'function\') showExerciseDetailModal($(\'exname_' + index + '\').value)" aria-label="Exercise info" title="View Details" style="font-size:16px;padding:0">ℹ️</button>' +
     '<div class="form-group dense-col-2"><input type="number" placeholder="Sets" id="exsets_' + index + '" value="' + (ex.sets || "") + '"></div>' +
     '<div class="form-group dense-col-2"><input type="number" placeholder="Reps" id="exreps_' + index + '" value="' + (ex.reps || "") + '"></div>' +
     '<div class="form-group dense-col-2"><input type="number" placeholder="Wt" id="exwt_' + index + '" value="' + (ex.weight || "") + '"></div>' +
     '<button class="btn btn-outline btn-sm dense-col-1" data-remove-row aria-label="Remove exercise row">✕</button>' +
+    '<div class="dense-col-12 progression-chip hidden" id="exprg_' + index + '"></div>' +
+    '<div class="dense-col-12 exercise-grouping-row">' +
+      '<label class="exercise-group-link" for="exlinknext_' + index + '">' +
+        '<input type="checkbox" id="exlinknext_' + index + '"' + (linkWithNext ? ' checked' : '') + '>' +
+        '<span>Link with next</span>' +
+      '</label>' +
+      '<select id="exgrouptype_' + index + '" class="exercise-group-type"' + (linkWithNext ? '' : ' disabled') + '>' + getExerciseGroupTypeOptionsHtml(groupType) + '</select>' +
+      '<span class="exercise-group-badge hidden" id="exgroupbadge_' + index + '"></span>' +
+    '</div>' +
     '<div class="dense-col-12 exercise-advanced-toggle-wrap" style="display:flex; justify-content:space-between; align-items:center;">' +
-      '<button class="btn btn-outline btn-sm exercise-advanced-toggle" data-action="toggle-ex-advanced" aria-expanded="false">Advanced targets & setup</button>' +
+      (beginnerMode
+        ? '<span class="text-xs" style="color:var(--text2)">Beginner mode: advanced targets are hidden</span>'
+        : '<button class="btn btn-outline btn-sm exercise-advanced-toggle" data-action="toggle-ex-advanced" aria-expanded="false">Advanced targets & setup</button>') +
       '<button class="btn btn-primary btn-sm" onclick="startTimer(settings.defaultRestTime || 60, $(\'exname_' + index + '\').value, ' + index + ')" style="border-radius:20px; padding:2px 12px; font-size:11px;">⏱️ Rest</button>' +
     '</div>' +
-    '<div class="dense-col-12 exercise-advanced hidden" id="exadv_' + index + '">' +
+    '<div class="dense-col-12 exercise-advanced' + (beginnerMode ? ' hidden' : ' hidden') + '" id="exadv_' + index + '">' +
       '<div class="stat-row stat-row-dense exercise-advanced-grid">' +
         '<div class="form-group dense-col-2"><input type="number" placeholder="RPE" id="exrpe_' + index + '" value="' + (ex.rpe || ps.targetRPE || "") + '"></div>' +
         '<div class="form-group dense-col-2"><input type="number" placeholder="T.Reps" id="extargetreps_' + index + '" value="' + (ex.targetReps || ps.targetReps || "") + '"></div>' +
@@ -129,6 +452,20 @@ function bindExerciseRowAdvancedToggle(row, index) {
     toggleBtn.setAttribute("aria-expanded", isHidden ? "true" : "false");
     toggleBtn.textContent = isHidden ? "Hide advanced" : "Advanced targets & setup";
   });
+}
+
+function bindExerciseGroupingControls(row, index) {
+  const linkToggle = $("exlinknext_" + index);
+  const typeSelect = $("exgrouptype_" + index);
+  const nameInput = $("exname_" + index);
+  const update = () => refreshExerciseGroupVisuals();
+
+  if (linkToggle) linkToggle.addEventListener("change", update);
+  if (typeSelect) typeSelect.addEventListener("change", update);
+  if (nameInput) {
+    nameInput.addEventListener("input", update);
+    nameInput.addEventListener("change", update);
+  }
 }
 
 function bindExerciseRowSetupHandlers(index) {
@@ -533,6 +870,7 @@ function addExerciseRow(seed) {
   $("exerciseRows").appendChild(row);
   bindExerciseInputShortcuts(row);
   bindExerciseRowAdvancedToggle(row, exerciseRowCount);
+  bindExerciseGroupingControls(row, exerciseRowCount);
   bindExerciseRowSetupHandlers(exerciseRowCount);
   // Wire exercise autocomplete
   if (typeof createExerciseAutocomplete === 'function') {
@@ -544,17 +882,48 @@ function addExerciseRow(seed) {
   if (nameInput) {
     nameInput.addEventListener('change', () => {
       const name = nameInput.value.trim();
+      const chip = $('exprg_' + idx);
+      if (chip) {
+        chip.classList.add('hidden');
+        chip.textContent = '';
+      }
       if (!name) return;
+      const last = typeof getLastSessionForExercise === 'function' ? getLastSessionForExercise(name) : null;
       const suggestion = typeof getSuggestedProgression === 'function' ? getSuggestedProgression(name) : null;
       if (suggestion) {
         const setsEl = $('exsets_' + idx), repsEl = $('exreps_' + idx), wtEl = $('exwt_' + idx);
         if (setsEl && !setsEl.value) setsEl.value = suggestion.sets || '';
         if (repsEl && !repsEl.value) repsEl.value = suggestion.reps || '';
         if (wtEl && !wtEl.value) wtEl.value = suggestion.weight || '';
-        if (suggestion.note) showToast(suggestion.note, 'info');
+        if (chip) {
+          const lastText = last
+            ? ((last.weight || 0) + 'kg × ' + (last.reps || 0) + ' × ' + (last.sets || 0) + ' sets')
+            : 'No history';
+          const suggestedText = (suggestion.weight || 0) + 'kg × ' + (suggestion.reps || 0) + ' × ' + (suggestion.sets || 0) + ' sets';
+          chip.textContent = 'Last: ' + lastText + ' -> Suggested: ' + suggestedText + (suggestion.note ? ' (' + suggestion.note + ')' : '');
+          chip.classList.remove('hidden');
+        }
+      } else if (chip) {
+        chip.textContent = 'No prior sessions for this movement yet. Log once to unlock progressive suggestions.';
+        chip.classList.remove('hidden');
       }
+      refreshExerciseGroupVisuals();
     });
   }
+  refreshExerciseGroupVisuals();
+}
+
+function openExerciseBrowserForRow(rowIndex) {
+  let targetRowIndex = Number(rowIndex || 0);
+  if (!targetRowIndex) {
+    addExerciseRow();
+    targetRowIndex = exerciseRowCount;
+  }
+  if (typeof showExerciseBrowserModal === "function") {
+    showExerciseBrowserModal(targetRowIndex);
+    return;
+  }
+  showToast("Exercise browser is unavailable", "warning");
 }
 
 function logWorkout() {
@@ -568,11 +937,33 @@ function logWorkout() {
   const date = $("workoutDate").value || today();
   const exercises = [];
   const userBodyweight = getPrimaryBodyweight();
+  const groupIdByStartRow = {};
+  let groupCounter = 0;
   for (let i = 1; i <= exerciseRowCount; i++) {
     const el = $("exname_" + i);
     if (!el) continue;
     const eName = el.value.trim();
     if (!eName) continue;
+    const row = el.closest('.stat-row[id^="exrow_"]');
+    const groupContext = row ? getExerciseGroupContext(row) : null;
+    const linkWithNext = row ? isExerciseRowLinkedWithNext(row) : false;
+    let groupId = null;
+    let groupRole = null;
+    let groupType = null;
+    if (groupContext && groupContext.isGrouped) {
+      const startKey = groupContext.startRow && groupContext.startRow.id ? groupContext.startRow.id : "";
+      if (startKey) {
+        if (!groupIdByStartRow[startKey]) {
+          groupCounter++;
+          groupIdByStartRow[startKey] = "grp_" + groupCounter;
+        }
+        groupId = groupIdByStartRow[startKey];
+      }
+      groupType = groupContext.groupType;
+      if (groupContext.isGroupStart) groupRole = "start";
+      else if (groupContext.isGroupEnd) groupRole = "end";
+      else groupRole = "middle";
+    }
     const exObj = {
       name: eName,
       sets: parseInt($("exsets_" + i).value) || 0,
@@ -586,8 +977,15 @@ function logWorkout() {
       gymName: $("exgym_" + i) ? $("exgym_" + i).value || null : null,
       machineSetupId: $("exsetup_" + i) ? $("exsetup_" + i).value || null : null,
       machineSetupNotes: $("exsetupnotes_" + i) ? $("exsetupnotes_" + i).value.trim() : "",
+      linkWithNext,
+      groupType,
+      groupId,
+      groupRole,
     };
     exObj.effectiveLoad = computeEffectiveLoad(exObj, exObj, userBodyweight);
+    exObj.est1RM = typeof calculateExerciseEstimated1RM === "function"
+      ? calculateExerciseEstimated1RM(exObj)
+      : (typeof calculate1RM === "function" ? calculate1RM(exObj.weight, exObj.reps) : 0);
     exercises.push(exObj);
     if (exObj.machineSetupNotes) upsertMachineSetup(eName, exObj.gymName, exObj.machineSetupNotes);
   }
@@ -600,6 +998,10 @@ function logWorkout() {
     protocolId: $("workoutProtocol").value || null,
     timestamp: Date.now(),
   };
+
+  const prs = typeof checkWorkoutForPRs === 'function'
+    ? checkWorkoutForPRs(exercises, date)
+    : [];
 
   const data = loadData(KEYS.workouts);
   data.push(entry);
@@ -620,6 +1022,11 @@ function logWorkout() {
       target_rpe: ex.targetRPE || null,
       is_assisted_bodyweight: ex.isAssistedBodyweight ? "true" : "false",
       effective_load: ex.effectiveLoad || 0,
+      est_1rm: ex.est1RM || 0,
+      group_type: ex.groupType || null,
+      group_id: ex.groupId || null,
+      group_role: ex.groupRole || null,
+      link_with_next: ex.linkWithNext ? "true" : "false",
     });
   });
   saveData(KEYS.strengthSets, flatSets);
@@ -632,7 +1039,6 @@ function logWorkout() {
   notifyDataChangedFromLog("logWorkout");
   // Check for personal records
   if (typeof checkWorkoutForPRs === 'function') {
-    const prs = checkWorkoutForPRs(exercises, date);
     if (prs.length > 0 && typeof celebratePRs === 'function') {
       celebratePRs(prs);
     } else {
@@ -654,6 +1060,10 @@ function logWorkout() {
           setsCount: setCount,
           reps: ex.reps,
           weight: ex.weight,
+          linkWithNext: !!ex.linkWithNext,
+          groupType: ex.groupType || null,
+          groupId: ex.groupId || null,
+          groupRole: ex.groupRole || null,
         };
       });
       setTimeout(function () { showPostWorkoutSummary(summaryEntry, prs); }, prs.length > 0 ? 2500 : 800);
@@ -687,6 +1097,10 @@ function logWorkout() {
           setsCount: setCount,
           reps: ex.reps,
           weight: ex.weight,
+          linkWithNext: !!ex.linkWithNext,
+          groupType: ex.groupType || null,
+          groupId: ex.groupId || null,
+          groupRole: ex.groupRole || null,
         };
       });
       setTimeout(function () { showPostWorkoutSummary(summaryEntry, []); }, 800);
@@ -1131,8 +1545,9 @@ function refreshLog() {
     $("recentWorkouts").innerHTML = workouts
       .map((w) => {
         const time = w.timestamp ? fmtTime(w.timestamp) : "";
+        const setPreview = renderWorkoutSetPreview(w);
         const targetHints = (w.exercises || []).map((ex) => renderTargetChip(ex)).filter(Boolean).slice(0, 2).join("");
-        return '<div class="list-item" data-open-workout="' + w.id + '"><div class="list-item-main"><div class="list-item-title">' + esc(w.name) + '<span class="entry-time">' + time + '</span></div><div class="list-item-sub">' + fmtDate(w.date) + " • " + w.type + " • " + (w.duration || 0) + " min • " + (w.exercises || []).length + ' ex</div>' + targetHints + '</div><div class="list-item-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span class="tag tag-blue">' + (w.caloriesBurned || 0) + ' cal</span><button class="btn-delete" data-delete-workout="' + w.id + '" title="Delete">✕</button></div></div>';
+        return '<div class="list-item" data-open-workout="' + w.id + '"><div class="list-item-main"><div class="list-item-title">' + esc(w.name) + '<span class="entry-time">' + time + '</span></div><div class="list-item-sub">' + fmtDate(w.date) + " • " + w.type + " • " + (w.duration || 0) + " min • " + (w.exercises || []).length + ' ex</div>' + setPreview + targetHints + '</div><div class="list-item-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span class="tag tag-blue">' + (w.caloriesBurned || 0) + ' cal</span><button class="btn-delete" data-delete-workout="' + w.id + '" title="Delete">✕</button></div></div>';
       })
       .join("");
   } else {
@@ -1171,6 +1586,7 @@ function initLogEvents() {
       else if (action === "cancelEditFood") cancelEditFood();
       else if (action === "clearTodayFood") clearTodayFood();
       else if (action === "logWorkout") logWorkout();
+      else if (action === "browseExercises") openExerciseBrowserForRow(exerciseRowCount || 0);
       else if (action === "addExerciseRow") addExerciseRow();
       else if (action === "logBody") logBody();
       else if (action === "startTimer") startTimer(parseInt(actionEl.dataset.seconds) || 60);
@@ -1205,7 +1621,17 @@ function initLogEvents() {
 
     // Remove exercise row
     const removeRow = e.target.closest("[data-remove-row]");
-    if (removeRow) { removeRow.closest(".stat-row").remove(); return; }
+    if (removeRow) {
+      const row = removeRow.closest(".stat-row");
+      if (row) row.remove();
+      refreshExerciseGroupVisuals();
+      return;
+    }
+    const browseRow = e.target.closest("[data-browse-row]");
+    if (browseRow) {
+      openExerciseBrowserForRow(Number(browseRow.dataset.browseRow) || 0);
+      return;
+    }
 
     // Favorites
     const removeFav = e.target.closest("[data-remove-fav]");
@@ -1262,7 +1688,7 @@ function initLogEvents() {
     const note = document.createElement("div");
     note.id = "shortcutHelp";
     note.className = "mini-banner";
-    note.innerHTML = "Shortcuts: Enter = next field/submit. ArrowUp/Down adjusts values. Swipe set row right = duplicate, left = delete.";
+    note.innerHTML = "Shortcuts: Enter = next field/submit. Link rows for supersets/circuits. ArrowUp/Down adjusts values. Swipe set row right = duplicate, left = delete.";
     workoutPanel.insertBefore(note, workoutPanel.firstChild);
   }
 }

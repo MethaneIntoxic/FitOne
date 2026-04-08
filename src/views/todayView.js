@@ -4,10 +4,207 @@
 // Forward declarations for cross-view navigation (set by main.js)
 let _goToLog = null;
 let _goToLogWorkout = null;
+const GOAL_RING_HISTORY_KEY = "ft_goal_ring_history_v1";
+const GOAL_RING_CONFIG = [
+  { key: "nutrition", label: "Nutrition", short: "N", color: "--brand-calories", closeAt: 0.85 },
+  { key: "training", label: "Training", short: "T", color: "--brand-warning", closeAt: 1 },
+  { key: "hydration", label: "Hydration", short: "H", color: "--brand-info", closeAt: 1 },
+  { key: "recovery", label: "Recovery", short: "R", color: "--brand-success", closeAt: 0.7 },
+];
 
 function setNavCallbacks(goToLog, goToLogWorkout) {
   _goToLog = goToLog;
   _goToLogWorkout = goToLogWorkout;
+}
+
+function clamp01(v) {
+  return Math.max(0, Math.min(1, Number(v) || 0));
+}
+
+function loadGoalRingHistory() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(GOAL_RING_HISTORY_KEY) || "{}");
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveGoalRingHistory(history) {
+  try {
+    localStorage.setItem(GOAL_RING_HISTORY_KEY, JSON.stringify(history || {}));
+  } catch {
+    // Ignore storage quota/privacy mode errors.
+  }
+}
+
+function getEntriesByDate(entries) {
+  const grouped = {};
+  (entries || []).forEach((entry) => {
+    if (!entry || !entry.date) return;
+    if (!grouped[entry.date]) grouped[entry.date] = [];
+    grouped[entry.date].push(entry);
+  });
+  return grouped;
+}
+
+function getSingleByDate(entries) {
+  const grouped = {};
+  (entries || []).forEach((entry) => {
+    if (!entry || !entry.date) return;
+    grouped[entry.date] = entry;
+  });
+  return grouped;
+}
+
+function getGoalRingSnapshotForDate(dateStr, ctx) {
+  const dayFood = (ctx.foodByDate && ctx.foodByDate[dateStr]) || [];
+  const dayWorkouts = (ctx.workoutsByDate && ctx.workoutsByDate[dateStr]) || [];
+  const dayWater = (ctx.waterByDate && ctx.waterByDate[dateStr]) || [];
+  const dayWellness = (ctx.wellnessByDate && ctx.wellnessByDate[dateStr]) || null;
+
+  const calories = dayFood.reduce((sum, f) => sum + (Number(f.calories) || 0), 0);
+  const protein = dayFood.reduce((sum, f) => sum + (Number(f.protein) || 0), 0);
+  const waterTotal = dayWater.reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
+
+  const calorieGoal = Math.max(1, Number(settings.calorieGoal) || 1);
+  const proteinGoal = Math.max(1, Number(settings.proteinGoal) || 1);
+  const waterGoal = Math.max(1, Number(settings.waterGoal) || 1);
+
+  const calAdherence = calories > 0 ? clamp01(1 - Math.abs(calories - calorieGoal) / calorieGoal) : 0;
+  const proAdherence = protein > 0 ? clamp01(protein / proteinGoal) : 0;
+  const nutrition = clamp01(calAdherence * 0.65 + proAdherence * 0.35);
+
+  const training = dayWorkouts.length > 0 ? 1 : 0;
+  const hydration = clamp01(waterTotal / waterGoal);
+
+  const recovery = dayWellness
+    ? clamp01(((Number(dayWellness.sleep) || 0) + (Number(dayWellness.soreness) || 0) + (Number(dayWellness.energy) || 0)) / 15)
+    : 0;
+
+  const scores = { nutrition, training, hydration, recovery };
+  const closed = {};
+  GOAL_RING_CONFIG.forEach((ring) => {
+    closed[ring.key] = (scores[ring.key] || 0) >= ring.closeAt;
+  });
+
+  return {
+    scores,
+    closed,
+    perfect: GOAL_RING_CONFIG.every((ring) => closed[ring.key]),
+    updatedAt: Date.now(),
+  };
+}
+
+function getGoalRingStreak(history, key, startDate) {
+  const d = new Date((startDate || today()) + "T12:00:00");
+  let streak = 0;
+  while (true) {
+    const ds = localDateStr(d);
+    const day = history[ds];
+    if (!day) break;
+    const passed = key === "perfect"
+      ? !!day.perfect
+      : !!(day.closed && day.closed[key]);
+    if (!passed) break;
+    streak += 1;
+    d.setDate(d.getDate() - 1);
+  }
+  return streak;
+}
+
+function refreshDailyGoalRings(todayTotals, todayWorkouts, todayFoodEntries) {
+  const grid = $("goalRingsGrid");
+  const perfectEl = $("goalPerfectDays");
+  const streaksEl = $("goalRingStreaks");
+  if (!grid || !perfectEl || !streaksEl) return;
+
+  const allFood = loadData(KEYS.food);
+  const allWorkouts = loadData(KEYS.workouts);
+  const allWater = loadData(KEYS.water);
+  const allWellness = loadData(KEYS.wellness);
+  const todayStr = today();
+
+  const foodByDate = getEntriesByDate(allFood);
+  const workoutsByDate = getEntriesByDate(allWorkouts);
+  const waterByDate = getEntriesByDate(allWater);
+  const wellnessByDate = getSingleByDate(allWellness);
+
+  if (Array.isArray(todayFoodEntries)) foodByDate[todayStr] = todayFoodEntries;
+  if (Array.isArray(todayWorkouts)) workoutsByDate[todayStr] = todayWorkouts;
+
+  const dateSet = new Set([
+    todayStr,
+    ...Object.keys(foodByDate),
+    ...Object.keys(workoutsByDate),
+    ...Object.keys(waterByDate),
+    ...Object.keys(wellnessByDate),
+  ]);
+
+  const history = loadGoalRingHistory();
+  dateSet.forEach((dateStr) => {
+    history[dateStr] = getGoalRingSnapshotForDate(dateStr, {
+      foodByDate,
+      workoutsByDate,
+      waterByDate,
+      wellnessByDate,
+    });
+  });
+
+  const pruneBefore = new Date();
+  pruneBefore.setDate(pruneBefore.getDate() - 730);
+  Object.keys(history).forEach((dateStr) => {
+    const ts = Date.parse(dateStr + "T00:00:00");
+    if (Number.isFinite(ts) && ts < pruneBefore.getTime()) delete history[dateStr];
+  });
+
+  saveGoalRingHistory(history);
+
+  const todaySnapshot = history[todayStr] || getGoalRingSnapshotForDate(todayStr, {
+    foodByDate,
+    workoutsByDate,
+    waterByDate,
+    wellnessByDate,
+  });
+
+  grid.innerHTML = GOAL_RING_CONFIG.map((ring) => {
+    const score = clamp01(todaySnapshot.scores[ring.key]);
+    const pct = Math.round(score * 100);
+    const isClosed = !!(todaySnapshot.closed && todaySnapshot.closed[ring.key]);
+    return '<div class="goal-ring-item' + (isClosed ? ' closed' : '') + '">' +
+      '<canvas id="goalRing_' + ring.key + '" width="128" height="128"></canvas>' +
+      '<div class="goal-ring-value">' + pct + '%</div>' +
+      '<div class="goal-ring-label">' + ring.label + '</div>' +
+      '<div class="goal-ring-state">' + (isClosed ? 'Closed' : 'Open') + '</div>' +
+      '</div>';
+  }).join("");
+
+  setTimeout(function () {
+    GOAL_RING_CONFIG.forEach(function (ring) {
+      const canvas = $("goalRing_" + ring.key);
+      if (!canvas) return;
+      drawRing(canvas, clamp01(todaySnapshot.scores[ring.key]), brandColor(ring.color));
+    });
+  }, 0);
+
+  const allDays = Object.keys(history);
+  const perfectTotal = allDays.filter((dateStr) => history[dateStr] && history[dateStr].perfect).length;
+  const perfectStreak = getGoalRingStreak(history, "perfect", todayStr);
+
+  let perfectWeek = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const ds = localDateStr(d);
+    if (history[ds] && history[ds].perfect) perfectWeek += 1;
+  }
+
+  perfectEl.textContent = perfectTotal + " perfect days • " + perfectWeek + "/7 this week • streak " + perfectStreak + "d";
+
+  streaksEl.innerHTML = GOAL_RING_CONFIG.map((ring) => {
+    const streak = getGoalRingStreak(history, ring.key, todayStr);
+    return '<span class="goal-ring-streak-chip' + (streak > 0 ? ' active' : '') + '">' + ring.short + ' ' + streak + 'd</span>';
+  }).join("");
 }
 
 // ========== WATER ==========
@@ -276,11 +473,11 @@ function reorderTodayCards() {
   const hour = new Date().getHours();
   let order;
   if (hour >= 5 && hour < 12) {
-    order = ["readiness", "calories", "food", "water", "workouts", "streak", "stats", "insights", "wellness"];
+    order = ["readiness", "calories", "goalRings", "food", "water", "workouts", "streak", "stats", "insights", "wellness"];
   } else if (hour >= 12 && hour < 17) {
-    order = ["readiness", "workouts", "calories", "food", "water", "streak", "stats", "insights", "wellness"];
+    order = ["readiness", "workouts", "calories", "goalRings", "food", "water", "streak", "stats", "insights", "wellness"];
   } else {
-    order = ["readiness", "workouts", "calories", "water", "food", "streak", "stats", "insights", "wellness"];
+    order = ["readiness", "workouts", "calories", "goalRings", "water", "food", "streak", "stats", "insights", "wellness"];
   }
   const cards = panel.querySelectorAll("[data-section]");
   cards.forEach((card) => {
@@ -456,6 +653,7 @@ function refreshToday() {
 
   // Water
   refreshWater();
+  refreshDailyGoalRings(totals, workouts, food);
 
   // Food list
   if (food.length) {

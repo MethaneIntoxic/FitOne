@@ -12,7 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
 <link rel="stylesheet" href="styles/brand-assets.css">
-<link rel="stylesheet" href="styles/main.css?v=20260406p">
+<link rel="stylesheet" href="styles/main.css?v=20260407e">
 <link rel="manifest" href="pwa/manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -109,6 +109,14 @@
       <div class="calorie-progress"><div class="calorie-progress-bar" id="calorieProgressBar"></div></div>
       <div class="calorie-progress-label" id="calorieProgressLabel"></div>
       <div class="net-cal" id="netCalDisplay"></div>
+    </div>
+    <div class="card goal-rings-card" id="goalRingsCard" data-section="goalRings">
+      <div class="card-title">Daily Goal Rings</div>
+      <div class="goal-rings-grid" id="goalRingsGrid"></div>
+      <div class="goal-rings-meta">
+        <div class="goal-perfect-days" id="goalPerfectDays">0 perfect days</div>
+        <div class="goal-ring-streaks" id="goalRingStreaks"></div>
+      </div>
     </div>
     <div class="card streak-card" id="streakCard" data-section="streak">
       <div class="streak-content">
@@ -345,7 +353,10 @@
 
         <div class="flex-between mb-8 mt-12">
           <span class="card-title" style="margin-bottom:0">Exercises</span>
-          <button class="btn btn-outline btn-sm" data-action="addExerciseRow">+ Add</button>
+          <div class="exercise-header-actions">
+            <button class="btn btn-outline btn-sm" data-action="browseExercises">Browse</button>
+            <button class="btn btn-outline btn-sm" data-action="addExerciseRow">+ Add</button>
+          </div>
         </div>
         <div id="exerciseRows"></div>
 
@@ -419,6 +430,9 @@
         <div class="card-title">History</div>
         <div id="bodyHistory"></div>
       </div>
+      <div class="card" id="bodyPhotosCard">
+        <div id="photosContainer"></div>
+      </div>
     </div>
   </div>
 
@@ -455,6 +469,21 @@
         <div class="chart-container stats-tonnage-chart"><canvas id="chartTonnage"></canvas></div>
       </div>
 
+      <!-- Body Composition Radar -->
+      <div class="card mb-16 stats-body-card">
+        <div class="flex-between mb-8">
+          <div class="card-title stats-body-title">Body Composition Map</div>
+          <span class="text-xs stats-body-range" id="statsBodyRange">No measurements</span>
+        </div>
+        <div class="chart-container stats-body-chart"><canvas id="chartBodyComposition"></canvas></div>
+        <div id="statsBodyTrendList" class="stats-body-trends">
+          <div class="text-sm stats-pr-empty">Log body measurements to unlock directional trends.</div>
+        </div>
+        <div id="statsSymmetryAnalysis" class="stats-body-symmetry">
+          <div class="text-sm stats-muted-label">Symmetry analysis appears after body measurements are logged.</div>
+        </div>
+      </div>
+
       <!-- Consistency Heatmap -->
       <div class="card mb-16">
         <div class="card-title">Weekly Consistency</div>
@@ -473,6 +502,34 @@
             </div>
             MORE
           </div>
+        </div>
+      </div>
+
+      <!-- Weekly Volume By Muscle -->
+      <div class="card mb-16">
+        <div class="flex-between mb-12">
+          <div class="card-title stats-volume-title">Weekly Volume by Muscle</div>
+          <span class="text-xs stats-muted-label" id="statsMuscleVolumeWindow">Current Week</span>
+        </div>
+        <div class="stats-volume-status" id="statsMuscleVolumeStatus">Log weighted sets to unlock weekly muscle volume guidance.</div>
+        <div id="statsMuscleVolumeList" class="stats-volume-list">
+          <div class="empty text-sm stats-pr-empty">Log workouts this week to see muscle-set volume.</div>
+        </div>
+        <div class="stats-volume-legend">
+          <span class="stats-volume-legend-item"><span class="stats-volume-dot is-under"></span>Below MEV</span>
+          <span class="stats-volume-legend-item"><span class="stats-volume-dot is-in-range"></span>In Range</span>
+          <span class="stats-volume-legend-item"><span class="stats-volume-dot is-over"></span>Above MRV</span>
+        </div>
+      </div>
+
+      <!-- Estimated 1RM Trends -->
+      <div class="card mb-16">
+        <div class="flex-between mb-12">
+          <div class="card-title stats-1rm-title">Estimated 1RM Trends</div>
+          <span class="text-xs stats-muted-label" id="stats1RMWindow">Last 3 months</span>
+        </div>
+        <div id="stats1RMTrendList" class="stats-1rm-trend-list">
+          <div class="empty text-sm stats-pr-empty">Log weighted sets to unlock estimated 1RM trends.</div>
         </div>
       </div>
 
@@ -683,6 +740,7 @@
         <button class="goal-option" data-goal="lose">📉 Lose</button>
         <button class="goal-option active" data-goal="maintain">⚖️ Maintain</button>
         <button class="goal-option" data-goal="gain">📈 Gain</button>
+        <button class="goal-option" data-goal="compete">🏆 Compete</button>
       </div>
       <div class="text-xs goal-note">Used by Adaptive TDEE for personalized recommendations</div>
     </div>
@@ -698,6 +756,22 @@
       <div class="workout-rest-ticks"><span>30 SEC</span><span>180 SEC</span><span>300 SEC</span></div>
       <div class="text-xs mt-8" style="color:var(--text2)">Timers auto-start after each set. You can override this per exercise in workout view.</div>
       <input type="hidden" id="settingRestTime" value="90">
+
+      <div class="workout-setting-head mt-12">
+        <div class="section-label">COMPOUND REST</div>
+        <div class="workout-rest-display" id="settingRestCompoundDisplay">150s</div>
+      </div>
+      <input type="range" id="settingRestCompoundRange" min="60" max="300" step="15" value="150">
+      <div class="workout-rest-ticks"><span>60 SEC</span><span>180 SEC</span><span>300 SEC</span></div>
+      <input type="hidden" id="settingRestCompound" value="150">
+
+      <div class="workout-setting-head mt-12">
+        <div class="section-label">ISOLATION REST</div>
+        <div class="workout-rest-display" id="settingRestIsolationDisplay">75s</div>
+      </div>
+      <input type="range" id="settingRestIsolationRange" min="30" max="180" step="15" value="75">
+      <div class="workout-rest-ticks"><span>30 SEC</span><span>90 SEC</span><span>180 SEC</span></div>
+      <input type="hidden" id="settingRestIsolation" value="75">
 
       <div class="section-label mt-16">PLATE SYSTEM</div>
       <div class="segmented-control" id="plateSystemSegmented">
@@ -769,6 +843,20 @@
         <label>Daily Fat Goal (g)</label>
         <input type="number" id="settingFatGoal" value="65">
       </div>
+      <div class="goal-sync-actions">
+        <button class="btn btn-outline" id="settingSyncGoalToTDEEBtn">SYNC GOAL TO TDEE</button>
+      </div>
+      <div class="text-xs mt-8" id="settingSyncGoalToTDEEStatus" style="color:var(--text2)">Adaptive TDEE sync becomes available once confidence is high enough.</div>
+      <div class="form-group hidden" id="competeGoalProfileGroup">
+        <label>Compete Day Profile</label>
+        <select id="settingGoalDayProfile">
+          <option value="training">Training Day</option>
+          <option value="rest">Rest Day</option>
+          <option value="carb-up">Carb-Up</option>
+          <option value="peak-week">Peak Week</option>
+        </select>
+      </div>
+      <div class="text-xs mt-8" id="settingGoalProfileHint" style="color:var(--text2)"></div>
       <div class="form-group">
         <label>Weekly Workout Goal (days)</label>
         <input type="number" id="settingWorkoutGoal" value="4">
@@ -777,6 +865,29 @@
         <label>Daily Water Goal (ml)</label>
         <input type="number" id="settingWaterGoal" value="2000">
       </div>
+    </div>
+    <div class="card" id="streakProtectionCard">
+      <div class="card-title">Streak Protection</div>
+      <div class="form-group">
+        <label>Active Day Rule</label>
+        <select id="settingStreakActiveRule">
+          <option value="any-log">Any log (food or workout)</option>
+          <option value="workout-only">Workout only</option>
+          <option value="food-workout">Food + workout</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Freeze Passes Per Week</label>
+        <select id="settingStreakFreezePerWeek">
+          <option value="1">1 freeze</option>
+          <option value="2">2 freezes</option>
+        </select>
+      </div>
+      <div class="toggle-row mt-8">
+        <span>Rest-day protection (wellness/body log counts)</span>
+        <label class="toggle"><input type="checkbox" id="settingStreakRestProtection" checked><span class="toggle-slider"></span></label>
+      </div>
+      <div class="text-xs mt-8" style="color:var(--text2)">Freeze passes preserve your streak on low-activity days and reset each week.</div>
     </div>
     <div class="card" id="systemCalibrationCard">
       <div class="card-title">Preferred Units</div>
@@ -818,10 +929,10 @@
 <!-- FAB Speed Dial -->
 <div class="fab-backdrop" id="fabBackdrop"></div>
 <div class="fab-menu" id="fabMenu">
-  <div class="fab-option"><span class="fab-option-label">Food</span><button class="fab-option-btn" aria-label="Log food">🍎</button></div>
-  <div class="fab-option"><span class="fab-option-label">Workout</span><button class="fab-option-btn" aria-label="Log workout">🏋️</button></div>
-  <div class="fab-option"><span class="fab-option-label">Body</span><button class="fab-option-btn" aria-label="Log body measurements">📏</button></div>
-  <div class="fab-option"><span class="fab-option-label">Water</span><button class="fab-option-btn" aria-label="Add water">💧</button></div>
+  <div class="fab-option"><span class="fab-option-label">Quick Add</span><button class="fab-option-btn" data-fab-action="quick-food" aria-label="Quick add food">🍎</button></div>
+  <div class="fab-option"><span class="fab-option-label">Workout</span><button class="fab-option-btn" data-fab-action="log-workout" aria-label="Log workout">🏋️</button></div>
+  <div class="fab-option"><span class="fab-option-label">Bodyweight</span><button class="fab-option-btn" data-fab-action="quick-bodyweight" aria-label="Quick add bodyweight">⚖️</button></div>
+  <div class="fab-option"><span class="fab-option-label">Water</span><button class="fab-option-btn" data-fab-action="add-water" aria-label="Add water">💧</button></div>
 </div>
 <button class="fab" id="fabBtn" aria-label="Quick actions menu">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
@@ -869,31 +980,32 @@
 <div id="modalContainer"></div>
 <div id="pulseCenterRoot"></div>
 
-<script src="src/dataStore.js?v=20260406b"></script>
+<script src="src/dataStore.js?v=20260407e"></script>
 <script src="src/syncService.js"></script>
 <script src="src/wearableIntegration.js"></script>
 <script src="src/foodDatabase.js"></script>
 <script src="src/barcodeScanner.js"></script>
 <script src="src/exerciseDatabase.js"></script>
 <script src="src/starterRoutines.js?v=20260406d"></script>
-<script src="src/prTracker.js"></script>
+<script src="src/prTracker.js?v=20260407a"></script>
 <script src="src/achievements.js"></script>
 <script src="src/shareCard.js?v=20260406k"></script>
 <script src="src/workoutIntelligence.js"></script>
 <script src="src/ui.js?v=20260406c"></script>
-<script src="src/onboarding.js?v=20260406b"></script>
+<script src="src/onboarding.js?v=20260407c"></script>
 <script src="src/views/todayView.js?v=20260406c"></script>
-<script src="src/views/logView.js?v=20260406i"></script>
+<script src="src/views/logView.js?v=20260407d"></script>
 <script src="src/views/exerciseDetailView.js?v=20260406c"></script>
 <script src="src/views/deepDiveView.js?v=20260406a"></script>
 <script src="src/views/activityFeedView.js?v=20260406a"></script>
 <script src="src/views/workoutDetailView.js?v=20260406a"></script>
 <script src="src/views/pulseCenterView.js?v=20260406a"></script>
-<script src="src/views/settingsView.js?v=20260406b"></script>
+<script src="src/views/settingsView.js?v=20260407e"></script>
 <script src="src/views/protocolsView.js?v=20260406d"></script>
-<script src="src/views/analyticsView.js?v=20260406j"></script>
+<script src="src/views/analyticsView.js?v=20260407d"></script>
 <script src="src/views/exportView.js"></script>
 <script src="src/views/postWorkoutView.js?v=20260406f"></script>
+<script src="src/views/photosView.js?v=20260407a"></script>
 <script src="src/main.js?v=20260406d"></script>
 </body>
 </html>

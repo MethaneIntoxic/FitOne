@@ -15,6 +15,10 @@ const EQUIPMENT_TYPES = {
   kettlebell: 'Kettlebell', smith: 'Smith Machine', other: 'Other',
 };
 
+const EXERCISE_CACHE_KEY = 'ft_exercise_db_cache_v1';
+const EXERCISE_CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 7;
+const TARGET_EXERCISE_COUNT = 220;
+
 // ========== BUNDLED EXERCISES ==========
 const EXERCISE_DB = [
   // === CHEST ===
@@ -129,6 +133,253 @@ const EXERCISE_DB = [
   { name: 'Box Jump', primary: ['quads','glutes'], secondary: ['calves','hamstrings'], equipment: 'other', category: 'compound', tips: 'Explosive jump onto box. Land softly with bent knees. Step down.' },
   { name: 'Sled Push', primary: ['quads','glutes'], secondary: ['calves','shoulders'], equipment: 'other', category: 'compound', tips: 'Low position, drive through legs. Great for conditioning.' },
 ];
+
+function buildBundledExerciseExpansion() {
+  const specs = [
+    {
+      names: ['Machine Incline Press', 'Smith Machine Bench Press', 'Decline Dumbbell Press', 'Close-Grip Push-Up', 'Feet-Elevated Push-Up', 'Single-Arm Cable Press', 'Hex Press'],
+      primary: ['chest'], secondary: ['triceps', 'shoulders'], equipment: 'machine', category: 'compound',
+      tips: 'Set shoulders down and back. Drive through a stable press path and control the negative.',
+    },
+    {
+      names: ['Low-to-High Cable Fly', 'High-to-Low Cable Fly', 'Machine Fly', 'Svend Press', 'Landmine Press', 'Isometric Push-Up Hold', 'Ring Push-Up'],
+      primary: ['chest'], secondary: ['shoulders'], equipment: 'cable', category: 'isolation',
+      tips: 'Use controlled tempo and finish each rep with chest contraction, not shoulder shrugging.',
+    },
+    {
+      names: ['Meadows Row', 'Chest-Supported Row', 'Single-Arm Cable Row', 'Inverted Row', 'Seal Row', 'Wide-Grip Pulldown', 'Neutral-Grip Pulldown'],
+      primary: ['back', 'lats'], secondary: ['biceps', 'traps'], equipment: 'cable', category: 'compound',
+      tips: 'Brace core and pull elbows through a full range. Pause briefly in the contracted position.',
+    },
+    {
+      names: ['Reverse-Grip Pulldown', 'Assisted Pull-Up', 'Assisted Chin-Up', 'Band-Assisted Pull-Up', 'Scap Pull-Up', 'Prone Y Raise', 'Prone T Raise'],
+      primary: ['lats', 'back'], secondary: ['biceps', 'shoulders'], equipment: 'bodyweight', category: 'compound',
+      tips: 'Keep ribcage down and initiate from the shoulder blades before the elbow flexes.',
+    },
+    {
+      names: ['Push Press', 'Z Press', 'Seated Barbell Press', 'Single-Arm Dumbbell Press', 'Landmine Shoulder Press', 'Bradford Press', 'Machine Lateral Raise'],
+      primary: ['shoulders'], secondary: ['triceps', 'traps'], equipment: 'barbell', category: 'compound',
+      tips: 'Stay stacked through torso and avoid overextending lower back while pressing overhead.',
+    },
+    {
+      names: ['Cable Rear Delt Fly', 'Reverse Pec Deck', 'Plate Front Raise', 'Lean-Away Lateral Raise', 'Behind-the-Back Cable Raise', 'Face Pull External Rotation', 'Cuban Press'],
+      primary: ['shoulders'], secondary: ['traps', 'back'], equipment: 'cable', category: 'isolation',
+      tips: 'Lead with elbows and keep tension in delts; use momentum only to start stubborn reps.',
+    },
+    {
+      names: ['Spider Curl', 'Bayesian Cable Curl', 'Cross-Body Hammer Curl', 'Reverse Curl', 'Machine Preacher Curl', 'Cable Rope Hammer Curl', 'Zottman Curl'],
+      primary: ['biceps'], secondary: ['forearms'], equipment: 'dumbbell', category: 'isolation',
+      tips: 'Keep elbows fixed and supinate strongly near top to maximize biceps recruitment.',
+    },
+    {
+      names: ['JM Press', 'Bench Dip', 'Single-Arm Cable Pushdown', 'Reverse-Grip Pushdown', 'Overhead Cable Extension', 'Machine Dip', 'Rolling Dumbbell Extension'],
+      primary: ['triceps'], secondary: ['chest', 'shoulders'], equipment: 'cable', category: 'isolation',
+      tips: 'Control elbow position and fully extend through the triceps without shoulder roll-forward.',
+    },
+    {
+      names: ['Pause Back Squat', 'Tempo Back Squat', 'Safety Bar Squat', 'Zercher Squat', 'Landmine Squat', 'Cyclist Squat', 'Heel-Elevated Goblet Squat'],
+      primary: ['quads', 'glutes'], secondary: ['abs', 'lowBack'], equipment: 'barbell', category: 'compound',
+      tips: 'Descend with braced core and balanced pressure across mid-foot before driving upward.',
+    },
+    {
+      names: ['Leg Press Calf Raise', 'Single-Leg Press', 'Step-Up', 'Split Squat', 'Front-Foot Elevated Split Squat', 'Reverse Lunge', 'Smith Split Squat'],
+      primary: ['quads', 'glutes'], secondary: ['hamstrings', 'calves'], equipment: 'machine', category: 'compound',
+      tips: 'Track knees over toes and maintain controlled balance through each unilateral rep.',
+    },
+    {
+      names: ['Nordic Curl', 'Single-Leg Romanian Deadlift', 'Banded Romanian Deadlift', 'Cable Romanian Deadlift', '45-Degree Back Extension', 'Reverse Hyperextension', 'Glute Ham Raise'],
+      primary: ['hamstrings', 'glutes'], secondary: ['lowBack'], equipment: 'bodyweight', category: 'compound',
+      tips: 'Hinge at hips with neutral spine and chase long hamstring tension before hip extension.',
+    },
+    {
+      names: ['B-Stance Hip Thrust', 'Single-Leg Hip Thrust', 'Frog Pump', 'Cable Kickback', 'Machine Hip Abduction', 'Machine Hip Adduction', 'Banded Lateral Walk'],
+      primary: ['glutes'], secondary: ['hamstrings', 'obliques'], equipment: 'band', category: 'isolation',
+      tips: 'Hold peak contraction for one second and avoid lumbar extension at lockout.',
+    },
+    {
+      names: ['Single-Leg Calf Raise', 'Smith Calf Raise', 'Leg Press Calf Press', 'Tibialis Raise', 'Bent-Knee Calf Raise', 'Calf Raise Pause Rep', 'Jump Rope Calf Hop'],
+      primary: ['calves'], secondary: [], equipment: 'machine', category: 'isolation',
+      tips: 'Use full ankle range with a pause in stretch and peak to train both gastroc and soleus.',
+    },
+    {
+      names: ['Cable Pallof Press', 'Dead Bug', 'Hollow Body Hold', 'Stir-the-Pot', 'Weighted Plank', 'Dragon Flag Progression', 'V-Up'],
+      primary: ['abs'], secondary: ['obliques', 'hipFlexors'], equipment: 'bodyweight', category: 'isolation',
+      tips: 'Brace trunk as if preparing for impact and keep pelvis stable through each repetition.',
+    },
+    {
+      names: ['Bicycle Crunch', 'Side Plank', 'Cable Side Bend', 'Hanging Knee Raise', 'Toes-to-Bar', 'Swiss Ball Crunch', 'Reverse Crunch'],
+      primary: ['obliques', 'abs'], secondary: ['hipFlexors'], equipment: 'bodyweight', category: 'isolation',
+      tips: 'Rotate through torso with intent and avoid pulling from neck or swinging hips.',
+    },
+    {
+      names: ['Power Clean', 'Power Snatch', 'Hang Clean', 'Hang Snatch', 'Barbell High Pull', 'Kettlebell Clean', 'Kettlebell Snatch'],
+      primary: ['quads', 'glutes', 'traps'], secondary: ['back', 'shoulders'], equipment: 'barbell', category: 'compound',
+      tips: 'Explode through hips and finish tall. Catch under control with stable receiving position.',
+    },
+    {
+      names: ['Ski Erg', 'Air Bike Sprint', 'Row Erg', 'Jump Squat', 'Medicine Ball Slam', 'Bear Crawl', 'Burpee Broad Jump'],
+      primary: ['quads', 'shoulders', 'abs'], secondary: ['glutes', 'back'], equipment: 'other', category: 'compound',
+      tips: 'Move fast with repeatable mechanics and keep breathing rhythm under fatigue.',
+    },
+    {
+      names: ['Band Pull-Apart', 'External Rotation', 'Scap Push-Up', 'Wall Slide', 'Neck Flexion', 'Neck Extension', 'Forearm Pronation Supination'],
+      primary: ['traps', 'shoulders'], secondary: ['forearms', 'back'], equipment: 'band', category: 'isolation',
+      tips: 'Use strict control and smooth tempo to build joint resilience and movement quality.',
+    },
+  ];
+
+  return specs.flatMap((spec) =>
+    spec.names.map((name) => ({
+      name: name,
+      primary: spec.primary.slice(),
+      secondary: spec.secondary.slice(),
+      equipment: spec.equipment,
+      category: spec.category,
+      tips: spec.tips,
+    }))
+  );
+}
+
+function mergeExercises(exercises) {
+  if (!Array.isArray(exercises) || !exercises.length) return;
+  const known = new Set(EXERCISE_DB.map((exercise) => exercise.name.toLowerCase()));
+  exercises.forEach((exercise) => {
+    if (!exercise || !exercise.name) return;
+    const key = exercise.name.toLowerCase();
+    if (known.has(key)) return;
+    EXERCISE_DB.push(exercise);
+    known.add(key);
+  });
+}
+
+mergeExercises(buildBundledExerciseExpansion());
+
+function mapWgerEquipment(name) {
+  const label = String(name || '').toLowerCase();
+  if (label.includes('barbell') || label.includes('sz-bar')) return 'barbell';
+  if (label.includes('dumbbell')) return 'dumbbell';
+  if (label.includes('cable')) return 'cable';
+  if (label.includes('machine')) return 'machine';
+  if (label.includes('kettlebell')) return 'kettlebell';
+  if (label.includes('smith')) return 'smith';
+  if (label.includes('band') || label.includes('resistance')) return 'band';
+  if (label.includes('bodyweight') || label.includes('none')) return 'bodyweight';
+  return 'other';
+}
+
+function mapWgerMuscle(name) {
+  const label = String(name || '').toLowerCase();
+  if (label.includes('chest') || label.includes('pector')) return 'chest';
+  if (label.includes('lat')) return 'lats';
+  if (label.includes('back')) return 'back';
+  if (label.includes('shoulder') || label.includes('deltoid')) return 'shoulders';
+  if (label.includes('bicep')) return 'biceps';
+  if (label.includes('tricep')) return 'triceps';
+  if (label.includes('forearm')) return 'forearms';
+  if (label.includes('quadr') || label.includes('thigh')) return 'quads';
+  if (label.includes('hamstring')) return 'hamstrings';
+  if (label.includes('glute')) return 'glutes';
+  if (label.includes('calf')) return 'calves';
+  if (label.includes('oblique')) return 'obliques';
+  if (label.includes('abdom') || label.includes('core')) return 'abs';
+  if (label.includes('trap')) return 'traps';
+  if (label.includes('spine') || label.includes('erector') || label.includes('lower back')) return 'lowBack';
+  if (label.includes('hip')) return 'hipFlexors';
+  return null;
+}
+
+function toWgerExercise(raw) {
+  if (!raw) return null;
+  const name = String(raw.name || raw.original_name || '').trim();
+  if (!name) return null;
+
+  const primary = [];
+  const secondary = [];
+  const muscles = Array.isArray(raw.muscles) ? raw.muscles : [];
+  const musclesSecondary = Array.isArray(raw.muscles_secondary) ? raw.muscles_secondary : [];
+  muscles.forEach((m) => {
+    const mapped = mapWgerMuscle(m && m.name_en ? m.name_en : m && m.name ? m.name : '');
+    if (mapped && !primary.includes(mapped)) primary.push(mapped);
+  });
+  musclesSecondary.forEach((m) => {
+    const mapped = mapWgerMuscle(m && m.name_en ? m.name_en : m && m.name ? m.name : '');
+    if (mapped && !secondary.includes(mapped) && !primary.includes(mapped)) secondary.push(mapped);
+  });
+
+  if (!primary.length) {
+    primary.push('back');
+  }
+
+  const equipmentRaw = Array.isArray(raw.equipment) && raw.equipment.length ? raw.equipment[0] : null;
+  const equipment = mapWgerEquipment(equipmentRaw && (equipmentRaw.name_en || equipmentRaw.name));
+
+  const description = String(raw.description || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  const tips = description || 'Use controlled form and train with full range of motion.';
+
+  return {
+    name,
+    primary,
+    secondary,
+    equipment,
+    category: secondary.length ? 'compound' : 'isolation',
+    tips,
+  };
+}
+
+function saveExerciseCache(exercises) {
+  try {
+    localStorage.setItem(EXERCISE_CACHE_KEY, JSON.stringify({
+      ts: Date.now(),
+      items: exercises,
+    }));
+  } catch (_err) {
+    // Ignore storage quota or privacy mode errors.
+  }
+}
+
+function loadExerciseCache() {
+  try {
+    const raw = localStorage.getItem(EXERCISE_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !Array.isArray(parsed.items)) return null;
+    if (Date.now() - Number(parsed.ts || 0) > EXERCISE_CACHE_TTL_MS) return null;
+    return parsed.items;
+  } catch (_err) {
+    return null;
+  }
+}
+
+async function fetchWgerExercises(limit) {
+  const url = 'https://wger.de/api/v2/exerciseinfo/?limit=' + encodeURIComponent(String(limit || 120)) + '&language=2';
+  const response = await fetch(url, { method: 'GET' });
+  if (!response.ok) throw new Error('Wger request failed: ' + response.status);
+  const payload = await response.json();
+  const results = Array.isArray(payload && payload.results) ? payload.results : [];
+  return results.map(toWgerExercise).filter(Boolean);
+}
+
+window.hydrateExerciseDatabase = async function () {
+  const cached = loadExerciseCache();
+  if (cached && cached.length) {
+    mergeExercises(cached);
+  }
+  if (EXERCISE_DB.length >= TARGET_EXERCISE_COUNT) return;
+
+  try {
+    const needed = Math.max(120, TARGET_EXERCISE_COUNT - EXERCISE_DB.length + 40);
+    const fetched = await fetchWgerExercises(needed);
+    if (!fetched.length) return;
+    mergeExercises(fetched);
+    saveExerciseCache(fetched);
+  } catch (_err) {
+    // Keep bundled fallback only when offline or request fails.
+  }
+};
+
+window.getExerciseDatabaseCount = function () {
+  return EXERCISE_DB.length;
+};
 
 function createDefaultFormTips(exercise) {
   const tipsText = (exercise && exercise.tips) || '';
@@ -292,3 +543,153 @@ function createExerciseAutocomplete(inputId, rowIndex) {
     }
   });
 }
+
+function setExerciseNameForRow(rowIndex, exerciseName) {
+  const nameInput = $('exname_' + rowIndex);
+  if (!nameInput) return;
+  nameInput.value = exerciseName;
+  nameInput.dispatchEvent(new Event('change'));
+  const setsInput = $('exsets_' + rowIndex);
+  if (setsInput) setsInput.focus();
+}
+
+function getMuscleExerciseCounts() {
+  const counts = {};
+  getAllMuscleGroups().forEach((group) => {
+    counts[group.key] = getExercisesByMuscle(group.key).length;
+  });
+  return counts;
+}
+
+window.showExerciseBrowserModal = function (rowIndex) {
+  const modalRoot = $('modalContainer');
+  if (!modalRoot) return;
+
+  const counts = getMuscleExerciseCounts();
+  const groups = getAllMuscleGroups();
+  const defaultGroup = groups[0] ? groups[0].key : '';
+
+  modalRoot.innerHTML = '' +
+    '<div class="modal-overlay" id="exerciseBrowserOverlay">' +
+      '<div class="modal exercise-browser-modal">' +
+        '<div class="modal-title">' +
+          '<span>Exercise Browser</span>' +
+          '<button class="modal-close" id="exerciseBrowserClose" aria-label="Close">×</button>' +
+        '</div>' +
+        '<div class="text-xs mb-8 exercise-browser-hint">Pick a muscle group, then insert an exercise into the current row.</div>' +
+        '<div class="exercise-browser-toolbar">' +
+          '<input type="text" id="exerciseBrowserSearch" placeholder="Filter exercises..." aria-label="Filter exercises">' +
+        '</div>' +
+        '<div class="exercise-browser-groups" id="exerciseBrowserGroups">' +
+          groups.map((group, idx) =>
+            '<button class="exercise-group-chip' + (idx === 0 ? ' active' : '') + '" data-muscle-key="' + group.key + '">' +
+              esc(group.label) + ' <span>' + (counts[group.key] || 0) + '</span>' +
+            '</button>'
+          ).join('') +
+        '</div>' +
+        '<div class="exercise-browser-list" id="exerciseBrowserList"></div>' +
+      '</div>' +
+    '</div>';
+
+  const overlay = $('exerciseBrowserOverlay');
+  const closeBtn = $('exerciseBrowserClose');
+  const list = $('exerciseBrowserList');
+  const searchInput = $('exerciseBrowserSearch');
+  const groupWrap = $('exerciseBrowserGroups');
+
+  let selectedMuscle = defaultGroup;
+  let query = '';
+
+  function renderList() {
+    if (!list) return;
+    const pool = selectedMuscle ? getExercisesByMuscle(selectedMuscle) : EXERCISE_DB.slice();
+    const q = (query || '').trim().toLowerCase();
+    const filtered = !q
+      ? pool
+      : pool.filter((exercise) => {
+          const nameMatch = exercise.name.toLowerCase().includes(q);
+          const primaryMatch = exercise.primary.some((m) => (MUSCLE_GROUPS[m] || m).toLowerCase().includes(q));
+          const secondaryMatch = (exercise.secondary || []).some((m) => (MUSCLE_GROUPS[m] || m).toLowerCase().includes(q));
+          const equip = (EQUIPMENT_TYPES[exercise.equipment] || exercise.equipment || '').toLowerCase();
+          return nameMatch || primaryMatch || secondaryMatch || equip.includes(q);
+        });
+
+    if (!filtered.length) {
+      list.innerHTML = '<div class="empty"><div class="empty-icon">🏋️</div><div class="empty-text">No exercises match this filter</div></div>';
+      return;
+    }
+
+    list.innerHTML = filtered.map((exercise) => {
+      const primary = (exercise.primary || []).map((m) => MUSCLE_GROUPS[m] || m).join(', ');
+      const secondary = (exercise.secondary || []).map((m) => MUSCLE_GROUPS[m] || m).join(', ');
+      const equip = EQUIPMENT_TYPES[exercise.equipment] || exercise.equipment || 'Other';
+      return '' +
+        '<div class="exercise-browser-item" data-exercise-name="' + escAttr(exercise.name) + '">' +
+          '<div class="exercise-browser-item-main">' +
+            '<div class="exercise-browser-item-name">' + esc(exercise.name) + '</div>' +
+            '<div class="exercise-browser-item-meta">Primary: ' + esc(primary || 'N/A') + '</div>' +
+            '<div class="exercise-browser-item-meta">Secondary: ' + esc(secondary || 'None') + ' • ' + esc(equip) + '</div>' +
+          '</div>' +
+          '<div class="exercise-browser-actions">' +
+            '<button class="btn btn-outline btn-sm" data-exercise-info="' + escAttr(exercise.name) + '" type="button">Info</button>' +
+            '<button class="btn btn-primary btn-sm" data-exercise-insert="' + escAttr(exercise.name) + '" type="button">Use</button>' +
+          '</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  function closeModalInternal() {
+    if (typeof closeModal === 'function') {
+      closeModal();
+    } else if (modalRoot) {
+      modalRoot.innerHTML = '';
+    }
+  }
+
+  renderList();
+
+  if (closeBtn) closeBtn.addEventListener('click', closeModalInternal);
+  if (overlay) {
+    overlay.addEventListener('click', (event) => {
+      if (event.target === overlay) closeModalInternal();
+    });
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      query = searchInput.value || '';
+      renderList();
+    });
+  }
+
+  if (groupWrap) {
+    groupWrap.addEventListener('click', (event) => {
+      const chip = event.target.closest('[data-muscle-key]');
+      if (!chip) return;
+      selectedMuscle = chip.getAttribute('data-muscle-key') || selectedMuscle;
+      groupWrap.querySelectorAll('.exercise-group-chip').forEach((btn) => btn.classList.remove('active'));
+      chip.classList.add('active');
+      renderList();
+    });
+  }
+
+  if (list) {
+    list.addEventListener('click', (event) => {
+      const infoBtn = event.target.closest('[data-exercise-info]');
+      if (infoBtn) {
+        const exName = infoBtn.getAttribute('data-exercise-info');
+        if (exName && typeof showExerciseDetailModal === 'function') {
+          showExerciseDetailModal(exName);
+        }
+        return;
+      }
+
+      const insertBtn = event.target.closest('[data-exercise-insert]');
+      if (!insertBtn) return;
+      const exName = insertBtn.getAttribute('data-exercise-insert');
+      if (!exName) return;
+      setExerciseNameForRow(rowIndex, exName);
+      closeModalInternal();
+    });
+  }
+};

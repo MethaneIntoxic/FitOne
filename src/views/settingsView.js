@@ -31,12 +31,46 @@ function normalizePlateSystem(value) {
 }
 
 function updateRestTimeDisplay() {
-  const display = $("settingRestTimeDisplay");
-  const hidden = $("settingRestTime");
-  const range = $("settingRestTimeRange");
-  const value = Number((range && range.value) || (hidden && hidden.value) || settings.defaultRestTime || 90);
-  if (hidden) hidden.value = String(value);
-  if (display) display.textContent = value + "s";
+  const baseDisplay = $("settingRestTimeDisplay");
+  const baseHidden = $("settingRestTime");
+  const baseRange = $("settingRestTimeRange");
+  const baseValue = Math.max(
+    30,
+    Math.min(
+      300,
+      Number((baseRange && baseRange.value) || (baseHidden && baseHidden.value) || settings.defaultRestTime || 90)
+    )
+  );
+  if (baseHidden) baseHidden.value = String(baseValue);
+  if (baseDisplay) baseDisplay.textContent = baseValue + "s";
+
+  const compoundDisplay = $("settingRestCompoundDisplay");
+  const compoundHidden = $("settingRestCompound");
+  const compoundRange = $("settingRestCompoundRange");
+  const compoundFallback = settings.defaultCompoundRestTime || Math.max(baseValue, 150);
+  const compoundValue = Math.max(
+    60,
+    Math.min(
+      300,
+      Number((compoundRange && compoundRange.value) || (compoundHidden && compoundHidden.value) || compoundFallback)
+    )
+  );
+  if (compoundHidden) compoundHidden.value = String(compoundValue);
+  if (compoundDisplay) compoundDisplay.textContent = compoundValue + "s";
+
+  const isolationDisplay = $("settingRestIsolationDisplay");
+  const isolationHidden = $("settingRestIsolation");
+  const isolationRange = $("settingRestIsolationRange");
+  const isolationFallback = settings.defaultIsolationRestTime || Math.max(30, Math.min(baseValue, 90));
+  const isolationValue = Math.max(
+    30,
+    Math.min(
+      180,
+      Number((isolationRange && isolationRange.value) || (isolationHidden && isolationHidden.value) || isolationFallback)
+    )
+  );
+  if (isolationHidden) isolationHidden.value = String(isolationValue);
+  if (isolationDisplay) isolationDisplay.textContent = isolationValue + "s";
 }
 
 function renderProfileAvatar() {
@@ -86,6 +120,309 @@ function updatePlateSystemSubtitle() {
     : "Selected: Standard Olympic 20KG";
 }
 
+const TDEE_SYNC_MIN_CONFIDENCE = 0.65;
+
+function normalizeGoalDayProfile(value) {
+  const raw = String(value || "").toLowerCase().trim();
+  if (raw === "rest" || raw === "rest day" || raw === "rest-day") return "rest";
+  if (raw === "carb-up" || raw === "carb up" || raw === "carbup") return "carb-up";
+  if (raw === "peak-week" || raw === "peak week" || raw === "peakweek") return "peak-week";
+  return "training";
+}
+
+function getGoalDayProfileLabel(value) {
+  const key = normalizeGoalDayProfile(value);
+  if (key === "rest") return "Rest Day";
+  if (key === "carb-up") return "Carb-Up";
+  if (key === "peak-week") return "Peak Week";
+  return "Training Day";
+}
+
+function getCompeteTargetsFromSettings(dayProfile) {
+  const profiles = settings.goalMacroProfiles;
+  if (!profiles || typeof profiles !== "object") return null;
+
+  const key = normalizeGoalDayProfile(dayProfile || settings.goalDayProfile || "training");
+  const entry = profiles[key];
+  if (!entry || typeof entry !== "object") return null;
+
+  const calories = Number(entry.calories) || 0;
+  const protein = Number(entry.protein) || 0;
+  const carbs = Number(entry.carbs) || 0;
+  const fat = Number(entry.fat) || 0;
+  if (!(calories > 0 && protein > 0 && carbs >= 0 && fat >= 0)) return null;
+
+  return {
+    dayType: key,
+    calories,
+    protein,
+    carbs,
+    fat,
+  };
+}
+
+function refreshGoalProfileControls() {
+  const group = $("competeGoalProfileGroup");
+  const select = $("settingGoalDayProfile");
+  const hint = $("settingGoalProfileHint");
+  if (!group || !select || !hint) return;
+
+  const isCompete = (settings.bodyGoal || "maintain") === "compete";
+  group.classList.toggle("hidden", !isCompete);
+  if (!isCompete) {
+    hint.textContent = "";
+    return;
+  }
+
+  const profile = normalizeGoalDayProfile(settings.goalDayProfile || select.value || "training");
+  select.value = profile;
+
+  const targets = getCompeteTargetsFromSettings(profile);
+  if (targets) {
+    hint.textContent =
+      getGoalDayProfileLabel(profile) +
+      ": " +
+      targets.calories +
+      " kcal (P" +
+      targets.protein +
+      " C" +
+      targets.carbs +
+      " F" +
+      targets.fat +
+      ")";
+  } else {
+    hint.textContent = "Sync Goal to TDEE to generate training/rest/carb-up/peak-week targets.";
+  }
+}
+
+function applyCompeteGoalProfile(dayProfile, silent) {
+  const profile = normalizeGoalDayProfile(dayProfile);
+  const targets = getCompeteTargetsFromSettings(profile);
+  const next = {
+    ...settings,
+    goalDayProfile: profile,
+  };
+
+  if (targets) {
+    next.calorieGoal = targets.calories;
+    next.proteinGoal = targets.protein;
+    next.carbsGoal = targets.carbs;
+    next.fatGoal = targets.fat;
+  }
+
+  updateSettings(next);
+  localStorage.setItem(KEYS.settings, JSON.stringify(next));
+  loadSettingsUI();
+
+  if (typeof window.notifyDataChanged === "function") {
+    window.notifyDataChanged({ source: "settings", reason: "goalProfile" });
+  }
+
+  if (!silent) {
+    if (targets) {
+      showToast("Applied " + getGoalDayProfileLabel(profile) + " targets", "success");
+    } else {
+      showToast("Profile saved. Sync Goal to TDEE to generate profile targets.", "info");
+    }
+  }
+
+  return !!targets;
+}
+
+function getBodyweightKgForMacroPlanning() {
+  let latest = typeof getPrimaryBodyweight === "function" ? Number(getPrimaryBodyweight()) : 0;
+  if (!Number.isFinite(latest) || latest <= 0) {
+    latest = (settings.weightUnit || "kg") === "lbs" ? 154 : 70;
+  }
+  const kg = (settings.weightUnit || "kg") === "lbs" ? latest * 0.453592 : latest;
+  return Math.max(40, Math.min(220, kg));
+}
+
+function getGoalMacroTargetsFromTDEE(tdee, goal, bodyweightKg, options) {
+  if (typeof calculateGoalMacroTargetsFromTDEE === "function") {
+    return calculateGoalMacroTargetsFromTDEE(tdee, goal, bodyweightKg, options);
+  }
+
+  const g = String(goal || "maintain").toLowerCase();
+  const opts = options || {};
+
+  function buildTargets(profile) {
+    const calories = Math.max(1200, Math.min(6000, Math.round(Number(tdee || 0) + Number(profile.delta || 0))));
+    let protein = Math.max(60, Math.min(360, Math.round(bodyweightKg * Number(profile.proteinPerKg || 2))));
+    let fat = Math.max(35, Math.min(180, Math.round(bodyweightKg * Number(profile.fatPerKg || 0.8))));
+    let carbs = Math.round((calories - protein * 4 - fat * 9) / 4);
+    const minCarbs = Math.max(40, Number(profile.minCarbs) || 40);
+
+    if (carbs < minCarbs) {
+      carbs = minCarbs;
+      fat = Math.round((calories - protein * 4 - carbs * 4) / 9);
+    }
+    if (fat < 35) {
+      fat = 35;
+      carbs = Math.round((calories - protein * 4 - fat * 9) / 4);
+    }
+
+    return {
+      calories,
+      protein,
+      carbs: Math.max(minCarbs, carbs),
+      fat,
+    };
+  }
+
+  if (g === "compete") {
+    const templates = {
+      training: { delta: -220, proteinPerKg: 2.6, fatPerKg: 0.7, minCarbs: 140 },
+      rest: { delta: -450, proteinPerKg: 2.8, fatPerKg: 0.9, minCarbs: 80 },
+      "carb-up": { delta: 180, proteinPerKg: 2.2, fatPerKg: 0.55, minCarbs: 220 },
+      "peak-week": { delta: -80, proteinPerKg: 2.4, fatPerKg: 0.65, minCarbs: 180 },
+    };
+    const profiles = {};
+    Object.keys(templates).forEach((key) => {
+      profiles[key] = buildTargets(templates[key]);
+    });
+    const dayType = normalizeGoalDayProfile(opts.dayType || settings.goalDayProfile || "training");
+    const selected = profiles[dayType] || profiles.training;
+    return {
+      ...selected,
+      dayType,
+      profiles: opts.includeProfiles ? profiles : undefined,
+    };
+  }
+
+  const profiles = {
+    lose: { delta: -400, proteinPerKg: 2.4, fatPerKg: 0.8, minCarbs: 60 },
+    maintain: { delta: 0, proteinPerKg: 2.0, fatPerKg: 0.9, minCarbs: 60 },
+    gain: { delta: 300, proteinPerKg: 2.0, fatPerKg: 0.8, minCarbs: 80 },
+    performance: { delta: 200, proteinPerKg: 2.0, fatPerKg: 0.8, minCarbs: 90 },
+  };
+  return buildTargets(profiles[g] || profiles.maintain);
+}
+
+function refreshGoalSyncStatus() {
+  const btn = $("settingSyncGoalToTDEEBtn");
+  const status = $("settingSyncGoalToTDEEStatus");
+  if (!btn || !status) return;
+
+  status.classList.remove("is-ready", "is-warn", "is-muted");
+
+  if (typeof calculateAdaptiveTDEE !== "function") {
+    btn.disabled = true;
+    status.classList.add("is-muted");
+    status.textContent = "Adaptive TDEE is unavailable in this build.";
+    return;
+  }
+
+  const result = calculateAdaptiveTDEE();
+  if (!result || result.status !== "ready") {
+    btn.disabled = true;
+    status.classList.add("is-muted");
+    status.textContent = result && result.message
+      ? result.message + " Build more data before syncing goals."
+      : "Log more food and bodyweight data to unlock TDEE sync.";
+    return;
+  }
+
+  const confidencePct = Math.round((Number(result.confidence) || 0) * 100);
+  if ((Number(result.confidence) || 0) < TDEE_SYNC_MIN_CONFIDENCE) {
+    btn.disabled = true;
+    status.classList.add("is-warn");
+    status.textContent = "Confidence " + confidencePct + "% (need at least " + Math.round(TDEE_SYNC_MIN_CONFIDENCE * 100) + "%). Keep logging for a more reliable sync.";
+    return;
+  }
+
+  btn.disabled = false;
+  status.classList.add("is-ready");
+  status.textContent =
+    "Ready: " +
+    result.estimatedTDEE +
+    " kcal/day at " +
+    confidencePct +
+    "% confidence. " +
+    ((settings.bodyGoal || "maintain") === "compete"
+      ? "This also refreshes training/rest/carb-up/peak-week macro profiles."
+      : "This updates calories and macros for your current body goal.");
+}
+
+function syncGoalsToTDEE() {
+  if (typeof syncGoalToAdaptiveTDEE === "function") {
+    const syncResult = syncGoalToAdaptiveTDEE({ minConfidence: TDEE_SYNC_MIN_CONFIDENCE });
+    if (!syncResult || syncResult.status === "insufficient") {
+      showToast(syncResult && syncResult.message ? syncResult.message : "Not enough data for TDEE sync", "warning");
+      refreshGoalSyncStatus();
+      return;
+    }
+    if (syncResult.status === "low-confidence") {
+      showToast("TDEE confidence is still low. Log more days before syncing.", "info");
+      refreshGoalSyncStatus();
+      return;
+    }
+    if (syncResult.status === "ready" && syncResult.targets) {
+      if ($("settingCalorieGoal")) $("settingCalorieGoal").value = String(syncResult.targets.calories);
+      if ($("settingProteinGoal")) $("settingProteinGoal").value = String(syncResult.targets.protein);
+      if ($("settingCarbsGoal")) $("settingCarbsGoal").value = String(syncResult.targets.carbs);
+      if ($("settingFatGoal")) $("settingFatGoal").value = String(syncResult.targets.fat);
+      loadSettingsUI();
+      refreshGoalSyncStatus();
+      const profileNote = syncResult.dayType
+        ? " [" + getGoalDayProfileLabel(syncResult.dayType) + "]"
+        : "";
+      showToast("Goals synced" + profileNote + ": " + syncResult.targets.calories + " kcal (P" + syncResult.targets.protein + " C" + syncResult.targets.carbs + " F" + syncResult.targets.fat + ")", "success");
+      return;
+    }
+  }
+
+  if (typeof calculateAdaptiveTDEE !== "function") {
+    showToast("Adaptive TDEE is unavailable", "warning");
+    return;
+  }
+
+  const result = calculateAdaptiveTDEE();
+  if (!result || result.status !== "ready") {
+    showToast(result && result.message ? result.message : "Not enough data for TDEE sync", "warning");
+    refreshGoalSyncStatus();
+    return;
+  }
+
+  if ((Number(result.confidence) || 0) < TDEE_SYNC_MIN_CONFIDENCE) {
+    showToast("TDEE confidence is still low. Log more days before syncing.", "info");
+    refreshGoalSyncStatus();
+    return;
+  }
+
+  const bodyweightKg = getBodyweightKgForMacroPlanning();
+  const goal = settings.bodyGoal || "maintain";
+  const targets = getGoalMacroTargetsFromTDEE(
+    result.estimatedTDEE,
+    goal,
+    bodyweightKg,
+    {
+      dayType: settings.goalDayProfile || "training",
+      includeProfiles: goal === "compete",
+    }
+  );
+
+  if ($("settingCalorieGoal")) $("settingCalorieGoal").value = String(targets.calories);
+  if ($("settingProteinGoal")) $("settingProteinGoal").value = String(targets.protein);
+  if ($("settingCarbsGoal")) $("settingCarbsGoal").value = String(targets.carbs);
+  if ($("settingFatGoal")) $("settingFatGoal").value = String(targets.fat);
+
+  if (goal === "compete" && targets.profiles) {
+    const next = {
+      ...settings,
+      goalDayProfile: targets.dayType || normalizeGoalDayProfile(settings.goalDayProfile || "training"),
+      goalMacroProfiles: targets.profiles,
+    };
+    updateSettings(next);
+    localStorage.setItem(KEYS.settings, JSON.stringify(next));
+  }
+
+  saveSettingsFromUI();
+  refreshGoalSyncStatus();
+  const profileNote = targets.dayType ? " [" + getGoalDayProfileLabel(targets.dayType) + "]" : "";
+  showToast("Goals synced" + profileNote + ": " + targets.calories + " kcal (P" + targets.protein + " C" + targets.carbs + " F" + targets.fat + ")", "success");
+}
+
 function buildSettingsPayload() {
   const gymItems = Array.from(document.querySelectorAll("#gymList .gym-chip"))
     .map((el) => (el.getAttribute("data-gym") || "").trim())
@@ -105,6 +442,8 @@ function buildSettingsPayload() {
     
     // W15 App Settings
     defaultRestTime: settingNum("settingRestTime", 60),
+    defaultCompoundRestTime: Math.max(60, Math.min(300, settingNum("settingRestCompound", settings.defaultCompoundRestTime || 150))),
+    defaultIsolationRestTime: Math.max(30, Math.min(180, settingNum("settingRestIsolation", settings.defaultIsolationRestTime || 75))),
     plateSystem: normalizePlateSystem(settingVal("settingPlateSystem", "kg")),
     autoLock: settingBool("settingAutoLock", true),
     autoAdvance: settingBool("settingAutoAdvance", true),
@@ -113,6 +452,10 @@ function buildSettingsPayload() {
     pushNotifications: settingBool("settingPushPulse", false),
     autoLockActiveOnly: settingBool("settingAutoLockActiveOnly", true),
     emailSummaries: false,
+    streakActiveRule: settingVal("settingStreakActiveRule", settings.streakActiveRule || "any-log"),
+    streakFreezesPerWeek: Math.max(0, Math.min(2, settingNum("settingStreakFreezePerWeek", settings.streakFreezesPerWeek || 2))),
+    streakRestProtection: settingBool("settingStreakRestProtection", settings.streakRestProtection !== false),
+    goalDayProfile: normalizeGoalDayProfile(settingVal("settingGoalDayProfile", settings.goalDayProfile || "training")),
     measureUnit: settingVal("settingMeasureUnit", "cm"),
     darkMode: settingBool("settingTheme", true),
     bodyGoal: settings.bodyGoal || "maintain",
@@ -161,6 +504,7 @@ function saveSettingsFromUI() {
   localStorage.setItem(KEYS.settings, JSON.stringify(next));
   updateBodyLabels();
   renderAdvancedSettings();
+  refreshGoalSyncStatus();
   const activeTab = document.querySelector(".tab-btn.active");
   if (activeTab && window._refreshCurrentTab) window._refreshCurrentTab(activeTab.dataset.tab);
 }
@@ -175,6 +519,10 @@ function resetWorkoutSettingsSection() {
   const defaults = defaultSettings();
   if ($("settingRestTimeRange")) $("settingRestTimeRange").value = String(defaults.defaultRestTime || 90);
   if ($("settingRestTime")) $("settingRestTime").value = String(defaults.defaultRestTime || 90);
+  if ($("settingRestCompoundRange")) $("settingRestCompoundRange").value = String(defaults.defaultCompoundRestTime || 150);
+  if ($("settingRestCompound")) $("settingRestCompound").value = String(defaults.defaultCompoundRestTime || 150);
+  if ($("settingRestIsolationRange")) $("settingRestIsolationRange").value = String(defaults.defaultIsolationRestTime || 75);
+  if ($("settingRestIsolation")) $("settingRestIsolation").value = String(defaults.defaultIsolationRestTime || 75);
   if ($("settingPlateSystem")) $("settingPlateSystem").value = defaults.plateSystem || "20kg";
   if ($("settingAutoLock")) $("settingAutoLock").checked = !!defaults.autoLock;
   if ($("settingAutoLockActiveOnly")) $("settingAutoLockActiveOnly").checked = !!defaults.autoLockActiveOnly;
@@ -327,8 +675,12 @@ function loadSettingsUI() {
   $("settingProteinGoal").value = settings.proteinGoal;
   $("settingCarbsGoal").value = settings.carbsGoal;
   $("settingFatGoal").value = settings.fatGoal;
+  if ($("settingGoalDayProfile")) $("settingGoalDayProfile").value = normalizeGoalDayProfile(settings.goalDayProfile || "training");
   $("settingWorkoutGoal").value = settings.workoutGoal;
   $("settingWaterGoal").value = settings.waterGoal || 2000;
+  if ($("settingStreakActiveRule")) $("settingStreakActiveRule").value = settings.streakActiveRule || "any-log";
+  if ($("settingStreakFreezePerWeek")) $("settingStreakFreezePerWeek").value = String(Math.max(1, Math.min(2, Number(settings.streakFreezesPerWeek) || 2)));
+  if ($("settingStreakRestProtection")) $("settingStreakRestProtection").checked = settings.streakRestProtection !== false;
   $("settingWeightUnit").value = settings.weightUnit;
   $("settingMeasureUnit").value = settings.measureUnit;
   if ($("settingDisplayName")) $("settingDisplayName").value = settings.displayName || "";
@@ -336,6 +688,10 @@ function loadSettingsUI() {
   if ($("settingPushPulse")) $("settingPushPulse").checked = !!settings.pushNotifications;
   if ($("settingRestTimeRange")) $("settingRestTimeRange").value = String(settings.defaultRestTime || 90);
   if ($("settingRestTime")) $("settingRestTime").value = String(settings.defaultRestTime || 90);
+  if ($("settingRestCompoundRange")) $("settingRestCompoundRange").value = String(settings.defaultCompoundRestTime || 150);
+  if ($("settingRestCompound")) $("settingRestCompound").value = String(settings.defaultCompoundRestTime || 150);
+  if ($("settingRestIsolationRange")) $("settingRestIsolationRange").value = String(settings.defaultIsolationRestTime || 75);
+  if ($("settingRestIsolation")) $("settingRestIsolation").value = String(settings.defaultIsolationRestTime || 75);
   if ($("settingPlateSystem")) $("settingPlateSystem").value = normalizePlateSystem(settings.plateSystem || "kg");
   if ($("settingAutoLock")) $("settingAutoLock").checked = !!settings.autoLock;
   if ($("settingAutoLockActiveOnly")) $("settingAutoLockActiveOnly").checked = settings.autoLockActiveOnly !== false;
@@ -356,15 +712,23 @@ function loadSettingsUI() {
   updatePlateSystemSubtitle();
   renderProfileAvatar();
   renderAdvancedSettings();
+  refreshGoalSyncStatus();
+  refreshGoalProfileControls();
 }
 
 function selectBodyGoal(goal) {
-  const newSettings = { ...settings, bodyGoal: goal };
+  const newSettings = {
+    ...settings,
+    bodyGoal: goal,
+    goalDayProfile: normalizeGoalDayProfile(settings.goalDayProfile || "training"),
+  };
   updateSettings(newSettings);
   document.querySelectorAll(".goal-option").forEach((b) => {
     b.classList.toggle("active", b.dataset.goal === goal);
   });
   saveSettingsFromUI();
+  refreshGoalSyncStatus();
+  refreshGoalProfileControls();
   showToast("Body goal set to " + goal);
 }
 
@@ -449,9 +813,21 @@ function bindDynamicSettingsEvents(panel) {
 
 function initSettingsEvents() {
   $("settingTheme").addEventListener("change", toggleTheme);
-  ["settingCalorieGoal", "settingProteinGoal", "settingCarbsGoal", "settingFatGoal", "settingWorkoutGoal", "settingWaterGoal", "settingDisplayName", "settingBio", "settingMeasureUnit"].forEach((id) => {
+  ["settingCalorieGoal", "settingProteinGoal", "settingCarbsGoal", "settingFatGoal", "settingWorkoutGoal", "settingWaterGoal", "settingDisplayName", "settingBio", "settingMeasureUnit", "settingStreakActiveRule", "settingStreakFreezePerWeek"].forEach((id) => {
     $(id).addEventListener("change", saveSettingsFromUI);
   });
+
+  const goalProfileSelect = $("settingGoalDayProfile");
+  if (goalProfileSelect) {
+    goalProfileSelect.addEventListener("change", () => {
+      const profile = normalizeGoalDayProfile(goalProfileSelect.value);
+      if ((settings.bodyGoal || "maintain") === "compete") {
+        applyCompeteGoalProfile(profile);
+      } else {
+        saveSettingsFromUI();
+      }
+    });
+  }
   const weightUnitSegmented = $("weightUnitSegmented");
   if (weightUnitSegmented) {
     weightUnitSegmented.addEventListener("click", (e) => {
@@ -477,11 +853,12 @@ function initSettingsEvents() {
     });
   }
 
-  const restRange = $("settingRestTimeRange");
-  if (restRange) {
-    restRange.addEventListener("input", updateRestTimeDisplay);
-    restRange.addEventListener("change", saveSettingsFromUI);
-  }
+  ["settingRestTimeRange", "settingRestCompoundRange", "settingRestIsolationRange"].forEach((id) => {
+    const range = $(id);
+    if (!range) return;
+    range.addEventListener("input", updateRestTimeDisplay);
+    range.addEventListener("change", saveSettingsFromUI);
+  });
 
   const pushPulse = $("settingPushPulse");
   if (pushPulse) {
@@ -491,7 +868,7 @@ function initSettingsEvents() {
     });
   }
 
-  ["settingAutoLock", "settingAutoLockActiveOnly", "settingAutoAdvance", "settingFocusMode", "settingVoiceCountdown"].forEach((id) => {
+  ["settingAutoLock", "settingAutoLockActiveOnly", "settingAutoAdvance", "settingFocusMode", "settingVoiceCountdown", "settingStreakRestProtection"].forEach((id) => {
     const el = $(id);
     if (el) el.addEventListener("change", saveSettingsFromUI);
   });
@@ -500,6 +877,11 @@ function initSettingsEvents() {
   if (saveWorkoutBtn) saveWorkoutBtn.addEventListener("click", saveWorkoutSettingsSection);
   const resetWorkoutBtn = $("workoutSettingsResetBtn");
   if (resetWorkoutBtn) resetWorkoutBtn.addEventListener("click", resetWorkoutSettingsSection);
+
+  const syncGoalBtn = $("settingSyncGoalToTDEEBtn");
+  if (syncGoalBtn) {
+    syncGoalBtn.addEventListener("click", syncGoalsToTDEE);
+  }
 
   const openDataBtn = $("openDataStudioBtn");
   if (openDataBtn) {
@@ -547,4 +929,6 @@ function initSettingsEvents() {
     });
   }
   bindDynamicSettingsEvents(panel);
+  refreshGoalSyncStatus();
+  refreshGoalProfileControls();
 }

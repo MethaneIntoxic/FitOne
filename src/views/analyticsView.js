@@ -1,6 +1,8 @@
 // ========== ANALYTICS VIEW ==========
 // Charts and analytics rendering
 
+const ANALYTICS_TDEE_SYNC_MIN_CONFIDENCE = 0.65;
+
 
 // ========== REFRESH ==========
 function refreshAnalytics() {
@@ -35,8 +37,11 @@ function drawPerformanceAnalytics() {
   const workouts = loadData(KEYS.workouts);
   
   drawPerformanceTonnage(workouts, daysBack);
+  drawPerformanceBodyComposition(daysBack);
   drawPerformanceConsistency(workouts);
-  drawPerformancePRs();
+  drawPerformanceMuscleVolume(daysBack);
+  drawPerformance1RMTrends(workouts, daysBack);
+  drawPerformancePRs(daysBack);
 }
 
 // ========== CALORIE CHART ==========
@@ -389,7 +394,53 @@ function refreshTDEE() {
     html += "</div>";
   }
 
+  const confidencePct = Math.round((Number(tdeeResult.confidence) || 0) * 100);
+  const syncReady = (Number(tdeeResult.confidence) || 0) >= ANALYTICS_TDEE_SYNC_MIN_CONFIDENCE;
+  html += '<div class="tdee-sync-actions">' +
+    '<button class="btn btn-outline btn-sm" id="tdeeSyncGoalBtn"' + (syncReady ? "" : " disabled") + '>SYNC GOAL TO TDEE</button>' +
+    '</div>';
+  html += '<div class="tdee-detail tdee-sync-status' + (syncReady ? ' is-ready' : '') + '" id="tdeeSyncGoalStatus">' +
+    (syncReady
+      ? 'Ready for sync at ' + confidencePct + '% confidence. ' +
+        ((settings.bodyGoal || 'maintain') === 'compete'
+          ? 'Updates active profile and regenerates training/rest/carb-up/peak-week targets.'
+          : 'Updates calories/macros for your current goal (' + (settings.bodyGoal || 'maintain') + ').')
+      : 'Confidence ' + confidencePct + '% is below the sync threshold (' + Math.round(ANALYTICS_TDEE_SYNC_MIN_CONFIDENCE * 100) + '%). Keep logging daily food + weight.') +
+    '</div>';
+
+  if (settings.lastGoalSyncAt) {
+    html += '<div class="tdee-detail" style="margin-top:6px">Last goal sync: ' + fmtDate(localDateStr(new Date(settings.lastGoalSyncAt))) + '</div>';
+  }
+
   container.innerHTML = html;
+
+  const syncBtn = $("tdeeSyncGoalBtn");
+  if (syncBtn) {
+    syncBtn.addEventListener("click", () => {
+      if (typeof syncGoalToAdaptiveTDEE !== "function") {
+        showToast("Goal sync helper is unavailable", "warning");
+        return;
+      }
+      const syncResult = syncGoalToAdaptiveTDEE({ minConfidence: ANALYTICS_TDEE_SYNC_MIN_CONFIDENCE });
+      if (!syncResult || syncResult.status === "insufficient") {
+        showToast(syncResult && syncResult.message ? syncResult.message : "Not enough data for goal sync", "warning");
+        refreshTDEE();
+        return;
+      }
+      if (syncResult.status === "low-confidence") {
+        showToast("TDEE confidence is still low. Keep logging before syncing.", "info");
+        refreshTDEE();
+        return;
+      }
+      if (syncResult.status === "ready" && syncResult.targets) {
+        const dayType = syncResult.dayType ? " [" + syncResult.dayType + "]" : "";
+        showToast("Goals synced" + dayType + ": " + syncResult.targets.calories + " kcal (P" + syncResult.targets.protein + " C" + syncResult.targets.carbs + " F" + syncResult.targets.fat + ")", "success");
+        if (typeof loadSettingsUI === "function") loadSettingsUI();
+        if (typeof refreshToday === "function") refreshToday();
+        refreshTDEE();
+      }
+    });
+  }
 }
 
 // ========== RESIZE HANDLER ==========
@@ -542,14 +593,227 @@ function drawPerformanceConsistency(workouts) {
   $("statsConsistencyVal").textContent = pct + "% Target Consistency (12W)";
 }
 
-function drawPerformancePRs() {
+function formatSetDisplay(value) {
+  const num = Number(value) || 0;
+  if (Math.abs(num - Math.round(num)) < 0.05) return String(Math.round(num));
+  return num.toFixed(1);
+}
+
+function drawPerformanceMuscleVolume(daysBack) {
+  const listEl = $("statsMuscleVolumeList");
+  const statusEl = $("statsMuscleVolumeStatus");
+  const windowEl = $("statsMuscleVolumeWindow");
+  if (!listEl || !statusEl) return;
+
+  if (typeof getWeeklyMuscleVolumeStats !== "function") {
+    statusEl.textContent = "Muscle volume engine is still loading.";
+    listEl.innerHTML = '<div class="empty text-sm stats-pr-empty">Try again in a moment.</div>';
+    return;
+  }
+
+  const current = getWeeklyMuscleVolumeStats(0);
+  const previous = getWeeklyMuscleVolumeStats(1);
+  if (windowEl && current && current.startDate && current.endDate) {
+    windowEl.textContent = fmtDate(current.startDate) + " -> " + fmtDate(current.endDate);
+  }
+
+  let statusText = (current && current.statusMessage) || "";
+  if (current && current.totalSetEntries > 0 && previous && previous.totalSetEntries > 0) {
+    const delta = current.totalSetEntries - previous.totalSetEntries;
+    const deltaSign = delta > 0 ? "+" : "";
+    statusText += " Total sets " + deltaSign + formatSetDisplay(delta) + " vs last week.";
+  } else if (current && current.totalSetEntries > 0 && previous && previous.totalSetEntries === 0) {
+    statusText += " Previous week had no logged sets.";
+  }
+
+  statusEl.textContent = statusText || "Log weighted sets to unlock weekly muscle volume guidance.";
+  statusEl.className = "stats-volume-status";
+  if (current && current.statusTone === "in-range") statusEl.classList.add("is-in-range");
+  if (current && current.statusTone === "under") statusEl.classList.add("is-under");
+  if (current && current.statusTone === "over") statusEl.classList.add("is-over");
+
+  const rows = (current && current.muscles ? current.muscles : [])
+    .filter(function (row) { return row.sets > 0; })
+    .slice(0, 10);
+
+  if (!rows.length) {
+    listEl.innerHTML = '<div class="empty text-sm stats-pr-empty">Log workouts this week to see muscle-set volume.</div>';
+    return;
+  }
+
+  listEl.innerHTML = rows.map(function (row) {
+    const statusClass = row.status === "over" ? "is-over" : row.status === "under" ? "is-under" : "is-in-range";
+    const statusLabel = row.status === "over" ? "Above MRV" : row.status === "under" ? "Below MEV" : "In Range";
+    const setsLabel = formatSetDisplay(row.sets) + " sets";
+    const targetLabel = "Target " + row.mev + "-" + row.mrv;
+    return '<div class="stats-volume-row ' + statusClass + '">' +
+      '<div class="stats-volume-head"><span class="stats-volume-name">' + esc(row.label) + '</span><span class="stats-volume-value">' + esc(setsLabel) + '</span></div>' +
+      '<div class="stats-volume-track"><span class="stats-volume-fill ' + statusClass + '" style="width:' + Math.max(4, row.pctOfMrv) + '%"></span></div>' +
+      '<div class="stats-volume-note">' + esc(targetLabel) + ' • ' + esc(statusLabel) + '</div>' +
+    '</div>';
+  }).join("");
+}
+
+function formatPerformanceRangeLabel(daysBack) {
+  const days = Math.max(14, Number(daysBack) || 90);
+  if (days >= 365) return "Last 12 months";
+  if (days >= 180) return "Last 6 months";
+  if (days >= 90) return "Last 3 months";
+  return "Last " + days + " days";
+}
+
+function collectExercise1RMTrends(workouts, daysBack) {
+  const days = Math.max(14, Number(daysBack) || 90);
+  const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+  const byExercise = {};
+
+  (workouts || []).forEach(function (workout) {
+    const ts = Number(workout && workout.timestamp) || Date.parse(String((workout && workout.date) || "") + "T12:00:00");
+    if (!Number.isFinite(ts) || ts < cutoff) return;
+
+    (workout.exercises || []).forEach(function (exercise) {
+      const exerciseName = String((exercise && exercise.name) || "").trim();
+      if (!exerciseName) return;
+
+      let est1RM = Number(exercise.est1RM) || 0;
+      if (est1RM <= 0 && typeof calculateExerciseEstimated1RM === "function") {
+        est1RM = calculateExerciseEstimated1RM(exercise);
+      } else if (est1RM <= 0 && typeof calculate1RM === "function") {
+        est1RM = calculate1RM(exercise && exercise.weight, exercise && exercise.reps);
+      }
+      if (est1RM <= 0) return;
+
+      const key = exerciseName.toLowerCase();
+      if (!byExercise[key]) {
+        byExercise[key] = { name: exerciseName, pointsByDate: {} };
+      }
+
+      const dateKey = String(workout.date || localDateStr(new Date(ts)));
+      const existing = byExercise[key].pointsByDate[dateKey];
+      if (!existing || est1RM > existing.value) {
+        byExercise[key].pointsByDate[dateKey] = {
+          date: dateKey,
+          ts: ts,
+          value: est1RM,
+        };
+      }
+    });
+  });
+
+  return Object.keys(byExercise).map(function (key) {
+    const entry = byExercise[key];
+    const points = Object.values(entry.pointsByDate).sort(function (a, b) { return a.ts - b.ts; });
+    const first = points[0];
+    const latest = points[points.length - 1];
+    const delta = latest.value - first.value;
+    const pct = first.value > 0 ? (delta / first.value) * 100 : 0;
+
+    return {
+      name: entry.name,
+      points: points,
+      sessions: points.length,
+      baseline: first.value,
+      latest: latest.value,
+      delta: delta,
+      pct: pct,
+      latestDate: latest.date,
+      latestTs: latest.ts,
+    };
+  });
+}
+
+function render1RMSparkline(points) {
+  const windowed = (points || []).slice(-10);
+  if (!windowed.length) return "";
+
+  const values = windowed.map(function (p) { return p.value; });
+  const min = Math.min.apply(null, values);
+  const max = Math.max.apply(null, values);
+  const spread = Math.max(0.0001, max - min);
+
+  return '<div class="stats-1rm-spark">' + windowed.map(function (point) {
+    const normalized = (point.value - min) / spread;
+    const h = Math.max(6, Math.round(8 + normalized * 24));
+    return '<span class="stats-1rm-spark-bar" style="height:' + h + 'px"></span>';
+  }).join("") + "</div>";
+}
+
+function drawPerformance1RMTrends(workouts, daysBack) {
+  const listEl = $("stats1RMTrendList");
+  const rangeEl = $("stats1RMWindow");
+  if (!listEl) return;
+  if (rangeEl) rangeEl.textContent = formatPerformanceRangeLabel(daysBack);
+
+  const trends = collectExercise1RMTrends(workouts, daysBack)
+    .sort(function (a, b) {
+      if ((b.latestTs || 0) !== (a.latestTs || 0)) return (b.latestTs || 0) - (a.latestTs || 0);
+      return (b.latest || 0) - (a.latest || 0);
+    })
+    .slice(0, 8);
+
+  if (!trends.length) {
+    listEl.innerHTML = '<div class="empty text-sm stats-pr-empty">Log weighted sets to unlock estimated 1RM trends.</div>';
+    return;
+  }
+
+  const unit = settings.weightUnit || "kg";
+  listEl.innerHTML = trends.map(function (trend) {
+    const latestDateLabel = trend.latestDate ? fmtDate(trend.latestDate) : "recent";
+    const latestLabel = trend.latest.toFixed(1) + " " + unit;
+
+    let deltaClass = "is-neutral";
+    let deltaLabel = "Baseline";
+    if (trend.sessions > 1) {
+      const deltaSign = trend.delta > 0 ? "+" : "";
+      const pctSign = trend.pct > 0 ? "+" : "";
+      if (trend.delta > 0) deltaClass = "is-good";
+      if (trend.delta < 0) deltaClass = "is-bad";
+      deltaLabel = (trend.delta > 0 ? "↑ " : trend.delta < 0 ? "↓ " : "→ ") + deltaSign + trend.delta.toFixed(1) + " " + unit + " (" + pctSign + trend.pct.toFixed(1) + "%)";
+    }
+
+    return '<button class="stats-1rm-item" data-1rm-exercise="' + escAttr(trend.name) + '">' +
+      '<div class="stats-1rm-main">' +
+        '<div class="stats-1rm-name">' + esc(trend.name) + '</div>' +
+        '<div class="stats-1rm-meta">' + trend.sessions + ' session' + (trend.sessions === 1 ? '' : 's') + ' • latest ' + esc(latestDateLabel) + '</div>' +
+        render1RMSparkline(trend.points) +
+      '</div>' +
+      '<div class="stats-1rm-side">' +
+        '<div class="stats-1rm-latest">' + esc(latestLabel) + '</div>' +
+        '<div class="stats-1rm-delta ' + deltaClass + '">' + esc(deltaLabel) + '</div>' +
+      '</div>' +
+    '</button>';
+  }).join("");
+
+  listEl.querySelectorAll("[data-1rm-exercise]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      const exercise = btn.getAttribute("data-1rm-exercise");
+      if (!exercise) return;
+      if (typeof showDeepDiveModal === "function") {
+        showDeepDiveModal(exercise);
+      } else {
+        showToast("Deep Dive is loading. Try again in a moment.", "info");
+      }
+    });
+  });
+}
+
+function drawPerformancePRs(daysBack) {
   const container = $("statsPRCards");
   if (!container) return;
   let prs = [];
+  const rangeDays = Math.max(7, Number(daysBack) || 90);
+  const cutoff = Date.now() - rangeDays * 24 * 60 * 60 * 1000;
+
+  function tsFromPR(pr) {
+    if (!pr) return 0;
+    if (Number(pr.timestamp) > 0) return Number(pr.timestamp);
+    const parsed = Date.parse(pr.date || "");
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
 
   if (typeof loadPRs === "function") {
     prs = loadPRs()
-      .filter(pr => pr && pr.exercise && pr.value)
+      .filter(pr => pr && pr.exercise && pr.value && tsFromPR(pr) >= cutoff)
       .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
       .slice(0, 6)
       .map(pr => {
@@ -588,7 +852,26 @@ function drawPerformancePRs() {
     return;
   }
 
-  container.innerHTML = prs.map(pr => {
+  let summary = { count: prs.length, previousCount: 0, delta: 0, frequencyPerWeek: 0 };
+  if (typeof getPRSummary === "function") {
+    summary = getPRSummary(rangeDays);
+  }
+  const deltaLabel = summary.delta > 0 ? '+' + summary.delta : String(summary.delta);
+  const trendTone = summary.delta >= 0 ? 'var(--brand-success)' : 'var(--brand-danger)';
+
+  const summaryHtml =
+    '<div class="card" style="padding:10px 12px;margin-bottom:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05)">' +
+      '<div style="font-size:11px;letter-spacing:0.08em;color:var(--text2);font-weight:700">PR MOMENTUM</div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-top:6px">' +
+        '<div><div style="font-size:22px;font-weight:700;color:var(--primary)">' + summary.count + '</div><div style="font-size:11px;color:var(--text2)">PRs in selected range</div></div>' +
+        '<div style="text-align:right">' +
+          '<div style="font-size:12px;color:' + trendTone + ';font-weight:700">Δ ' + deltaLabel + ' vs prior period</div>' +
+          '<div style="font-size:11px;color:var(--text2)">' + summary.frequencyPerWeek + ' PRs/week</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  container.innerHTML = summaryHtml + prs.map(pr => {
     const ageText = timeAgoFromDate(pr.date);
     const isNew = ageText === "today" || ageText === "1 day ago" || ageText.includes("days ago") && parseInt(ageText, 10) <= 14;
     const badge = isNew ? "NEW HIGH" : "STABLE";
@@ -618,6 +901,175 @@ function drawPerformancePRs() {
       }
     });
   });
+}
+
+const BODY_COMPOSITION_METRICS = [
+  { key: "weight", label: "Weight", unit: () => (settings.weightUnit || "kg") },
+  { key: "bodyFat", label: "Body Fat", unit: () => "%" },
+  { key: "chest", label: "Chest", unit: () => (settings.measureUnit || "cm") },
+  { key: "waist", label: "Waist", unit: () => (settings.measureUnit || "cm") },
+  { key: "arms", label: "Arms", unit: () => (settings.measureUnit || "cm") },
+  { key: "legs", label: "Legs", unit: () => (settings.measureUnit || "cm") },
+];
+
+function bodyMetricValue(entry, keys) {
+  if (!entry) return null;
+  const list = Array.isArray(keys) ? keys : [keys];
+  for (let i = 0; i < list.length; i++) {
+    const n = Number(entry[list[i]]);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return null;
+}
+
+function bodyTrendPreference(metricKey) {
+  if (metricKey === "bodyFat" || metricKey === "waist") return "down";
+  if (metricKey === "weight") {
+    const goal = settings.bodyGoal || "maintain";
+    if (goal === "lose") return "down";
+    if (goal === "compete") return "down";
+    if (goal === "gain" || goal === "performance") return "up";
+    return "neutral";
+  }
+  return "up";
+}
+
+function bodyTrendToneClass(metricKey, delta) {
+  if (!delta) return "is-neutral";
+  const pref = bodyTrendPreference(metricKey);
+  if (pref === "neutral") return "is-neutral";
+  const improving = pref === "up" ? delta > 0 : delta < 0;
+  return improving ? "is-good" : "is-bad";
+}
+
+function drawPerformanceBodyComposition(daysBack) {
+  const canvas = $("chartBodyComposition");
+  const trendList = $("statsBodyTrendList");
+  const symmetryBox = $("statsSymmetryAnalysis");
+  const rangeEl = $("statsBodyRange");
+  if (!canvas || !trendList || !symmetryBox || !rangeEl) return;
+
+  const allBody = loadData(KEYS.body)
+    .filter((b) => b && b.date)
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  if (!allBody.length) {
+    drawRadarChart(canvas, BODY_COMPOSITION_METRICS.map((m) => m.label), [], { showLegend: false });
+    trendList.innerHTML = '<div class="text-sm stats-pr-empty">Log body measurements to unlock directional trends.</div>';
+    symmetryBox.innerHTML = '<div class="text-sm stats-muted-label">Symmetry analysis appears after body measurements are logged.</div>';
+    rangeEl.textContent = "No measurements";
+    return;
+  }
+
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - Math.max(14, Number(daysBack) || 90));
+  let scoped = allBody.filter((b) => Date.parse((b.date || "") + "T00:00:00") >= cutoff.getTime());
+  if (!scoped.length) scoped = allBody.slice(Math.max(0, allBody.length - 12));
+  if (!scoped.length) scoped = allBody.slice();
+
+  const first = scoped[0];
+  const latest = scoped[scoped.length - 1];
+  const labels = BODY_COMPOSITION_METRICS.map((m) => m.label);
+  const firstValues = BODY_COMPOSITION_METRICS.map((m) => bodyMetricValue(first, m.key) || 0);
+  const latestValues = BODY_COMPOSITION_METRICS.map((m) => bodyMetricValue(latest, m.key) || 0);
+  const hasAnyValues = latestValues.some((v) => v > 0) || firstValues.some((v) => v > 0);
+
+  if (!hasAnyValues) {
+    drawRadarChart(canvas, labels, [], { showLegend: false });
+    trendList.innerHTML = '<div class="text-sm stats-pr-empty">Save waist, chest, arms, legs, body fat, or weight to render this chart.</div>';
+    symmetryBox.innerHTML = '<div class="text-sm stats-muted-label">Symmetry analysis appears after body measurements are logged.</div>';
+    rangeEl.textContent = "Waiting for metrics";
+    return;
+  }
+
+  const maxValues = BODY_COMPOSITION_METRICS.map((m, i) => {
+    const historicalMax = scoped.reduce((mx, row) => Math.max(mx, bodyMetricValue(row, m.key) || 0), 0);
+    const base = Math.max(historicalMax, firstValues[i], latestValues[i], 1);
+    return base * 1.12;
+  });
+
+  drawRadarChart(
+    canvas,
+    labels,
+    [
+      {
+        label: "Start",
+        values: firstValues,
+        color: "rgba(255,255,255,0.72)",
+        fillColor: "rgba(255,255,255,0.08)",
+      },
+      {
+        label: "Current",
+        values: latestValues,
+        color: typeof brandColor === "function" ? (brandColor("--accent") || "#8B5CF6") : "#8B5CF6",
+        fillColor: "rgba(139,92,246,0.24)",
+      },
+    ],
+    { maxValues, levels: 5, showLegend: true }
+  );
+
+  rangeEl.textContent = fmtDate(first.date) + " -> " + fmtDate(latest.date);
+
+  trendList.innerHTML = BODY_COMPOSITION_METRICS.map((metric) => {
+    const series = scoped
+      .map((row) => ({ date: row.date, value: bodyMetricValue(row, metric.key) }))
+      .filter((row) => row.value != null);
+    if (!series.length) {
+      return '<div class="stats-body-trend-item"><span class="stats-body-trend-label">' + esc(metric.label) + '</span><span class="stats-body-trend-current">No data</span><span class="stats-body-trend-delta is-neutral">-> collect</span></div>';
+    }
+    const current = series[series.length - 1];
+    const previous = series.length > 1 ? series[series.length - 2] : null;
+    const delta = previous ? current.value - previous.value : 0;
+    const arrow = previous ? (delta > 0 ? "↑" : delta < 0 ? "↓" : "→") : "•";
+    const tone = bodyTrendToneClass(metric.key, delta);
+    const unit = metric.unit();
+    const currentLabel = current.value.toFixed(1) + (unit === "%" ? "%" : " " + unit);
+    const deltaLabel = previous
+      ? ((delta > 0 ? "+" : "") + delta.toFixed(1) + (unit === "%" ? "%" : " " + unit))
+      : "baseline";
+    return '<div class="stats-body-trend-item"><span class="stats-body-trend-label">' + esc(metric.label) + '</span><span class="stats-body-trend-current">' + currentLabel + '</span><span class="stats-body-trend-delta ' + tone + '">' + arrow + " " + deltaLabel + '</span></div>';
+  }).join("");
+
+  const leftArm = bodyMetricValue(latest, ["leftArm", "armLeft", "left_arm", "leftBicep", "bicepLeft", "armsLeft"]);
+  const rightArm = bodyMetricValue(latest, ["rightArm", "armRight", "right_arm", "rightBicep", "bicepRight", "armsRight"]);
+  const leftLeg = bodyMetricValue(latest, ["leftLeg", "legLeft", "left_leg", "leftQuad", "quadLeft", "legsLeft"]);
+  const rightLeg = bodyMetricValue(latest, ["rightLeg", "legRight", "right_leg", "rightQuad", "quadRight", "legsRight"]);
+  const chest = bodyMetricValue(latest, "chest");
+  const waist = bodyMetricValue(latest, "waist");
+  const arms = bodyMetricValue(latest, "arms");
+  const legs = bodyMetricValue(latest, "legs");
+  const mu = settings.measureUnit || "cm";
+
+  const symmetryRows = [];
+  function pushSymmetryRow(label, left, right, unit) {
+    if (!(left && right)) return;
+    const avg = (left + right) / 2;
+    const asymPct = avg > 0 ? (Math.abs(left - right) / avg) * 100 : 0;
+    const state = asymPct <= 2 ? "is-good" : asymPct <= 5 ? "is-neutral" : "is-bad";
+    const dominant = left === right ? "Even" : left > right ? "L-heavy" : "R-heavy";
+    symmetryRows.push('<div class="stats-body-sym-row"><span class="stats-body-sym-label">' + esc(label) + '</span><span class="stats-body-sym-values">' + left.toFixed(1) + "/" + right.toFixed(1) + " " + esc(unit) + '</span><span class="stats-body-sym-score ' + state + '">' + dominant + " " + asymPct.toFixed(1) + '%</span></div>');
+  }
+
+  pushSymmetryRow("Arms L/R", leftArm, rightArm, mu);
+  pushSymmetryRow("Legs L/R", leftLeg, rightLeg, mu);
+
+  if (chest && waist) {
+    const ratio = chest / waist;
+    const state = ratio >= 1.2 ? "is-good" : ratio >= 1.05 ? "is-neutral" : "is-bad";
+    symmetryRows.push('<div class="stats-body-sym-row"><span class="stats-body-sym-label">Chest:Waist</span><span class="stats-body-sym-values">' + ratio.toFixed(2) + '</span><span class="stats-body-sym-score ' + state + '">' + (ratio >= 1.2 ? "Strong taper" : ratio >= 1.05 ? "Developing" : "Needs focus") + "</span></div>");
+  }
+  if (arms && legs) {
+    const ratio = arms / legs;
+    const diff = Math.abs(ratio - 0.45);
+    const state = diff <= 0.03 ? "is-good" : diff <= 0.07 ? "is-neutral" : "is-bad";
+    symmetryRows.push('<div class="stats-body-sym-row"><span class="stats-body-sym-label">Upper:Lower ratio</span><span class="stats-body-sym-values">' + ratio.toFixed(2) + '</span><span class="stats-body-sym-score ' + state + '">' + (state === "is-good" ? "Balanced" : state === "is-neutral" ? "Near target" : "Imbalance") + "</span></div>");
+  }
+
+  if (!symmetryRows.length) {
+    symmetryBox.innerHTML = '<div class="text-sm stats-muted-label">Add left/right limb fields (leftArm/rightArm/leftLeg/rightLeg) or chest/waist metrics for full symmetry analysis.</div>';
+  } else {
+    symmetryBox.innerHTML = '<div class="stats-body-sym-title">Symmetry and Proportion</div>' + symmetryRows.join("");
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {

@@ -195,6 +195,181 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
+function ensureChartTooltip() {
+  let tooltip = document.getElementById("chartCanvasTooltip");
+  if (tooltip) return tooltip;
+  tooltip = document.createElement("div");
+  tooltip.id = "chartCanvasTooltip";
+  tooltip.style.position = "fixed";
+  tooltip.style.zIndex = "500";
+  tooltip.style.pointerEvents = "none";
+  tooltip.style.padding = "6px 8px";
+  tooltip.style.borderRadius = "10px";
+  tooltip.style.fontSize = "11px";
+  tooltip.style.fontWeight = "600";
+  tooltip.style.lineHeight = "1.35";
+  tooltip.style.whiteSpace = "nowrap";
+  tooltip.style.color = "#f8fafc";
+  tooltip.style.border = "1px solid rgba(255,255,255,0.14)";
+  tooltip.style.background = "rgba(13,18,30,0.95)";
+  tooltip.style.boxShadow = "0 10px 28px rgba(0,0,0,0.35)";
+  tooltip.style.display = "none";
+  document.body.appendChild(tooltip);
+  return tooltip;
+}
+
+function hideChartTooltip() {
+  const tooltip = document.getElementById("chartCanvasTooltip");
+  if (!tooltip) return;
+  tooltip.style.display = "none";
+}
+
+function showChartTooltip(clientX, clientY, html) {
+  const tooltip = ensureChartTooltip();
+  tooltip.innerHTML = html;
+  tooltip.style.display = "block";
+  const pad = 10;
+  const rect = tooltip.getBoundingClientRect();
+  let x = clientX + 12;
+  let y = clientY - rect.height - 12;
+  if (x + rect.width + pad > window.innerWidth) x = window.innerWidth - rect.width - pad;
+  if (x < pad) x = pad;
+  if (y < pad) y = clientY + 14;
+  tooltip.style.left = x + "px";
+  tooltip.style.top = y + "px";
+}
+
+function bindCanvasTooltipInteractions(canvas, points, options) {
+  if (!canvas) return;
+  if (typeof canvas._chartTooltipCleanup === "function") canvas._chartTooltipCleanup();
+  const data = (Array.isArray(points) ? points : []).filter(function (p) {
+    return p && Number.isFinite(p.x) && Number.isFinite(p.y);
+  });
+  if (!data.length) {
+    canvas._chartTooltipCleanup = null;
+    return;
+  }
+
+  const opts = options || {};
+  const hitMode = opts.hitMode || "nearest";
+  const threshold = Number(opts.threshold) || 22;
+  const valueFormatter = typeof opts.valueFormatter === "function"
+    ? opts.valueFormatter
+    : function (v) {
+        const n = Number(v);
+        if (!Number.isFinite(n)) return String(v);
+        return Math.abs(n % 1) > 0 ? n.toFixed(1) : String(n);
+      };
+
+  let longPressTimer = null;
+  let pointerDown = false;
+
+  function normalizePointer(evt) {
+    const rect = canvas.getBoundingClientRect();
+    const touch = evt.touches && evt.touches.length ? evt.touches[0] : null;
+    const source = touch || evt;
+    return {
+      x: source.clientX - rect.left,
+      y: source.clientY - rect.top,
+      clientX: source.clientX,
+      clientY: source.clientY,
+    };
+  }
+
+  function findNearestIndex(localX, localY) {
+    let idx = -1;
+    let best = Infinity;
+    for (let i = 0; i < data.length; i++) {
+      const pt = data[i];
+      const dist = hitMode === "x"
+        ? Math.abs(pt.x - localX)
+        : Math.hypot(pt.x - localX, pt.y - localY);
+      if (dist < best) {
+        best = dist;
+        idx = i;
+      }
+    }
+    return best <= threshold ? idx : -1;
+  }
+
+  function buildTooltipHtml(index, compare) {
+    const pt = data[index];
+    if (!pt) return "";
+    let html = '<div style="letter-spacing:0.04em;text-transform:uppercase;color:#94a3b8">' + esc(String(pt.label || "Point")) + "</div>";
+    html += '<div style="font-size:12px;color:#f8fafc">' + esc(valueFormatter(pt.value, pt, index)) + "</div>";
+    if (compare && index > 0) {
+      const prev = data[index - 1];
+      const delta = (Number(pt.value) || 0) - (Number(prev.value) || 0);
+      const deltaFmt = (delta > 0 ? "+" : "") + (Math.abs(delta % 1) > 0 ? delta.toFixed(1) : String(delta));
+      const deltaColor = delta >= 0 ? "#86efac" : "#fca5a5";
+      html += '<div style="margin-top:2px;color:' + deltaColor + '">vs prev ' + deltaFmt + "</div>";
+    }
+    return html;
+  }
+
+  function renderTooltip(evt, compare) {
+    const p = normalizePointer(evt);
+    const idx = findNearestIndex(p.x, p.y);
+    if (idx < 0) {
+      hideChartTooltip();
+      return;
+    }
+    showChartTooltip(p.clientX, p.clientY, buildTooltipHtml(idx, compare));
+  }
+
+  function clearLongPress() {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+  }
+
+  const onMouseMove = function (evt) { renderTooltip(evt, false); };
+  const onMouseLeave = function () { clearLongPress(); hideChartTooltip(); };
+  const onClick = function (evt) { renderTooltip(evt, false); };
+  const onPressStart = function (evt) {
+    pointerDown = true;
+    clearLongPress();
+    longPressTimer = setTimeout(function () {
+      if (!pointerDown) return;
+      renderTooltip(evt, true);
+    }, 480);
+    renderTooltip(evt, false);
+  };
+  const onPressEnd = function () {
+    pointerDown = false;
+    clearLongPress();
+  };
+  const onTouchMove = function (evt) {
+    renderTooltip(evt, false);
+    if (evt.cancelable) evt.preventDefault();
+  };
+
+  canvas.addEventListener("mousemove", onMouseMove);
+  canvas.addEventListener("mouseleave", onMouseLeave);
+  canvas.addEventListener("click", onClick);
+  canvas.addEventListener("mousedown", onPressStart);
+  canvas.addEventListener("mouseup", onPressEnd);
+  canvas.addEventListener("touchstart", onPressStart, { passive: true });
+  canvas.addEventListener("touchmove", onTouchMove, { passive: false });
+  canvas.addEventListener("touchend", onPressEnd);
+  canvas.addEventListener("touchcancel", onPressEnd);
+
+  canvas._chartTooltipCleanup = function () {
+    canvas.removeEventListener("mousemove", onMouseMove);
+    canvas.removeEventListener("mouseleave", onMouseLeave);
+    canvas.removeEventListener("click", onClick);
+    canvas.removeEventListener("mousedown", onPressStart);
+    canvas.removeEventListener("mouseup", onPressEnd);
+    canvas.removeEventListener("touchstart", onPressStart);
+    canvas.removeEventListener("touchmove", onTouchMove);
+    canvas.removeEventListener("touchend", onPressEnd);
+    canvas.removeEventListener("touchcancel", onPressEnd);
+    hideChartTooltip();
+    clearLongPress();
+  };
+}
+
 function drawBarChart(canvas, labels, values, color, goalLine) {
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
@@ -217,6 +392,7 @@ function drawBarChart(canvas, labels, values, color, goalLine) {
   const maxVal = Math.max(...values, goalLine || 0, 1);
   const barW = (cW / labels.length) * 0.6;
   const gap = (cW / labels.length) * 0.4;
+  const chartPoints = [];
 
   ctx.fillStyle = textColor;
   ctx.font = "10px sans-serif";
@@ -275,6 +451,14 @@ function drawBarChart(canvas, labels, values, color, goalLine) {
     ctx.font = "9px sans-serif";
     ctx.textAlign = "center";
     ctx.fillText(l, x + barW / 2, H - pad.b + 14);
+
+    chartPoints.push({
+      x: x + barW / 2,
+      y: y + Math.max(8, h * 0.5),
+      label: l,
+      value: Number(values[i]) || 0,
+      statusGlyph,
+    });
   });
 
   if (goalLine) {
@@ -297,6 +481,16 @@ function drawBarChart(canvas, labels, values, color, goalLine) {
     ctx.textAlign = "right";
     ctx.fillText("▲ above  ✓ on target  • near", W - pad.r, pad.t - 6);
   }
+
+  bindCanvasTooltipInteractions(canvas, chartPoints, {
+    hitMode: "x",
+    threshold: Math.max(28, (cW / Math.max(2, labels.length)) * 0.65),
+    valueFormatter: function (v) {
+      const n = Number(v);
+      if (!Number.isFinite(n)) return String(v);
+      return Math.abs(n % 1) > 0 ? n.toFixed(1) : String(n);
+    },
+  });
 }
 
 function drawLineChart(canvas, labels, values, color) {
@@ -325,6 +519,15 @@ function drawLineChart(canvas, labels, values, color) {
   const yMin = minV - padding;
   const yMax = maxV + padding;
   const yRange = yMax - yMin;
+  const linePoints = values.map((v, i) => {
+    const numeric = Number(v);
+    return {
+      x: pad.l + (cW / (values.length - 1 || 1)) * i,
+      y: pad.t + cH - (((Number.isFinite(numeric) ? numeric : 0) - yMin) / yRange) * cH,
+      label: labels[i],
+      value: v,
+    };
+  });
 
   ctx.fillStyle = textColor;
   ctx.font = "10px sans-serif";
@@ -347,11 +550,9 @@ function drawLineChart(canvas, labels, values, color) {
   gradient.addColorStop(1, color + "05");
   ctx.fillStyle = gradient;
   ctx.beginPath();
-  values.forEach((v, i) => {
-    const x = pad.l + (cW / (values.length - 1 || 1)) * i;
-    const y = pad.t + cH - ((v - yMin) / yRange) * cH;
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
+  linePoints.forEach((pt, i) => {
+    if (i === 0) ctx.moveTo(pt.x, pt.y);
+    else ctx.lineTo(pt.x, pt.y);
   });
   ctx.lineTo(pad.l + cW, pad.t + cH);
   ctx.lineTo(pad.l, pad.t + cH);
@@ -362,28 +563,24 @@ function drawLineChart(canvas, labels, values, color) {
   ctx.lineWidth = 2;
   ctx.lineJoin = "round";
   ctx.beginPath();
-  values.forEach((v, i) => {
-    const x = pad.l + (cW / (values.length - 1 || 1)) * i;
-    const y = pad.t + cH - ((v - yMin) / yRange) * cH;
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
+  linePoints.forEach((pt, i) => {
+    if (i === 0) ctx.moveTo(pt.x, pt.y);
+    else ctx.lineTo(pt.x, pt.y);
   });
   ctx.stroke();
 
-  values.forEach((v, i) => {
-    const x = pad.l + (cW / (values.length - 1 || 1)) * i;
-    const y = pad.t + cH - ((v - yMin) / yRange) * cH;
+  linePoints.forEach((pt) => {
     ctx.fillStyle = color;
     ctx.beginPath();
-    ctx.arc(x, y, 3, 0, Math.PI * 2);
+    ctx.arc(pt.x, pt.y, 3, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = textColor;
     ctx.font = "8px sans-serif";
     ctx.textAlign = "center";
     ctx.fillText(
-      typeof v === "number" ? (v % 1 ? v.toFixed(1) : v) : v,
-      x,
-      y - 8
+      typeof pt.value === "number" ? (pt.value % 1 ? pt.value.toFixed(1) : pt.value) : pt.value,
+      pt.x,
+      pt.y - 8
     );
   });
 
@@ -396,6 +593,16 @@ function drawLineChart(canvas, labels, values, color) {
       const x = pad.l + (cW / (labels.length - 1 || 1)) * i;
       ctx.fillText(l, x, H - pad.b + 14);
     }
+  });
+
+  bindCanvasTooltipInteractions(canvas, linePoints, {
+    hitMode: "nearest",
+    threshold: 42,
+    valueFormatter: function (v) {
+      const n = Number(v);
+      if (!Number.isFinite(n)) return String(v);
+      return Math.abs(n % 1) > 0 ? n.toFixed(1) : String(n);
+    },
   });
 }
 
@@ -499,6 +706,138 @@ function drawMultiLineChart(canvas, labels, datasets) {
       ctx.fillText(l, x, H - pad.b + 14);
     }
   });
+}
+
+function drawRadarChart(canvas, labels, datasets, options) {
+  if (!canvas || !Array.isArray(labels) || !labels.length) return;
+  const sets = (Array.isArray(datasets) ? datasets : []).filter(function (ds) {
+    return ds && Array.isArray(ds.values) && ds.values.length === labels.length;
+  });
+
+  const ctx = canvas.getContext("2d");
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+
+  const W = rect.width;
+  const H = rect.height;
+  const cs = getComputedStyle(document.documentElement);
+  const textColor = cs.getPropertyValue("--text2").trim() || "#A1A1AA";
+  const borderColor = cs.getPropertyValue("--border").trim() || "#27272A";
+  ctx.clearRect(0, 0, W, H);
+
+  if (!sets.length) {
+    ctx.fillStyle = textColor;
+    ctx.font = "12px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Add body logs to render radar chart", W / 2, H / 2);
+    return;
+  }
+
+  const levels = Math.max(3, Math.min(8, Number(options && options.levels) || 5));
+  const cx = W / 2;
+  const cy = H / 2 + 6;
+  const radius = Math.max(20, Math.min(W, H) / 2 - 34);
+  const angleStep = (Math.PI * 2) / labels.length;
+  const optMax = options && Array.isArray(options.maxValues) ? options.maxValues : [];
+  const maxValues = labels.map(function (_, i) {
+    const explicit = Number(optMax[i]);
+    let maxVal = Number.isFinite(explicit) && explicit > 0 ? explicit : 0;
+    sets.forEach(function (ds) {
+      const v = Number(ds.values[i]) || 0;
+      if (v > maxVal) maxVal = v;
+    });
+    return maxVal > 0 ? maxVal : 1;
+  });
+
+  ctx.strokeStyle = borderColor;
+  ctx.lineWidth = 0.7;
+  for (let lvl = 1; lvl <= levels; lvl++) {
+    const ratio = lvl / levels;
+    ctx.beginPath();
+    labels.forEach(function (_, i) {
+      const a = -Math.PI / 2 + i * angleStep;
+      const x = cx + Math.cos(a) * radius * ratio;
+      const y = cy + Math.sin(a) * radius * ratio;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+    ctx.stroke();
+  }
+
+  labels.forEach(function (_, i) {
+    const a = -Math.PI / 2 + i * angleStep;
+    const x = cx + Math.cos(a) * radius;
+    const y = cy + Math.sin(a) * radius;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(x, y);
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = 0.7;
+    ctx.stroke();
+  });
+
+  sets.forEach(function (ds, idx) {
+    const color = ds.color || (idx === 0 ? "rgba(255,255,255,0.75)" : "#8B5CF6");
+    const fillColor = ds.fillColor || (idx === 0 ? "rgba(255,255,255,0.08)" : "rgba(139,92,246,0.22)");
+    ctx.beginPath();
+    labels.forEach(function (_, i) {
+      const a = -Math.PI / 2 + i * angleStep;
+      const raw = Number(ds.values[i]) || 0;
+      const ratio = Math.max(0, Math.min(1, raw / maxValues[i]));
+      const x = cx + Math.cos(a) * radius * ratio;
+      const y = cy + Math.sin(a) * radius * ratio;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+    ctx.fillStyle = fillColor;
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    labels.forEach(function (_, i) {
+      const a = -Math.PI / 2 + i * angleStep;
+      const raw = Number(ds.values[i]) || 0;
+      const ratio = Math.max(0, Math.min(1, raw / maxValues[i]));
+      const x = cx + Math.cos(a) * radius * ratio;
+      const y = cy + Math.sin(a) * radius * ratio;
+      ctx.beginPath();
+      ctx.arc(x, y, 3, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+    });
+  });
+
+  ctx.fillStyle = textColor;
+  ctx.font = "10px sans-serif";
+  labels.forEach(function (label, i) {
+    const a = -Math.PI / 2 + i * angleStep;
+    const lx = cx + Math.cos(a) * (radius + 12);
+    const ly = cy + Math.sin(a) * (radius + 12);
+    const xDir = Math.cos(a);
+    if (xDir > 0.3) ctx.textAlign = "left";
+    else if (xDir < -0.3) ctx.textAlign = "right";
+    else ctx.textAlign = "center";
+    ctx.fillText(label, lx, ly);
+  });
+
+  if (!options || options.showLegend !== false) {
+    let ly = 14;
+    ctx.textAlign = "left";
+    ctx.font = "10px sans-serif";
+    sets.forEach(function (ds, idx) {
+      ctx.fillStyle = ds.color || (idx === 0 ? "rgba(255,255,255,0.75)" : "#8B5CF6");
+      ctx.fillRect(12, ly - 6, 10, 3);
+      ctx.fillStyle = textColor;
+      ctx.fillText(ds.label || ("Set " + (idx + 1)), 26, ly);
+      ly += 13;
+    });
+  }
 }
 
 function drawStackedBar(canvas, labels, macros) {

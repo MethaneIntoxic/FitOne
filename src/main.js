@@ -246,6 +246,197 @@ function closeFabMenu() {
   if (backdrop) backdrop.classList.remove("open");
 }
 
+function closeQuickModal() {
+  if (typeof closeModal === "function") {
+    closeModal();
+    return;
+  }
+  const modalContainer = $("modalContainer");
+  if (modalContainer) modalContainer.innerHTML = "";
+}
+
+function notifyQuickLogSaved(reason) {
+  if (typeof window.notifyDataChanged === "function") {
+    window.notifyDataChanged({ source: "quick-log", reason: reason || "mutation" });
+    return;
+  }
+  refreshLog();
+  refreshToday();
+}
+
+function openQuickAddFoodModal() {
+  const modalContainer = $("modalContainer");
+  if (!modalContainer) return;
+
+  modalContainer.innerHTML =
+    '<div class="modal-overlay" id="quickFoodOverlay">' +
+      '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="quickFoodTitle">' +
+        '<div class="modal-title" id="quickFoodTitle">Quick Add <button class="modal-close" id="quickFoodCloseBtn" aria-label="Close quick add">×</button></div>' +
+        '<form id="quickFoodForm">' +
+          '<div class="form-group">' +
+            '<label>Food name</label>' +
+            '<input type="text" id="quickFoodName" placeholder="e.g., Greek yogurt" autocomplete="off" required>' +
+          '</div>' +
+          '<div class="stat-row">' +
+            '<div class="form-group" style="flex:1">' +
+              '<label>Calories</label>' +
+              '<input type="number" id="quickFoodCalories" min="0" step="1" placeholder="0" required>' +
+            '</div>' +
+            '<div class="form-group" style="flex:1">' +
+              '<label>Meal</label>' +
+              '<select id="quickFoodMeal">' +
+                '<option value="breakfast">Breakfast</option>' +
+                '<option value="lunch">Lunch</option>' +
+                '<option value="dinner">Dinner</option>' +
+                '<option value="snack" selected>Snack</option>' +
+              '</select>' +
+            '</div>' +
+          '</div>' +
+          '<button class="btn btn-primary btn-block" type="submit">Done</button>' +
+        '</form>' +
+      '</div>' +
+    '</div>';
+
+  const overlay = $("quickFoodOverlay");
+  const closeBtn = $("quickFoodCloseBtn");
+  const form = $("quickFoodForm");
+  const nameInput = $("quickFoodName");
+
+  if (overlay) {
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) closeQuickModal();
+    });
+  }
+  if (closeBtn) closeBtn.addEventListener("click", closeQuickModal);
+
+  if (form) {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const name = (nameInput && nameInput.value ? nameInput.value : "").trim();
+      const caloriesRaw = $("quickFoodCalories") ? $("quickFoodCalories").value : "";
+      const calories = parseInt(caloriesRaw, 10);
+      const meal = $("quickFoodMeal") ? $("quickFoodMeal").value : "snack";
+
+      if (!name) {
+        showToast("Enter a food name", "warning");
+        if (nameInput) nameInput.focus();
+        return;
+      }
+      if (!Number.isFinite(calories) || calories < 0) {
+        showToast("Calories must be 0 or higher", "error");
+        if ($("quickFoodCalories")) $("quickFoodCalories").focus();
+        return;
+      }
+
+      const data = loadData(KEYS.food);
+      data.push({
+        id: uid(),
+        date: today(),
+        name,
+        calories,
+        protein: 0,
+        carbs: 0,
+        fat: 0,
+        serving: "",
+        meal,
+        timestamp: Date.now(),
+      });
+      saveData(KEYS.food, data);
+      closeQuickModal();
+      notifyQuickLogSaved("quickFood");
+      showToast("Quick food logged", "success");
+    });
+  }
+
+  setTimeout(() => {
+    if (nameInput) nameInput.focus();
+  }, 20);
+}
+
+function openQuickBodyweightModal() {
+  const modalContainer = $("modalContainer");
+  if (!modalContainer) return;
+
+  modalContainer.innerHTML =
+    '<div class="modal-overlay" id="quickBodyOverlay">' +
+      '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="quickBodyTitle">' +
+        '<div class="modal-title" id="quickBodyTitle">Quick Bodyweight <button class="modal-close" id="quickBodyCloseBtn" aria-label="Close bodyweight modal">×</button></div>' +
+        '<form id="quickBodyForm">' +
+          '<div class="form-group">' +
+            '<label>Weight (' + esc(settings.weightUnit || "kg") + ')</label>' +
+            '<input type="number" id="quickBodyWeight" min="0" step="0.1" placeholder="0.0" required>' +
+          '</div>' +
+          '<button class="btn btn-primary btn-block" type="submit">Done</button>' +
+        '</form>' +
+      '</div>' +
+    '</div>';
+
+  const overlay = $("quickBodyOverlay");
+  const closeBtn = $("quickBodyCloseBtn");
+  const form = $("quickBodyForm");
+  const weightInput = $("quickBodyWeight");
+
+  if (overlay) {
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) closeQuickModal();
+    });
+  }
+  if (closeBtn) closeBtn.addEventListener("click", closeQuickModal);
+
+  if (form) {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const weightRaw = weightInput ? weightInput.value : "";
+      const weight = parseFloat(weightRaw);
+
+      if (!Number.isFinite(weight) || weight <= 0) {
+        showToast("Enter a valid bodyweight", "warning");
+        if (weightInput) weightInput.focus();
+        return;
+      }
+
+      const data = loadData(KEYS.body);
+      data.push({
+        id: uid(),
+        date: today(),
+        weight,
+        bodyFat: null,
+        waist: null,
+        chest: null,
+        arms: null,
+        legs: null,
+        notes: "",
+        timestamp: Date.now(),
+      });
+      saveData(KEYS.body, data);
+      closeQuickModal();
+      notifyQuickLogSaved("quickBodyweight");
+      showToast("Bodyweight logged", "success");
+    });
+  }
+
+  setTimeout(() => {
+    if (weightInput) weightInput.focus();
+  }, 20);
+}
+
+function mapLegacyFabLabelToAction(label) {
+  if (label === "Log food") return "log-food";
+  if (label === "Log workout") return "log-workout";
+  if (label === "Log body measurements") return "log-body";
+  if (label === "Add water") return "add-water";
+  return "";
+}
+
+function handleFabAction(action) {
+  if (action === "quick-food") openQuickAddFoodModal();
+  else if (action === "log-food") goToLog();
+  else if (action === "log-workout") goToLogWorkout();
+  else if (action === "quick-bodyweight") openQuickBodyweightModal();
+  else if (action === "log-body") goToLogBody();
+  else if (action === "add-water") addWater(250);
+}
+
 // FAB events
 const fabBtnEl = $("fabBtn");
 const fabBackdropEl = $("fabBackdrop");
@@ -258,12 +449,9 @@ if (fabMenu) {
   fabMenu.addEventListener("click", (e) => {
     const btn = e.target.closest(".fab-option-btn");
     if (!btn) return;
-    const label = btn.getAttribute("aria-label");
+    const action = btn.dataset.fabAction || mapLegacyFabLabelToAction(btn.getAttribute("aria-label"));
     closeFabMenu();
-    if (label === "Log food") goToLog();
-    else if (label === "Log workout") goToLogWorkout();
-    else if (label === "Log body measurements") goToLogBody();
-    else if (label === "Add water") addWater(250);
+    handleFabAction(action);
   });
 }
 
@@ -398,6 +586,11 @@ function init() {
   initExportEvents();
   initSettingsEvents();
   initAnalyticsResize();
+  if (typeof hydrateExerciseDatabase === 'function') {
+    setTimeout(() => {
+      hydrateExerciseDatabase();
+    }, 0);
+  }
 
   // Initial render
   refreshToday();
