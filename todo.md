@@ -991,7 +991,7 @@
 
 ### Smart Coaching
 
-- [ ] **#25 🟠 Smart Calorie/Macro Adjustment**
+- [x] **#25 🟠 Smart Calorie/Macro Adjustment**
   - "Sync Goal to TDEE" button when TDEE confidence is high
   - Calculate macros based on goal + bodyweight:
     - **Lose:** TDEE − 300-500, protein 2.2-2.8g/kg, fill remaining with carbs/fat
@@ -1000,7 +1000,7 @@
     - **Compete:** Support multiple daily profiles (training day / rest day / carb-up / peak week)
   - **Modify:** `dataStore.js`, `analyticsView.js`
 
-- [ ] **#26 🟡 Periodized Training Plan Generator**
+- [x] **#26 🟡 Periodized Training Plan Generator**
   - Given a protocol, generate multi-week progression:
     - **Beginner:** Linear progression (add weight every session)
     - **Intermediate:** Weekly undulating periodization
@@ -1009,7 +1009,7 @@
   - **New file:** `src/planGenerator.js`
   - **New key:** `ft_training_plan`
 
-- [ ] **#27 🟡 Recovery Suggestions Based on Readiness**
+- [x] **#27 🟡 Recovery Suggestions Based on Readiness**
   - Low readiness → suggest: mobility work, light walk, yoga, foam rolling
   - Moderate → suggest: light training, skip heavy compounds
   - High → suggest: next scheduled protocol, push heavy
@@ -1017,7 +1017,7 @@
   - **Pro value:** Data-driven training decisions, avoid overtraining in prep
   - **Modify:** `todayView.js` → `renderInsights()`
 
-- [ ] **#28 🟢 Food Photo Estimation (Client-Side Only)**
+- [x] **#28 🟢 Food Photo Estimation (Client-Side Only)**
   - **Cost:** $0 — TensorFlow.js runs entirely in browser, no API calls
   - If `aiModulesEnabled`, add "Snap & Estimate" button
   - Load a pre-trained MobileNet food classification model (~5MB)
@@ -1027,7 +1027,7 @@
 
 ### Nutrition Intelligence
 
-- [ ] **#4 🟡 Micronutrient Tracking**
+- [x] **#4 🟡 Micronutrient Tracking**
   - Additional fields: fiber (g), sugar (g), sodium (mg)
   - Auto-populate from Open Food Facts when using food database
   - Analytics sub-tab for micronutrient trends
@@ -1035,7 +1035,7 @@
   - **Pro value:** Sodium/water tracking is critical for peak week
   - **Modify:** food schema in `dataStore.js`, form in `logView.js`
 
-- [ ] **#5 🟡 Recipe Builder with Macro Calculator**
+- [x] **#5 🟡 Recipe Builder with Macro Calculator**
   - Add ingredients (from database or manual), specify total servings
   - Auto-calculate per-serving macros
   - Save as reusable food item

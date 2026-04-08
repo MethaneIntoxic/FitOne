@@ -728,6 +728,151 @@ body.welcome-active .fab-backdrop {
   min-width: 150px;
 }
 
+.recipe-builder-meta {
+  color: var(--text2);
+  line-height: 1.45;
+}
+
+.recipe-quick-list {
+  margin-top: 8px;
+}
+
+.recipe-chip {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.recipe-chip-title {
+  min-width: 0;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recipe-builder-modal {
+  width: min(880px, 96vw);
+  max-height: 82vh;
+  overflow-y: auto;
+}
+
+.recipe-builder-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.recipe-builder-top-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.recipe-builder-top-row .form-group {
+  min-width: 150px;
+  margin-bottom: 0;
+}
+
+.recipe-builder-top-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.recipe-builder-top-actions .btn {
+  min-width: 148px;
+}
+
+.recipe-ingredients-wrap {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.recipe-ingredient-row {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 10px;
+  min-width: 0;
+}
+
+.recipe-ingredient-row-top {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.recipe-ingredient-row-top .form-group {
+  margin-bottom: 0;
+  min-width: 0;
+  flex: 1;
+}
+
+.recipe-ingredient-remove {
+  flex: 0 0 auto;
+}
+
+.recipe-ingredient-macros {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.recipe-ingredient-macros .form-group {
+  margin-bottom: 0;
+}
+
+.recipe-builder-summary {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.recipe-summary-card {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 8px 10px;
+}
+
+.recipe-summary-label {
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text2);
+}
+
+.recipe-summary-value {
+  margin-top: 3px;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.recipe-summary-sub {
+  margin-top: 2px;
+  font-size: 0.68rem;
+  color: var(--text2);
+}
+
+.recipe-builder-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.recipe-builder-actions .btn {
+  flex: 1;
+  min-width: 160px;
+}
+
 /* ========== STAT ROW ========== */
 .stat-row {
   display: flex;
@@ -2136,6 +2281,221 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), select:focus:
   align-self: flex-end;
 }
 
+.food-name-actions-row {
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.food-micronutrient-grid {
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.food-micronutrient-grid .form-group {
+  min-width: 0;
+}
+
+.micronutrient-hint {
+  color: var(--text2);
+}
+
+.food-name-actions-row > input {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.food-name-actions-row .btn {
+  flex: 0 0 auto;
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+#foodVisionResult {
+  margin-top: 8px;
+}
+
+.food-vision-result-card {
+  border-radius: 12px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  min-width: 0;
+}
+
+.food-vision-tone-warn {
+  border-color: rgba(255, 152, 0, 0.36);
+  background: rgba(255, 152, 0, 0.08);
+}
+
+.food-vision-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.food-vision-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.food-vision-badge {
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text2);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.food-vision-subtitle {
+  margin-top: 8px;
+  font-size: 0.72rem;
+  color: var(--text2);
+}
+
+.food-vision-chips {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.food-vision-chip {
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 0.68rem;
+  line-height: 1.2;
+  color: var(--text1);
+  background: rgba(139, 92, 246, 0.16);
+  min-width: 0;
+}
+
+.food-vision-suggestion-list {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.food-vision-suggestion-btn {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+}
+
+.food-vision-suggestion-name,
+.food-vision-suggestion-meta {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.food-vision-suggestion-name {
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.food-vision-suggestion-meta {
+  font-size: 0.68rem;
+  color: var(--text2);
+}
+
+.food-vision-empty,
+.food-vision-message {
+  font-size: 0.72rem;
+  color: var(--text2);
+  line-height: 1.4;
+}
+
+.micronutrient-trend-card .card-title {
+  min-width: 0;
+}
+
+.micronutrient-trend-meta {
+  color: var(--text2);
+  text-align: right;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.micronutrient-trend-summary {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.micronutrient-trend-pill {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 8px 10px;
+  min-width: 0;
+}
+
+.micronutrient-trend-pill-label {
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--text2);
+}
+
+.micronutrient-trend-pill-value {
+  margin-top: 3px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.2;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.micronutrient-trend-pill-delta {
+  margin-top: 4px;
+  font-size: 0.68rem;
+  color: var(--text2);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.micronutrient-trend-pill-target {
+  margin-top: 2px;
+  font-size: 0.62rem;
+  color: var(--text2);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.micronutrient-trend-pill-delta.is-good {
+  color: var(--green);
+}
+
+.micronutrient-trend-pill-delta.is-bad {
+  color: var(--danger);
+}
+
+.micronutrient-trend-pill-delta.is-neutral {
+  color: var(--text2);
+}
+
 @media (max-width: 520px) {
   .meal-template-controls {
     flex-direction: column;
@@ -2149,6 +2509,69 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), select:focus:
 
   .meal-template-actions .btn {
     min-width: 0;
+  }
+
+  .recipe-builder-top-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .recipe-builder-top-actions .btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .recipe-ingredient-row-top {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .recipe-ingredient-remove {
+    width: 100%;
+  }
+
+  .recipe-ingredient-macros {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .recipe-builder-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .recipe-builder-actions .btn {
+    min-width: 0;
+  }
+
+  .food-name-actions-row .btn {
+    width: 100%;
+  }
+
+  .food-vision-suggestion-name,
+  .food-vision-suggestion-meta {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .food-micronutrient-grid {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .micronutrient-trend-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .micronutrient-trend-meta,
+  .micronutrient-trend-pill-delta,
+  .micronutrient-trend-pill-value {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 920px) and (min-width: 521px) {
+  .recipe-ingredient-macros {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
@@ -3634,6 +4057,250 @@ body.timer-locked #timerOverlay {
 .routine-tag { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.08em; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; }
 .routine-tag.level { background: rgba(52, 211, 153, 0.15); color: #34D399; }
 .routine-tag.category { background: rgba(139, 92, 246, 0.15); color: var(--accent2); }
+
+.protocol-card-head {
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.protocol-card-title {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.protocol-card-title .text-xs {
+  flex-shrink: 0;
+}
+
+.protocol-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 100%;
+}
+
+.protocol-card-actions .btn {
+  min-width: 56px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.periodized-plan-card {
+  margin-bottom: 16px;
+  background:
+    radial-gradient(circle at top right, rgba(139, 92, 246, 0.18) 0%, transparent 55%),
+    var(--surface-low, var(--bg2));
+}
+
+.periodized-plan-copy {
+  color: var(--text2);
+  line-height: 1.45;
+  margin-bottom: 10px;
+}
+
+.periodized-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+
+.periodized-plan-grid .form-group {
+  margin-bottom: 0;
+  min-width: 0;
+}
+
+.plan-generate-wrap .btn {
+  width: 100%;
+  min-height: 44px;
+}
+
+.periodized-plan-output {
+  margin-top: 12px;
+}
+
+.periodized-plan-empty {
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 10px 12px;
+  color: var(--text2);
+  font-size: 0.76rem;
+}
+
+.periodized-plan-summary {
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.periodized-plan-summary-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.25;
+}
+
+.periodized-plan-summary-meta {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.periodized-plan-summary-meta span {
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--text2);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.plan-week-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.plan-week-card {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 10px 12px;
+  min-width: 0;
+}
+
+.plan-week-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.plan-week-number {
+  font-weight: 800;
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent2);
+  flex-shrink: 0;
+}
+
+.plan-week-phase {
+  font-weight: 700;
+  font-size: 0.74rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plan-week-flag {
+  margin-left: auto;
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffd6a0;
+  border: 1px solid rgba(255, 172, 73, 0.45);
+  background: rgba(255, 172, 73, 0.14);
+  flex-shrink: 0;
+}
+
+.plan-week-focus {
+  margin-top: 6px;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--text2);
+}
+
+.plan-week-ex-list {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.plan-week-ex-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, auto);
+  gap: 8px;
+  align-items: baseline;
+}
+
+.plan-week-ex-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text1);
+}
+
+.plan-week-ex-target {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.69rem;
+  color: var(--text2);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.plan-week-more {
+  margin-top: 6px;
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text2);
+}
+
+@media (max-width: 980px) {
+  .periodized-plan-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .plan-week-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .protocol-card-actions {
+    justify-content: flex-start;
+  }
+
+  .periodized-plan-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .plan-week-ex-row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .plan-week-ex-target {
+    text-align: left;
+  }
+}
 
 /* W6.2 Protocol Builder Title Field */
 .proto-modal-kicker {

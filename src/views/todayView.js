@@ -285,6 +285,90 @@ function saveWellness() {
 }
 
 // ========== INSIGHTS ==========
+function normalizePlanDate(value) {
+  if (!value) return "";
+  const raw = String(value).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  const parsed = Date.parse(raw);
+  if (!Number.isFinite(parsed)) return "";
+  return localDateStr(new Date(parsed));
+}
+
+function getNextScheduledProtocolName() {
+  const userProtocols = loadData(KEYS.protocols);
+  const starterProtocols = Array.isArray(window.STARTER_ROUTINES) ? window.STARTER_ROUTINES : [];
+  const byId = {};
+  userProtocols.forEach(function (protocol) {
+    if (protocol && protocol.id) byId[protocol.id] = protocol;
+  });
+  starterProtocols.forEach(function (protocol) {
+    if (protocol && protocol.id && !byId[protocol.id]) byId[protocol.id] = protocol;
+  });
+
+  const todayStr = today();
+  const dayPlans = loadData(KEYS.dayPlans)
+    .map(function (plan) {
+      const row = plan || {};
+      const date = normalizePlanDate(row.date || row.dayDate || row.scheduledDate || row.day);
+      if (!date) return null;
+
+      let protocolName = "";
+      if (row.protocolName) {
+        protocolName = String(row.protocolName);
+      } else if (row.protocolId && byId[row.protocolId]) {
+        protocolName = String(byId[row.protocolId].name || "");
+      } else if (row.routineId && byId[row.routineId]) {
+        protocolName = String(byId[row.routineId].name || "");
+      }
+
+      return {
+        date,
+        protocolName,
+      };
+    })
+    .filter(Boolean)
+    .filter(function (plan) {
+      return plan.date >= todayStr;
+    })
+    .sort(function (a, b) {
+      return a.date.localeCompare(b.date);
+    });
+
+  const nextPlanned = dayPlans.find(function (plan) {
+    return !!String(plan.protocolName || "").trim();
+  });
+  if (nextPlanned) {
+    return {
+      name: nextPlanned.protocolName,
+      date: nextPlanned.date,
+      source: "schedule",
+    };
+  }
+
+  if (userProtocols.length) {
+    const latest = userProtocols
+      .slice()
+      .sort(function (a, b) {
+        return Number(b.createdAt || 0) - Number(a.createdAt || 0);
+      })[0];
+    return {
+      name: latest && latest.name ? String(latest.name) : "",
+      date: "",
+      source: "library",
+    };
+  }
+
+  if (starterProtocols.length) {
+    return {
+      name: String(starterProtocols[0].name || ""),
+      date: "",
+      source: "starter",
+    };
+  }
+
+  return null;
+}
+
 function renderInsights(totals, food, workouts) {
   const insights = [];
   const s = settings;
@@ -335,9 +419,32 @@ function renderInsights(totals, food, workouts) {
 
   const readinessResult = calculateReadiness();
   if (readinessResult.score < 40) {
-    insights.push({ type: "warn", icon: "😴", text: "Readiness is low (" + readinessResult.score + "). Consider a rest day or light stretching." });
+    insights.push({
+      type: "warn",
+      icon: "🧘",
+      text:
+        "Low readiness (" + readinessResult.score + "). Recovery suggestion: 15-20 min mobility work, a light walk, easy yoga, and foam rolling. Keep intensity minimal today.",
+    });
+  } else if (readinessResult.score < 75) {
+    insights.push({
+      type: "tip",
+      icon: "🛠️",
+      text:
+        "Moderate readiness (" + readinessResult.score + "). Suggested session: light training with technique work and accessories; skip heavy compounds and max-effort sets.",
+    });
   } else if (readinessResult.score >= 75) {
-    insights.push({ type: "good", icon: "⚡", text: "High readiness (" + readinessResult.score + ")! Great day for an intense workout." });
+    const nextProtocol = getNextScheduledProtocolName();
+    if (nextProtocol && nextProtocol.name) {
+      const when = nextProtocol.date ? " on " + fmtDate(nextProtocol.date) : "";
+      insights.push({
+        type: "good",
+        icon: "⚡",
+        text:
+          "High readiness (" + readinessResult.score + ")! Run " + nextProtocol.name + when + " and push heavy compound top sets.",
+      });
+    } else {
+      insights.push({ type: "good", icon: "⚡", text: "High readiness (" + readinessResult.score + ")! Great day to push heavy compounds." });
+    }
   }
 
   if (insights.length === 0 && food.length === 0 && workouts.length === 0) {

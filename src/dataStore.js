@@ -73,8 +73,10 @@ const KEYS = {
   measurements: "ft_measurements",
   photos: "ft_photos",
   foodItems: "ft_food_items",
+  recipes: "ft_recipes",
   foodLogs: "ft_food_logs",
   dayPlans: "ft_day_plans",
+  trainingPlan: "ft_training_plan",
   uxTelemetry: "ft_ux_telemetry",
   settings: "ft_settings",
   water: "ft_water",
@@ -219,6 +221,86 @@ function ensureRoutineMigrations() {
 }
 
 ensureRoutineMigrations();
+
+function coerceMicronutrient(value, decimals) {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n < 0) return 0;
+  const d = Number.isFinite(Number(decimals)) ? Math.max(0, Number(decimals)) : 0;
+  if (d === 0) return Math.round(n);
+  const factor = Math.pow(10, d);
+  return Math.round(n * factor) / factor;
+}
+
+function normalizeMicronutrientFields(entry) {
+  const source = entry || {};
+  const fiber = coerceMicronutrient(source.fiber, 1);
+  const sugar = coerceMicronutrient(source.sugar, 1);
+  const sodium = coerceMicronutrient(source.sodium, 0);
+
+  const rawFiber = Number(source.fiber);
+  const rawSugar = Number(source.sugar);
+  const rawSodium = Number(source.sodium);
+
+  const changed =
+    !Number.isFinite(rawFiber) || rawFiber !== fiber || String(source.fiber).trim() === "" ||
+    !Number.isFinite(rawSugar) || rawSugar !== sugar || String(source.sugar).trim() === "" ||
+    !Number.isFinite(rawSodium) || rawSodium !== sodium || String(source.sodium).trim() === "";
+
+  return {
+    changed,
+    value: {
+      ...source,
+      fiber,
+      sugar,
+      sodium,
+    },
+  };
+}
+
+function ensureFoodSchemaMigrations() {
+  const migrateList = function (key) {
+    const rows = loadData(key);
+    if (!Array.isArray(rows) || !rows.length) return;
+
+    let changed = false;
+    const normalized = rows.map(function (row) {
+      const next = normalizeMicronutrientFields(row);
+      if (next.changed) changed = true;
+      return next.value;
+    });
+    if (changed) saveData(key, normalized);
+  };
+
+  migrateList(KEYS.food);
+  migrateList(KEYS.foodItems);
+  migrateList(KEYS.favorites);
+
+  const templates = loadData(KEYS.mealTemplates);
+  if (Array.isArray(templates) && templates.length) {
+    let changed = false;
+    const normalizedTemplates = templates.map(function (tpl) {
+      const template = tpl || {};
+      const items = Array.isArray(template.items) ? template.items : [];
+      let templateChanged = false;
+      const nextItems = items.map(function (item) {
+        const next = normalizeMicronutrientFields(item);
+        if (next.changed) templateChanged = true;
+        return next.value;
+      });
+      if (templateChanged) {
+        changed = true;
+        return {
+          ...template,
+          items: nextItems,
+        };
+      }
+      return template;
+    });
+    if (changed) saveData(KEYS.mealTemplates, normalizedTemplates);
+  }
+}
+
+ensureFoodSchemaMigrations();
 
 function getPrimaryBodyweight() {
   const body = loadData(KEYS.body)

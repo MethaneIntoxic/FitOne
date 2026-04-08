@@ -3,6 +3,66 @@
 
 
 let exerciseRowCount = 0;
+const MICRONUTRIENT_DAILY_TARGETS = {
+  fiber: 30,
+  sugar: 50,
+  sodium: 2300,
+};
+
+function parseMicronutrientValue(raw, decimals) {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  const d = Number.isFinite(Number(decimals)) ? Math.max(0, Number(decimals)) : 0;
+  if (d === 0) return Math.round(n);
+  const factor = Math.pow(10, d);
+  return Math.round(n * factor) / factor;
+}
+
+function formatMicronutrientDelta(value, target, unit, capMode) {
+  const delta = (Number(target) || 0) - (Number(value) || 0);
+  const pretty = unit === "mg" ? String(Math.round(Math.abs(delta))) : Math.abs(delta).toFixed(1).replace(/\.0$/, "");
+  if (delta > 0) return pretty + unit + " left";
+  if (delta < 0) return pretty + unit + " over";
+  return capMode ? "at cap" : "on target";
+}
+
+function formatMicronutrientInline(entry) {
+  const row = entry || {};
+  const fiber = parseMicronutrientValue(row.fiber, 1);
+  const sugar = parseMicronutrientValue(row.sugar, 1);
+  const sodium = parseMicronutrientValue(row.sodium, 0);
+  if (!fiber && !sugar && !sodium) return "";
+  return " • Fi" + fiber + "g" + " Su" + sugar + "g" + " Na" + sodium + "mg";
+}
+
+function refreshMicronutrientHints() {
+  const fiberHint = $("fiberHint");
+  const sugarHint = $("sugarHint");
+  const sodiumHint = $("sodiumHint");
+  if (!fiberHint && !sugarHint && !sodiumHint) return;
+
+  const selectedDate = ($("foodDate") && $("foodDate").value) || today();
+  const dayFood = loadData(KEYS.food).filter((f) => f.date === selectedDate);
+  const totals = dayFood.reduce(
+    (acc, row) => {
+      acc.fiber += Number(row.fiber) || 0;
+      acc.sugar += Number(row.sugar) || 0;
+      acc.sodium += Number(row.sodium) || 0;
+      return acc;
+    },
+    { fiber: 0, sugar: 0, sodium: 0 }
+  );
+
+  if (fiberHint) {
+    fiberHint.textContent = "(" + formatMicronutrientDelta(totals.fiber, MICRONUTRIENT_DAILY_TARGETS.fiber, "g", false) + ")";
+  }
+  if (sugarHint) {
+    sugarHint.textContent = "(" + formatMicronutrientDelta(totals.sugar, MICRONUTRIENT_DAILY_TARGETS.sugar, "g", true) + ")";
+  }
+  if (sodiumHint) {
+    sodiumHint.textContent = "(" + formatMicronutrientDelta(totals.sodium, MICRONUTRIENT_DAILY_TARGETS.sodium, "mg", true) + ")";
+  }
+}
 
 function getGymOptions() {
   return (settings.gyms || []).map((g) => '<option value="' + escAttr(g) + '">' + esc(g) + "</option>").join("");
@@ -512,7 +572,11 @@ function saveFavorite(entry) {
   const favs = loadData(KEYS.favorites);
   const fav = {
     id: uid(), name: entry.name, calories: entry.calories, protein: entry.protein,
-    carbs: entry.carbs, fat: entry.fat, serving: entry.serving, meal: entry.meal,
+    carbs: entry.carbs, fat: entry.fat,
+    fiber: parseMicronutrientValue(entry.fiber, 1),
+    sugar: parseMicronutrientValue(entry.sugar, 1),
+    sodium: parseMicronutrientValue(entry.sodium, 0),
+    serving: entry.serving, meal: entry.meal,
   };
   favs.push(fav);
   saveData(KEYS.favorites, favs);
@@ -531,6 +595,9 @@ function quickAddFavorite(id) {
   const entry = {
     id: uid(), date: today(), name: fav.name, calories: fav.calories || 0,
     protein: fav.protein || 0, carbs: fav.carbs || 0, fat: fav.fat || 0,
+    fiber: parseMicronutrientValue(fav.fiber, 1),
+    sugar: parseMicronutrientValue(fav.sugar, 1),
+    sodium: parseMicronutrientValue(fav.sodium, 0),
     serving: fav.serving || "", meal: fav.meal || "snack", timestamp: Date.now(),
   };
   const data = loadData(KEYS.food);
@@ -555,6 +622,9 @@ function getMealTemplateItemsFromCurrentMeal() {
       protein: Number(f.protein) || 0,
       carbs: Number(f.carbs) || 0,
       fat: Number(f.fat) || 0,
+      fiber: parseMicronutrientValue(f.fiber, 1),
+      sugar: parseMicronutrientValue(f.sugar, 1),
+      sodium: parseMicronutrientValue(f.sodium, 0),
       serving: f.serving || "",
     }))
     .filter((f) => f.name);
@@ -566,6 +636,9 @@ function getMealTemplateItemsFromCurrentMeal() {
   const pro = parseInt($("foodProtein").value) || 0;
   const carb = parseInt($("foodCarbs").value) || 0;
   const fat = parseInt($("foodFat").value) || 0;
+  const fiber = parseMicronutrientValue($("foodFiber") ? $("foodFiber").value : 0, 1);
+  const sugar = parseMicronutrientValue($("foodSugar") ? $("foodSugar").value : 0, 1);
+  const sodium = parseMicronutrientValue($("foodSodium") ? $("foodSodium").value : 0, 0);
   const caloriesInput = parseInt($("foodCalories").value) || 0;
   return [{
     name,
@@ -573,6 +646,9 @@ function getMealTemplateItemsFromCurrentMeal() {
     protein: pro,
     carbs: carb,
     fat,
+    fiber,
+    sugar,
+    sodium,
     serving: ($("foodServing") && $("foodServing").value.trim()) || "",
   }];
 }
@@ -588,7 +664,9 @@ function refreshMealTemplateMeta() {
   }
   const itemCount = Array.isArray(tpl.items) ? tpl.items.length : 0;
   const totalCalories = (tpl.items || []).reduce((sum, item) => sum + (Number(item.calories) || 0), 0);
-  meta.textContent = itemCount + " items • " + totalCalories + " kcal • " + mealLabelFromKey(tpl.meal || "");
+  const totalFiber = (tpl.items || []).reduce((sum, item) => sum + (Number(item.fiber) || 0), 0);
+  const totalSodium = (tpl.items || []).reduce((sum, item) => sum + (Number(item.sodium) || 0), 0);
+  meta.textContent = itemCount + " items • " + totalCalories + " kcal • Fi " + totalFiber.toFixed(1).replace(/\.0$/, "") + "g • Na " + Math.round(totalSodium) + "mg • " + mealLabelFromKey(tpl.meal || "");
 }
 
 function refreshMealTemplates() {
@@ -686,6 +764,9 @@ function applyMealTemplate() {
     protein: Math.round((Number(item.protein) || 0) * multiplier * 10) / 10,
     carbs: Math.round((Number(item.carbs) || 0) * multiplier * 10) / 10,
     fat: Math.round((Number(item.fat) || 0) * multiplier * 10) / 10,
+    fiber: Math.round((Number(item.fiber) || 0) * multiplier * 10) / 10,
+    sugar: Math.round((Number(item.sugar) || 0) * multiplier * 10) / 10,
+    sodium: Math.round((Number(item.sodium) || 0) * multiplier),
     serving: multiplier === 1 ? (item.serving || "") : ((item.serving || "serving") + " x" + multiplier),
     timestamp: now + idx,
   }));
@@ -693,6 +774,396 @@ function applyMealTemplate() {
   saveData(KEYS.food, current.concat(newEntries));
   notifyDataChangedFromLog("applyMealTemplate");
   showToast("Added " + newEntries.length + " items from " + template.name, "success");
+}
+
+// ========== RECIPES ==========
+function parseRecipeServings(raw) {
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return 1;
+  return Math.max(0.25, Math.min(24, Math.round(n * 100) / 100));
+}
+
+function normalizeRecipeIngredient(raw) {
+  const row = raw || {};
+  return {
+    name: String(row.name || "").trim(),
+    serving: String(row.serving || "").trim(),
+    calories: Math.max(0, Math.round(Number(row.calories) || 0)),
+    protein: parseMicronutrientValue(row.protein, 1),
+    carbs: parseMicronutrientValue(row.carbs, 1),
+    fat: parseMicronutrientValue(row.fat, 1),
+    fiber: parseMicronutrientValue(row.fiber, 1),
+    sugar: parseMicronutrientValue(row.sugar, 1),
+    sodium: parseMicronutrientValue(row.sodium, 0),
+  };
+}
+
+function calculateRecipeTotals(ingredients) {
+  return (ingredients || []).reduce(
+    (acc, item) => {
+      const row = normalizeRecipeIngredient(item);
+      acc.calories += row.calories;
+      acc.protein += row.protein;
+      acc.carbs += row.carbs;
+      acc.fat += row.fat;
+      acc.fiber += row.fiber;
+      acc.sugar += row.sugar;
+      acc.sodium += row.sodium;
+      return acc;
+    },
+    { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, sugar: 0, sodium: 0 }
+  );
+}
+
+function getRecipePerServing(recipe) {
+  const row = recipe || {};
+  const servings = parseRecipeServings(row.servings || 1);
+  const totals = calculateRecipeTotals(row.ingredients || []);
+  const divide = function (value, decimals) {
+    const base = servings > 0 ? Number(value || 0) / servings : 0;
+    return parseMicronutrientValue(base, decimals);
+  };
+  return {
+    servings,
+    calories: Math.max(0, Math.round((Number(totals.calories) || 0) / servings)),
+    protein: divide(totals.protein, 1),
+    carbs: divide(totals.carbs, 1),
+    fat: divide(totals.fat, 1),
+    fiber: divide(totals.fiber, 1),
+    sugar: divide(totals.sugar, 1),
+    sodium: divide(totals.sodium, 0),
+  };
+}
+
+function getFoodFormIngredientSeed() {
+  const name = ($("foodName") && $("foodName").value.trim()) || "";
+  if (!name) return null;
+  return normalizeRecipeIngredient({
+    name,
+    serving: ($("foodServing") && $("foodServing").value.trim()) || "",
+    calories: ($("foodCalories") && $("foodCalories").value) || 0,
+    protein: ($("foodProtein") && $("foodProtein").value) || 0,
+    carbs: ($("foodCarbs") && $("foodCarbs").value) || 0,
+    fat: ($("foodFat") && $("foodFat").value) || 0,
+    fiber: ($("foodFiber") && $("foodFiber").value) || 0,
+    sugar: ($("foodSugar") && $("foodSugar").value) || 0,
+    sodium: ($("foodSodium") && $("foodSodium").value) || 0,
+  });
+}
+
+function getRecipeIngredientRowHtml(seed) {
+  const row = normalizeRecipeIngredient(seed || {});
+  const rowId = uid();
+  return (
+    '<div class="recipe-ingredient-row" data-recipe-ingredient-row="' + rowId + '">' +
+      '<div class="recipe-ingredient-row-top">' +
+        '<div class="form-group"><label>Ingredient</label><input type="text" class="recipe-ingredient-name" placeholder="e.g., Chicken breast" value="' + escAttr(row.name) + '"></div>' +
+        '<div class="form-group"><label>Serving</label><input type="text" class="recipe-ingredient-serving" placeholder="e.g., 150g" value="' + escAttr(row.serving) + '"></div>' +
+        '<button class="btn btn-delete btn-sm recipe-ingredient-remove" data-remove-recipe-ingredient="' + rowId + '" title="Remove ingredient">✕</button>' +
+      '</div>' +
+      '<div class="recipe-ingredient-macros">' +
+        '<div class="form-group"><label>Cal</label><input type="number" class="recipe-ingredient-calories" min="0" step="1" value="' + escAttr(String(row.calories)) + '"></div>' +
+        '<div class="form-group"><label>P (g)</label><input type="number" class="recipe-ingredient-protein" min="0" step="0.1" value="' + escAttr(String(row.protein)) + '"></div>' +
+        '<div class="form-group"><label>C (g)</label><input type="number" class="recipe-ingredient-carbs" min="0" step="0.1" value="' + escAttr(String(row.carbs)) + '"></div>' +
+        '<div class="form-group"><label>F (g)</label><input type="number" class="recipe-ingredient-fat" min="0" step="0.1" value="' + escAttr(String(row.fat)) + '"></div>' +
+        '<div class="form-group"><label>Fi (g)</label><input type="number" class="recipe-ingredient-fiber" min="0" step="0.1" value="' + escAttr(String(row.fiber)) + '"></div>' +
+        '<div class="form-group"><label>Su (g)</label><input type="number" class="recipe-ingredient-sugar" min="0" step="0.1" value="' + escAttr(String(row.sugar)) + '"></div>' +
+        '<div class="form-group"><label>Na (mg)</label><input type="number" class="recipe-ingredient-sodium" min="0" step="1" value="' + escAttr(String(row.sodium)) + '"></div>' +
+      '</div>' +
+    '</div>'
+  );
+}
+
+function collectRecipeModalIngredients() {
+  return Array.from(document.querySelectorAll("#recipeIngredientRows [data-recipe-ingredient-row]")).map((row) => {
+    return normalizeRecipeIngredient({
+      name: row.querySelector(".recipe-ingredient-name") ? row.querySelector(".recipe-ingredient-name").value : "",
+      serving: row.querySelector(".recipe-ingredient-serving") ? row.querySelector(".recipe-ingredient-serving").value : "",
+      calories: row.querySelector(".recipe-ingredient-calories") ? row.querySelector(".recipe-ingredient-calories").value : 0,
+      protein: row.querySelector(".recipe-ingredient-protein") ? row.querySelector(".recipe-ingredient-protein").value : 0,
+      carbs: row.querySelector(".recipe-ingredient-carbs") ? row.querySelector(".recipe-ingredient-carbs").value : 0,
+      fat: row.querySelector(".recipe-ingredient-fat") ? row.querySelector(".recipe-ingredient-fat").value : 0,
+      fiber: row.querySelector(".recipe-ingredient-fiber") ? row.querySelector(".recipe-ingredient-fiber").value : 0,
+      sugar: row.querySelector(".recipe-ingredient-sugar") ? row.querySelector(".recipe-ingredient-sugar").value : 0,
+      sodium: row.querySelector(".recipe-ingredient-sodium") ? row.querySelector(".recipe-ingredient-sodium").value : 0,
+    });
+  }).filter((row) => row.name);
+}
+
+function refreshRecipeBuilderSummary() {
+  const summary = $("recipeBuilderSummary");
+  if (!summary) return;
+  const servings = parseRecipeServings($("recipeBuilderServings") ? $("recipeBuilderServings").value : 1);
+  const ingredients = collectRecipeModalIngredients();
+  const totals = calculateRecipeTotals(ingredients);
+  const perServing = getRecipePerServing({ servings, ingredients });
+
+  summary.innerHTML =
+    '<div class="recipe-summary-card">' +
+      '<div class="recipe-summary-label">Recipe Totals</div>' +
+      '<div class="recipe-summary-value">' + totals.calories + ' kcal</div>' +
+      '<div class="recipe-summary-sub">P' + totals.protein + ' C' + totals.carbs + ' F' + totals.fat + ' • Fi' + totals.fiber + ' Su' + totals.sugar + ' Na' + totals.sodium + 'mg</div>' +
+    '</div>' +
+    '<div class="recipe-summary-card">' +
+      '<div class="recipe-summary-label">Per Serving (' + servings + ')</div>' +
+      '<div class="recipe-summary-value">' + perServing.calories + ' kcal</div>' +
+      '<div class="recipe-summary-sub">P' + perServing.protein + ' C' + perServing.carbs + ' F' + perServing.fat + ' • Fi' + perServing.fiber + ' Su' + perServing.sugar + ' Na' + perServing.sodium + 'mg</div>' +
+    '</div>';
+}
+
+function appendRecipeIngredientRow(seed) {
+  const root = $("recipeIngredientRows");
+  if (!root) return;
+  const currentCount = root.querySelectorAll("[data-recipe-ingredient-row]").length;
+  if (currentCount >= 24) {
+    showToast("Recipe limit reached (24 ingredients)", "warning");
+    return;
+  }
+  root.insertAdjacentHTML("beforeend", getRecipeIngredientRowHtml(seed || {}));
+  refreshRecipeBuilderSummary();
+}
+
+function upsertFoodItemFromRecipe(recipe) {
+  const row = recipe || {};
+  if (!row.id) return;
+  const per = getRecipePerServing(row);
+  const items = loadData(KEYS.foodItems);
+  const existingIndex = items.findIndex((item) => String(item.sourceRecipeId || "") === String(row.id));
+  const saved = {
+    id: existingIndex >= 0 ? (items[existingIndex].id || uid()) : uid(),
+    timestamp: Date.now(),
+    name: row.name,
+    serving: "1 serving",
+    calories: per.calories,
+    protein: per.protein,
+    carbs: per.carbs,
+    fat: per.fat,
+    fiber: per.fiber,
+    sugar: per.sugar,
+    sodium: per.sodium,
+    sourceRecipeId: row.id,
+  };
+
+  if (existingIndex >= 0) items[existingIndex] = saved;
+  else items.push(saved);
+  saveData(KEYS.foodItems, items);
+}
+
+function saveRecipeFromModal() {
+  const nameInput = $("recipeBuilderName");
+  const servingsInput = $("recipeBuilderServings");
+  if (!nameInput || !servingsInput) return;
+
+  const recipeName = nameInput.value.trim();
+  if (!recipeName) {
+    showToast("Recipe name is required", "warning");
+    nameInput.focus();
+    return;
+  }
+
+  const servings = parseRecipeServings(servingsInput.value);
+  const ingredients = collectRecipeModalIngredients();
+  if (!ingredients.length) {
+    showToast("Add at least one ingredient", "warning");
+    return;
+  }
+
+  const recipeId = ($("recipeBuilderId") && $("recipeBuilderId").value) || uid();
+  const recipes = loadData(KEYS.recipes);
+  const existingIndex = recipes.findIndex((row) => row.id === recipeId);
+  const next = {
+    id: recipeId,
+    name: recipeName,
+    servings,
+    ingredients,
+    updatedAt: Date.now(),
+    createdAt: existingIndex >= 0 && recipes[existingIndex].createdAt ? recipes[existingIndex].createdAt : Date.now(),
+  };
+
+  if (existingIndex >= 0) recipes[existingIndex] = next;
+  else recipes.push(next);
+
+  saveData(KEYS.recipes, recipes);
+  upsertFoodItemFromRecipe(next);
+  closeModal();
+  refreshRecipeQuickList();
+  notifyDataChangedFromLog("saveRecipe");
+  showToast(existingIndex >= 0 ? "Recipe updated" : "Recipe saved", "success");
+}
+
+function openRecipeBuilderModal(recipeId) {
+  const recipes = loadData(KEYS.recipes);
+  const existing = recipeId ? recipes.find((row) => row.id === recipeId) : null;
+  const seedIngredient = getFoodFormIngredientSeed();
+  const seedRows = existing && Array.isArray(existing.ingredients) && existing.ingredients.length
+    ? existing.ingredients
+    : (seedIngredient ? [seedIngredient] : [{}]);
+
+  const modal = $("modalContainer");
+  if (!modal) return;
+
+  modal.innerHTML =
+    '<div class="modal-overlay" id="recipeBuilderOverlay">' +
+      '<div class="modal recipe-builder-modal" id="recipeBuilderModal">' +
+        '<div class="modal-drag-handle"></div>' +
+        '<div class="recipe-builder-head mb-8">' +
+          '<div class="modal-title">🥣 Recipe Builder</div>' +
+          '<button class="modal-close" id="recipeBuilderClose" aria-label="Close">✕</button>' +
+        '</div>' +
+        '<input type="hidden" id="recipeBuilderId" value="' + escAttr(existing ? existing.id : "") + '">' +
+        '<div class="form-group">' +
+          '<label>Recipe Name</label>' +
+          '<input type="text" id="recipeBuilderName" placeholder="e.g., Chicken rice bowl" value="' + escAttr(existing ? existing.name : "") + '">' +
+        '</div>' +
+        '<div class="recipe-builder-top-row">' +
+          '<div class="form-group" style="flex:0 0 140px">' +
+            '<label>Total Servings</label>' +
+            '<input type="number" id="recipeBuilderServings" min="0.25" max="24" step="0.25" value="' + escAttr(String(existing ? parseRecipeServings(existing.servings) : 1)) + '">' +
+          '</div>' +
+          '<div class="recipe-builder-top-actions">' +
+            '<button class="btn btn-outline btn-sm" data-action="recipeAddFromForm">+ Add From Food Form</button>' +
+            '<button class="btn btn-outline btn-sm" data-action="recipeAddIngredient">+ Add Ingredient</button>' +
+          '</div>' +
+        '</div>' +
+        '<div id="recipeIngredientRows" class="recipe-ingredients-wrap"></div>' +
+        '<div id="recipeBuilderSummary" class="recipe-builder-summary"></div>' +
+        '<div class="recipe-builder-actions">' +
+          '<button class="btn btn-outline" data-action="cancelRecipeBuilder">Cancel</button>' +
+          '<button class="btn btn-primary" data-action="saveRecipeBuilder">Save Recipe</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  const overlay = $("recipeBuilderOverlay");
+  const modalBody = $("recipeBuilderModal");
+  if (overlay) {
+    overlay.addEventListener("click", function (e) {
+      if (e.target === overlay) closeModal();
+    });
+  }
+  if (modalBody) {
+    modalBody.addEventListener("click", function (e) {
+      const closeBtn = e.target.closest("#recipeBuilderClose");
+      if (closeBtn) {
+        closeModal();
+        return;
+      }
+      const actionEl = e.target.closest("[data-action]");
+      if (actionEl && actionEl.dataset.action === "cancelRecipeBuilder") {
+        closeModal();
+        return;
+      }
+      if (actionEl && actionEl.dataset.action === "saveRecipeBuilder") {
+        saveRecipeFromModal();
+        return;
+      }
+      if (actionEl && actionEl.dataset.action === "recipeAddIngredient") {
+        appendRecipeIngredientRow({});
+        return;
+      }
+      if (actionEl && actionEl.dataset.action === "recipeAddFromForm") {
+        const seed = getFoodFormIngredientSeed();
+        if (!seed || !seed.name) {
+          showToast("Fill the food form first", "info");
+          return;
+        }
+        appendRecipeIngredientRow(seed);
+        return;
+      }
+      const removeBtn = e.target.closest("[data-remove-recipe-ingredient]");
+      if (removeBtn) {
+        const row = removeBtn.closest("[data-recipe-ingredient-row]");
+        if (row) row.remove();
+        if (!document.querySelector("#recipeIngredientRows [data-recipe-ingredient-row]")) appendRecipeIngredientRow({});
+        refreshRecipeBuilderSummary();
+      }
+    });
+
+    modalBody.addEventListener("input", function (e) {
+      if (e.target && (e.target.id === "recipeBuilderServings" || e.target.closest("[data-recipe-ingredient-row]"))) {
+        refreshRecipeBuilderSummary();
+      }
+    });
+  }
+
+  seedRows.forEach((seed) => appendRecipeIngredientRow(seed));
+  refreshRecipeBuilderSummary();
+  setTimeout(function () {
+    if ($("recipeBuilderName")) $("recipeBuilderName").focus();
+  }, 80);
+}
+
+function deleteRecipe(recipeId) {
+  const id = String(recipeId || "").trim();
+  if (!id) return;
+  showConfirmModal("Delete Recipe", "🥣", "Remove this recipe and its reusable food item?", function () {
+    saveData(KEYS.recipes, loadData(KEYS.recipes).filter((row) => row.id !== id));
+    saveData(KEYS.foodItems, loadData(KEYS.foodItems).filter((row) => String(row.sourceRecipeId || "") !== id));
+    refreshRecipeQuickList();
+    notifyDataChangedFromLog("deleteRecipe");
+    showToast("Recipe deleted", "info");
+  });
+}
+
+function quickAddRecipe(recipeId) {
+  const recipe = loadData(KEYS.recipes).find((row) => row.id === recipeId);
+  if (!recipe) return;
+  const per = getRecipePerServing(recipe);
+  const selectedDate = ($("foodDate") && $("foodDate").value) || today();
+  const selectedMeal = ($("foodMeal") && $("foodMeal").value) || "snack";
+
+  const entry = {
+    id: uid(),
+    date: selectedDate,
+    meal: selectedMeal,
+    name: recipe.name,
+    calories: per.calories,
+    protein: per.protein,
+    carbs: per.carbs,
+    fat: per.fat,
+    fiber: per.fiber,
+    sugar: per.sugar,
+    sodium: per.sodium,
+    serving: "1 serving",
+    recipeId: recipe.id,
+    timestamp: Date.now(),
+  };
+
+  const food = loadData(KEYS.food);
+  food.push(entry);
+  saveData(KEYS.food, food);
+  notifyDataChangedFromLog("quickAddRecipe");
+  showToast(recipe.name + " added from recipe", "success");
+}
+
+function refreshRecipeQuickList() {
+  const list = $("recipeQuickList");
+  const meta = $("recipeBuilderMeta");
+  if (!list || !meta) return;
+
+  const recipes = loadData(KEYS.recipes)
+    .slice()
+    .sort((a, b) => Number(b.updatedAt || b.createdAt || 0) - Number(a.updatedAt || a.createdAt || 0));
+
+  if (!recipes.length) {
+    list.innerHTML = "";
+    meta.textContent = "Create home-cooked recipes with per-serving macros and reuse them anytime.";
+    return;
+  }
+
+  list.innerHTML = recipes.slice(0, 10).map((recipe) => {
+    const per = getRecipePerServing(recipe);
+    return (
+      '<span class="fav-chip recipe-chip" data-recipe-id="' + recipe.id + '" title="Quick add one serving">' +
+        '<span class="recipe-chip-title">' + esc(recipe.name || "Recipe") + '</span>' +
+        '<span class="fav-chip-cal">' + per.calories + 'cal</span>' +
+        '<button class="fav-chip-remove" data-edit-recipe="' + recipe.id + '" title="Edit recipe">✏️</button>' +
+        '<button class="fav-chip-remove" data-remove-recipe="' + recipe.id + '" title="Delete recipe">✕</button>' +
+      '</span>'
+    );
+  }).join("");
+
+  meta.textContent = recipes.length + " recipes saved • tap a chip to quick add one serving";
 }
 
 // ========== LOG FOOD ==========
@@ -704,7 +1175,16 @@ function logFood() {
   const pro = parseInt($("foodProtein").value) || 0;
   const carb = parseInt($("foodCarbs").value) || 0;
   const fat = parseInt($("foodFat").value) || 0;
-  if (cal < 0 || pro < 0 || carb < 0 || fat < 0) { showToast("Values cannot be negative", "error"); return; }
+  const fiberRaw = $("foodFiber") ? $("foodFiber").value : "";
+  const sugarRaw = $("foodSugar") ? $("foodSugar").value : "";
+  const sodiumRaw = $("foodSodium") ? $("foodSodium").value : "";
+  if (cal < 0 || pro < 0 || carb < 0 || fat < 0 || Number(fiberRaw) < 0 || Number(sugarRaw) < 0 || Number(sodiumRaw) < 0) {
+    showToast("Values cannot be negative", "error");
+    return;
+  }
+  const fiber = parseMicronutrientValue(fiberRaw, 1);
+  const sugar = parseMicronutrientValue(sugarRaw, 1);
+  const sodium = parseMicronutrientValue(sodiumRaw, 0);
 
   const date = $("foodDate").value || today();
   const editId = $("foodEditId").value;
@@ -713,6 +1193,7 @@ function logFood() {
     id: editId || uid(), date, name,
     calories: cal || Math.round(pro * 4 + carb * 4 + fat * 9),
     protein: pro, carbs: carb, fat,
+    fiber, sugar, sodium,
     serving: $("foodServing").value.trim(),
     meal: $("foodMeal").value,
     timestamp: Date.now(),
@@ -733,10 +1214,11 @@ function logFood() {
     showToast("Food logged! 🍎");
   }
   saveData(KEYS.food, data);
-  ["foodName", "foodCalories", "foodProtein", "foodCarbs", "foodFat", "foodServing"].forEach((id) => ($(id).value = ""));
+  ["foodName", "foodCalories", "foodProtein", "foodCarbs", "foodFat", "foodFiber", "foodSugar", "foodSodium", "foodServing"].forEach((id) => ($(id).value = ""));
   $("foodDate").value = today();
   $("foodCalories").dataset.manualEntry = "";
   refreshCalorieGuidance();
+  refreshMicronutrientHints();
   const card = $("foodFormCard");
   if (card) { card.classList.add("log-success"); setTimeout(() => card.classList.remove("log-success"), 600); }
   notifyDataChangedFromLog("logFood");
@@ -778,6 +1260,9 @@ function editFood(id) {
   $("foodProtein").value = food.protein || "";
   $("foodCarbs").value = food.carbs || "";
   $("foodFat").value = food.fat || "";
+  if ($("foodFiber")) $("foodFiber").value = parseMicronutrientValue(food.fiber, 1) || "";
+  if ($("foodSugar")) $("foodSugar").value = parseMicronutrientValue(food.sugar, 1) || "";
+  if ($("foodSodium")) $("foodSodium").value = parseMicronutrientValue(food.sodium, 0) || "";
   $("foodServing").value = food.serving || "";
   $("foodMeal").value = food.meal || "breakfast";
   $("foodDate").value = food.date || today();
@@ -790,6 +1275,7 @@ function editFood(id) {
   document.querySelector('[data-subtab="log-food"]').classList.add("active");
   $("log-food").classList.add("active");
   $("foodFormCard").scrollIntoView({ behavior: "smooth", block: "start" });
+  refreshMicronutrientHints();
   setTimeout(() => $("foodName").focus(), 300);
 }
 
@@ -798,10 +1284,11 @@ function cancelEditFood() {
   $("foodFormTitle").textContent = "Log Food";
   $("foodSubmitBtn").textContent = "Log Food";
   $("foodCancelEdit").classList.add("hidden");
-  ["foodName", "foodCalories", "foodProtein", "foodCarbs", "foodFat", "foodServing"].forEach((id) => ($(id).value = ""));
+  ["foodName", "foodCalories", "foodProtein", "foodCarbs", "foodFat", "foodFiber", "foodSugar", "foodSodium", "foodServing"].forEach((id) => ($(id).value = ""));
   $("foodDate").value = today();
   $("foodCalories").dataset.manualEntry = "";
   refreshCalorieGuidance();
+  refreshMicronutrientHints();
 }
 
 function duplicateFood(id) {
@@ -811,6 +1298,9 @@ function duplicateFood(id) {
     id: uid(), date: today(), name: food.name,
     calories: food.calories || 0, protein: food.protein || 0,
     carbs: food.carbs || 0, fat: food.fat || 0,
+    fiber: parseMicronutrientValue(food.fiber, 1),
+    sugar: parseMicronutrientValue(food.sugar, 1),
+    sodium: parseMicronutrientValue(food.sodium, 0),
     serving: food.serving || "", meal: food.meal || "snack",
     timestamp: Date.now(),
   };
@@ -1534,7 +2024,7 @@ function refreshLog() {
     $("recentFood").innerHTML = food
       .map((f) => {
         const time = f.timestamp ? fmtTime(f.timestamp) : "";
-        return '<div class="list-item"><div class="list-item-main"><div class="list-item-title">' + esc(f.name) + '<span class="entry-time">' + time + '</span></div><div class="list-item-sub">' + fmtDate(f.date) + " • " + (f.meal || "") + (f.serving ? " • " + esc(f.serving) : "") + " • P" + (f.protein || 0) + " C" + (f.carbs || 0) + " F" + (f.fat || 0) + '</div></div><div class="list-item-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><div style="font-weight:600">' + f.calories + ' cal</div><div style="display:flex;gap:4px"><button class="btn-icon" data-duplicate-food="' + f.id + '" title="Log again">🔄</button><button class="btn-icon" data-edit-food="' + f.id + '" title="Edit">✏️</button><button class="btn-delete" data-delete-food="' + f.id + '" title="Delete">✕</button></div></div></div>';
+        return '<div class="list-item"><div class="list-item-main"><div class="list-item-title">' + esc(f.name) + '<span class="entry-time">' + time + '</span></div><div class="list-item-sub">' + fmtDate(f.date) + " • " + (f.meal || "") + (f.serving ? " • " + esc(f.serving) : "") + " • P" + (f.protein || 0) + " C" + (f.carbs || 0) + " F" + (f.fat || 0) + esc(formatMicronutrientInline(f)) + '</div></div><div class="list-item-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><div style="font-weight:600">' + f.calories + ' cal</div><div style="display:flex;gap:4px"><button class="btn-icon" data-duplicate-food="' + f.id + '" title="Log again">🔄</button><button class="btn-icon" data-edit-food="' + f.id + '" title="Edit">✏️</button><button class="btn-delete" data-delete-food="' + f.id + '" title="Delete">✕</button></div></div></div>';
       })
       .join("");
   } else {
@@ -1568,6 +2058,9 @@ function refreshLog() {
   populateProtocolSelect();
   refreshFavorites();
   refreshMealTemplates();
+  refreshRecipeQuickList();
+  if (typeof syncFoodVisionState === "function") syncFoodVisionState();
+  refreshMicronutrientHints();
 }
 
 // ========== EVENT DELEGATION ==========
@@ -1583,6 +2076,7 @@ function initLogEvents() {
       if (action === "logFood") logFood();
       else if (action === "saveMealTemplate") saveMealTemplate();
       else if (action === "applyMealTemplate") applyMealTemplate();
+      else if (action === "openRecipeBuilder") openRecipeBuilderModal();
       else if (action === "cancelEditFood") cancelEditFood();
       else if (action === "clearTodayFood") clearTodayFood();
       else if (action === "logWorkout") logWorkout();
@@ -1595,6 +2089,7 @@ function initLogEvents() {
       else if (action === "focusWorkout" && $("workoutName")) $("workoutName").focus();
       else if (action === "focusBody" && $("bodyWeight")) $("bodyWeight").focus();
       else if (action === "scanBarcode" && typeof showBarcodeScanner === 'function') showBarcodeScanner();
+      else if (action === "snapFoodEstimate" && typeof showFoodVisionPicker === "function") showFoodVisionPicker();
       return;
     }
 
@@ -1638,21 +2133,51 @@ function initLogEvents() {
     if (removeFav) { e.stopPropagation(); removeFavorite(removeFav.dataset.removeFav); return; }
     const favChip = e.target.closest("[data-fav-id]");
     if (favChip && !removeFav) { quickAddFavorite(favChip.dataset.favId); return; }
+
+    // Recipes
+    const removeRecipe = e.target.closest("[data-remove-recipe]");
+    if (removeRecipe) { e.stopPropagation(); deleteRecipe(removeRecipe.dataset.removeRecipe); return; }
+    const editRecipe = e.target.closest("[data-edit-recipe]");
+    if (editRecipe) { e.stopPropagation(); openRecipeBuilderModal(editRecipe.dataset.editRecipe); return; }
+    const recipeChip = e.target.closest("[data-recipe-id]");
+    if (recipeChip && !removeRecipe && !editRecipe) { quickAddRecipe(recipeChip.dataset.recipeId); return; }
   });
 
   // Auto-calc calories
   $("foodProtein").addEventListener("input", autoCalcCalories);
   $("foodCarbs").addEventListener("input", autoCalcCalories);
   $("foodFat").addEventListener("input", autoCalcCalories);
+  const foodFiber = $("foodFiber");
+  const foodSugar = $("foodSugar");
+  const foodSodium = $("foodSodium");
+  const foodDate = $("foodDate");
+  if (foodFiber) {
+    foodFiber.addEventListener("input", refreshMicronutrientHints);
+    foodFiber.addEventListener("change", refreshMicronutrientHints);
+  }
+  if (foodSugar) {
+    foodSugar.addEventListener("input", refreshMicronutrientHints);
+    foodSugar.addEventListener("change", refreshMicronutrientHints);
+  }
+  if (foodSodium) {
+    foodSodium.addEventListener("input", refreshMicronutrientHints);
+    foodSodium.addEventListener("change", refreshMicronutrientHints);
+  }
+  if (foodDate) {
+    foodDate.addEventListener("change", refreshMicronutrientHints);
+  }
   // Track manual calorie entry so auto-calc doesn't overwrite
   $("foodCalories").addEventListener("input", function () {
     this.dataset.manualEntry = this.value ? "1" : "";
     refreshCalorieGuidance();
   });
   refreshCalorieGuidance();
+  refreshMicronutrientHints();
 
   // Init food database search
   if (typeof initFoodSearch === 'function') initFoodSearch();
+  if (typeof initFoodVision === "function") initFoodVision();
+  if (typeof syncFoodVisionState === "function") syncFoodVisionState();
 
   // Search
   const searchFood = $("searchFood");

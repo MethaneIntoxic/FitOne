@@ -188,6 +188,8 @@ function refreshSubTab(subtabId) {
     refreshLog();
   } else if (subtabId === "log-workout" && typeof refreshLogWorkout === "function") {
     // refreshLogWorkout(); // if needed
+  } else if (subtabId && subtabId.indexOf("analytics-") === 0 && typeof refreshAnalyticsSubTab === "function") {
+    refreshAnalyticsSubTab(subtabId);
   }
 }
 

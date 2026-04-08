@@ -79,7 +79,7 @@ Current synced checkpoint (from `todo.md`):
 - R1 complete
 - R2 complete
 - R3 complete
-- Phase W next target: #25 (Smart Calorie/Macro Adjustment)
+- Phase W complete through #5. Next target: #46 (ES Modules Migration)
 
 ## 4) DO NOT List
 

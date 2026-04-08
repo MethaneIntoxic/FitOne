@@ -60,7 +60,129 @@ function drawCalorieChart() {
     macros.fat.push(df.reduce((a, f) => a + (f.fat || 0), 0));
   });
   drawStackedBar($("chartMacros"), last7.map((d) => d.slice(5)), macros);
+  drawMicronutrientTrendChart(days, food);
   renderWeeklySummary(days, food);
+}
+
+function getMicronutrientSeries(days, food, key) {
+  return days.map(function (dateStr) {
+    return food
+      .filter(function (row) { return row.date === dateStr; })
+      .reduce(function (sum, row) { return sum + (Number(row[key]) || 0); }, 0);
+  });
+}
+
+function getMicronutrientStats(values) {
+  const recent = values.slice(-7);
+  const previous = values.slice(0, Math.max(0, values.length - 7)).slice(-7);
+  const avgRecent = recent.length ? recent.reduce((a, b) => a + b, 0) / recent.length : 0;
+  const avgPrevious = previous.length ? previous.reduce((a, b) => a + b, 0) / previous.length : 0;
+  return {
+    avgRecent,
+    avgPrevious,
+    delta: avgRecent - avgPrevious,
+  };
+}
+
+function getMicronutrientDeltaTone(delta, preferLower) {
+  if (Math.abs(delta) < 0.0001) return "is-neutral";
+  if (preferLower) return delta < 0 ? "is-good" : "is-bad";
+  return delta > 0 ? "is-good" : "is-bad";
+}
+
+function formatMicronutrientValue(value, unit, decimals) {
+  const n = Number(value) || 0;
+  if (unit === "mg") return Math.round(n) + " mg";
+  const d = Number.isFinite(Number(decimals)) ? Math.max(0, Number(decimals)) : 1;
+  return n.toFixed(d).replace(/\.0$/, "") + " " + unit;
+}
+
+function drawMicronutrientTrendChart(days, food) {
+  const canvas = $("chartMicronutrients");
+  const summary = $("micronutrientTrendSummary");
+  const meta = $("micronutrientTrendMeta");
+  if (!canvas || !summary) return;
+
+  const labels = (days || []).map(function (d) { return String(d || "").slice(5); });
+  const fiberValues = getMicronutrientSeries(days, food, "fiber");
+  const sugarValues = getMicronutrientSeries(days, food, "sugar");
+  const sodiumValues = getMicronutrientSeries(days, food, "sodium");
+  const hasAny = fiberValues.some((v) => v > 0) || sugarValues.some((v) => v > 0) || sodiumValues.some((v) => v > 0);
+
+  if (!hasAny) {
+    drawMultiLineChart(canvas, labels, []);
+    summary.innerHTML = '<div class="empty"><div class="empty-icon">🥦</div><div class="empty-text">Log fiber, sugar, and sodium to unlock micronutrient trends.</div></div>';
+    if (meta) meta.textContent = "Waiting for micronutrient logs";
+    return;
+  }
+
+  drawMultiLineChart(canvas, labels, [
+    {
+      label: "Fiber",
+      values: fiberValues,
+      color: brandColor("--brand-success") || "#22c55e",
+    },
+    {
+      label: "Sugar",
+      values: sugarValues,
+      color: brandColor("--brand-warning") || "#f59e0b",
+    },
+    {
+      label: "Sodium",
+      values: sodiumValues,
+      color: brandColor("--brand-info") || "#38bdf8",
+    },
+  ]);
+
+  const fiberStats = getMicronutrientStats(fiberValues);
+  const sugarStats = getMicronutrientStats(sugarValues);
+  const sodiumStats = getMicronutrientStats(sodiumValues);
+
+  const cards = [
+    {
+      label: "Fiber",
+      current: fiberStats.avgRecent,
+      delta: fiberStats.delta,
+      target: "Target ≥30g",
+      unit: "g",
+      decimals: 1,
+      preferLower: false,
+    },
+    {
+      label: "Sugar",
+      current: sugarStats.avgRecent,
+      delta: sugarStats.delta,
+      target: "Keep ≤50g",
+      unit: "g",
+      decimals: 1,
+      preferLower: true,
+    },
+    {
+      label: "Sodium",
+      current: sodiumStats.avgRecent,
+      delta: sodiumStats.delta,
+      target: "Keep ≤2300mg",
+      unit: "mg",
+      decimals: 0,
+      preferLower: true,
+    },
+  ];
+
+  summary.innerHTML = cards.map(function (card) {
+    const tone = getMicronutrientDeltaTone(card.delta, card.preferLower);
+    const deltaPrefix = card.delta > 0 ? "+" : card.delta < 0 ? "-" : "";
+    const deltaValue = formatMicronutrientValue(Math.abs(card.delta), card.unit, card.decimals);
+    const current = formatMicronutrientValue(card.current, card.unit, card.decimals);
+    const deltaLabel = Math.abs(card.delta) < 0.0001 ? "flat vs prior 7d" : deltaPrefix + deltaValue + " vs prior 7d";
+    return '<div class="micronutrient-trend-pill">' +
+      '<div class="micronutrient-trend-pill-label">' + esc(card.label) + '</div>' +
+      '<div class="micronutrient-trend-pill-value">' + esc(current) + '</div>' +
+      '<div class="micronutrient-trend-pill-delta ' + tone + '">' + esc(deltaLabel) + '</div>' +
+      '<div class="micronutrient-trend-pill-target">' + esc(card.target) + '</div>' +
+    '</div>';
+  }).join("");
+
+  if (meta) meta.textContent = "7-day avg vs prior 7-day avg";
 }
 
 // ========== WEIGHT CHART ==========

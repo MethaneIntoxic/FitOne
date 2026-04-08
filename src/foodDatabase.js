@@ -42,12 +42,61 @@ function getCachedByBarcode(barcode) {
 }
 
 function getCachedSearch(query) {
-  const cache = loadFoodCache();
   const q = query.toLowerCase().trim();
-  return Object.values(cache).filter(p =>
+  const cache = loadFoodCache();
+  const cached = Object.values(cache).filter(p =>
     (p.name || '').toLowerCase().includes(q) ||
     (p._searchKey || '').toLowerCase().includes(q)
-  ).slice(0, 10);
+  );
+  return mergeFoodResults(getSavedFoodItems(q), cached, 12);
+}
+
+function getSavedFoodItems(query) {
+  const q = String(query || '').toLowerCase().trim();
+  if (!q) return [];
+  const items = loadData(KEYS.foodItems);
+  if (!Array.isArray(items)) return [];
+
+  return items
+    .map((item) => {
+      const row = item || {};
+      return {
+        name: String(row.name || '').trim(),
+        serving: String(row.serving || '').trim(),
+        calories: Math.max(0, Number(row.calories) || 0),
+        protein: Math.max(0, Number(row.protein) || 0),
+        carbs: Math.max(0, Number(row.carbs) || 0),
+        fat: Math.max(0, Number(row.fat) || 0),
+        fiber: Math.max(0, Number(row.fiber) || 0),
+        sugar: Math.max(0, Number(row.sugar) || 0),
+        sodium: Math.max(0, Number(row.sodium) || 0),
+        _searchKey: (String(row.name || '') + ' ' + String(row.serving || '')).toLowerCase(),
+      };
+    })
+    .filter((row) => row.name)
+    .filter((row) => row.name.toLowerCase().includes(q) || row._searchKey.includes(q));
+}
+
+function mergeFoodResults(primary, secondary, limit) {
+  const output = [];
+  const seen = new Set();
+  const max = Math.max(1, Number(limit) || 10);
+
+  const pushList = function (rows) {
+    (rows || []).forEach((row) => {
+      const name = String(row && row.name || '').trim();
+      if (!name) return;
+      const key = name.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      output.push(row);
+    });
+  };
+
+  pushList(primary);
+  pushList(secondary);
+
+  return output.slice(0, max);
 }
 
 // ========== API: NORMALIZE PRODUCT ==========
@@ -100,6 +149,7 @@ async function searchFoodsAPI(query) {
   _foodSearchController = new AbortController();
 
   try {
+    const localMatches = getSavedFoodItems(query);
     const url = OFF_SEARCH_URL +
       '?search_terms=' + encodeURIComponent(query.trim()) +
       '&json=1&page_size=10&search_simple=1&action=process' +
@@ -116,7 +166,7 @@ async function searchFoodsAPI(query) {
       .map(p => normalizeOFFProduct({ product: p }));
 
     products.forEach(p => cacheProduct(p));
-    return products;
+    return mergeFoodResults(localMatches, products, 12);
   } catch (e) {
     if (e.name === 'AbortError') return [];
     console.warn('Food search API error:', e);
@@ -220,8 +270,12 @@ function fillFoodFormFromProduct(product) {
   if ($('foodProtein')) $('foodProtein').value = product.protein || '';
   if ($('foodCarbs')) $('foodCarbs').value = product.carbs || '';
   if ($('foodFat')) $('foodFat').value = product.fat || '';
+  if ($('foodFiber')) $('foodFiber').value = product.fiber || '';
+  if ($('foodSugar')) $('foodSugar').value = product.sugar || '';
+  if ($('foodSodium')) $('foodSodium').value = product.sodium || '';
   if ($('foodServing')) $('foodServing').value = product.serving || '';
   refreshCalorieGuidance();
+  if (typeof refreshMicronutrientHints === 'function') refreshMicronutrientHints();
 }
 
 function hideFoodSearchDropdown() {

@@ -1,19 +1,286 @@
 // ========== PROTOCOLS VIEW ==========
 
+let _selectedPlanProtocolId = "";
+let _planWeeksTouched = false;
+let _latestGeneratedPlan = null;
+
+function normalizePlanLevelLocal(value) {
+  if (typeof window.normalizePlanExperienceLevel === "function") {
+    return window.normalizePlanExperienceLevel(value);
+  }
+  const raw = String(value || "").toLowerCase().trim();
+  if (raw === "intermediate" || raw === "advanced" || raw === "competitor") return raw;
+  return "beginner";
+}
+
+function getDefaultPlanWeeksLocal(level) {
+  const normalized = normalizePlanLevelLocal(level);
+  if (typeof window.getDefaultPlanWeeksForExperience === "function") {
+    return window.getDefaultPlanWeeksForExperience(normalized);
+  }
+  if (normalized === "competitor") return 16;
+  if (normalized === "advanced") return 12;
+  if (normalized === "intermediate") return 10;
+  return 8;
+}
+
+function getPlanProtocolCollection() {
+  const userProtocols = loadData(KEYS.protocols).map(function (p) {
+    return { ...p, source: "user" };
+  });
+  const starterProtocols = (window.STARTER_ROUTINES || []).map(function (p) {
+    return { ...p, source: "starter" };
+  });
+
+  return userProtocols
+    .concat(starterProtocols)
+    .filter(function (protocol) {
+      return Array.isArray(protocol && protocol.exercises) && protocol.exercises.length > 0;
+    });
+}
+
+function getPlanProtocolById(protocolId) {
+  const id = String(protocolId || "").trim();
+  if (!id) return null;
+  return getPlanProtocolCollection().find(function (protocol) {
+    return protocol.id === id;
+  }) || null;
+}
+
+function getStoredTrainingPlans() {
+  const plans = loadData(KEYS.trainingPlan);
+  return Array.isArray(plans) ? plans : [];
+}
+
+function saveTrainingPlan(plan) {
+  const plans = getStoredTrainingPlans();
+  plans.push(plan);
+  if (plans.length > 60) {
+    plans.splice(0, plans.length - 60);
+  }
+  saveData(KEYS.trainingPlan, plans);
+}
+
+function getLatestPlanForProtocol(protocolId, level) {
+  const id = String(protocolId || "");
+  const lv = normalizePlanLevelLocal(level);
+  return getStoredTrainingPlans()
+    .filter(function (plan) {
+      return plan && plan.protocolId === id && normalizePlanLevelLocal(plan.experienceLevel) === lv;
+    })
+    .sort(function (a, b) {
+      return Number(b.generatedAt || 0) - Number(a.generatedAt || 0);
+    })[0] || null;
+}
+
+function formatPlanTarget(exercise, unit) {
+  if (!exercise) return "";
+  const sets = Math.max(1, Number(exercise.sets) || 1);
+  const reps = Math.max(1, Number(exercise.reps) || 1);
+  const weight = Number(exercise.weight) || 0;
+  const rpe = Number(exercise.targetRPE || exercise.rpe) || 0;
+
+  let text = sets + "x" + reps;
+  if (weight > 0) {
+    text += " @ " + (Math.abs(weight % 1) > 0 ? weight.toFixed(1) : String(weight)) + " " + (unit || "kg");
+  }
+  if (rpe > 0) {
+    text += " | RPE " + (Math.abs(rpe % 1) > 0 ? rpe.toFixed(1) : String(Math.round(rpe)));
+  }
+  return text;
+}
+
+function renderGeneratedPlanPreview(plan) {
+  const output = $("planGeneratorOutput");
+  if (!output) return;
+
+  if (!plan || !Array.isArray(plan.weeks) || !plan.weeks.length) {
+    output.innerHTML = '<div class="periodized-plan-empty">Generate a plan to preview weekly progression blocks.</div>';
+    return;
+  }
+
+  const levelLabel = normalizePlanLevelLocal(plan.experienceLevel);
+  const weeks = plan.weeks;
+  const weekCards = weeks
+    .map(function (week) {
+      const exercises = Array.isArray(week.exercises) ? week.exercises : [];
+      const rows = exercises.slice(0, 5).map(function (exercise) {
+        return (
+          '<div class="plan-week-ex-row">' +
+            '<span class="plan-week-ex-name">' + esc(exercise.name || "Exercise") + '</span>' +
+            '<span class="plan-week-ex-target">' + esc(formatPlanTarget(exercise, plan.weightUnit || settings.weightUnit || "kg")) + '</span>' +
+          '</div>'
+        );
+      }).join("");
+
+      const moreCount = Math.max(0, exercises.length - 5);
+      const more = moreCount > 0
+        ? '<div class="plan-week-more">+' + moreCount + ' more exercise' + (moreCount === 1 ? "" : "s") + '</div>'
+        : "";
+
+      return (
+        '<div class="plan-week-card">' +
+          '<div class="plan-week-head">' +
+            '<span class="plan-week-number">W' + esc(String(week.week || "?")) + '</span>' +
+            '<span class="plan-week-phase">' + esc(week.phase || "Training") + '</span>' +
+            (week.isDeload ? '<span class="plan-week-flag">Deload</span>' : "") +
+          '</div>' +
+          '<div class="plan-week-focus">' + esc(week.focus || "") + '</div>' +
+          '<div class="plan-week-ex-list">' + rows + '</div>' +
+          more +
+        '</div>'
+      );
+    })
+    .join("");
+
+  output.innerHTML =
+    '<div class="periodized-plan-summary">' +
+      '<div class="periodized-plan-summary-name">' + esc(plan.protocolName || "Protocol") + '</div>' +
+      '<div class="periodized-plan-summary-meta">' +
+        '<span>' + esc(levelLabel.toUpperCase()) + '</span>' +
+        '<span>' + esc(String(plan.totalWeeks || weeks.length)) + ' weeks</span>' +
+        '<span>' + esc(String(plan.deloadWeeks || 0)) + ' deload</span>' +
+      '</div>' +
+    '</div>' +
+    '<div class="plan-week-grid">' + weekCards + '</div>';
+}
+
+function renderPlanProtocolOptions(preferredProtocolId) {
+  const select = $("planProtocolSelect");
+  if (!select) return;
+
+  const protocols = getPlanProtocolCollection();
+  if (!protocols.length) {
+    select.innerHTML = '<option value="">No protocols available</option>';
+    select.disabled = true;
+    _selectedPlanProtocolId = "";
+    renderGeneratedPlanPreview(null);
+    return;
+  }
+
+  select.disabled = false;
+  select.innerHTML = protocols
+    .map(function (protocol) {
+      const source = protocol.source === "starter" ? "Starter" : "My";
+      return '<option value="' + escAttr(protocol.id) + '">[' + source + '] ' + esc(protocol.name || "Protocol") + '</option>';
+    })
+    .join("");
+
+  const preferred = String(preferredProtocolId || "");
+  const validPreferred = protocols.some(function (protocol) {
+    return protocol.id === preferred;
+  });
+
+  if (validPreferred) _selectedPlanProtocolId = preferred;
+  if (!_selectedPlanProtocolId || !protocols.some(function (protocol) { return protocol.id === _selectedPlanProtocolId; })) {
+    _selectedPlanProtocolId = protocols[0].id;
+  }
+
+  select.value = _selectedPlanProtocolId;
+}
+
+function syncPlanWeeksInput(force) {
+  const levelSelect = $("planExperienceLevel");
+  const weeksInput = $("planWeeksInput");
+  if (!levelSelect || !weeksInput) return;
+
+  if (force || !_planWeeksTouched) {
+    weeksInput.value = String(getDefaultPlanWeeksLocal(levelSelect.value || settings.experienceLevel || "beginner"));
+  }
+}
+
+function renderPlanGeneratorCard(preferredProtocolId) {
+  const levelSelect = $("planExperienceLevel");
+  if (levelSelect && !levelSelect.value) {
+    levelSelect.value = normalizePlanLevelLocal(settings.experienceLevel || "beginner");
+  }
+
+  renderPlanProtocolOptions(preferredProtocolId);
+  syncPlanWeeksInput(true);
+
+  const latest = _selectedPlanProtocolId
+    ? getLatestPlanForProtocol(_selectedPlanProtocolId, levelSelect ? levelSelect.value : settings.experienceLevel)
+    : null;
+
+  _latestGeneratedPlan = latest || null;
+  renderGeneratedPlanPreview(_latestGeneratedPlan);
+}
+
+function generatePeriodizedPlanFromUI(preferredProtocolId) {
+  const protocolSelect = $("planProtocolSelect");
+  const levelSelect = $("planExperienceLevel");
+  const weeksInput = $("planWeeksInput");
+
+  if (!protocolSelect || !levelSelect || !weeksInput) return;
+  if (preferredProtocolId) {
+    protocolSelect.value = String(preferredProtocolId);
+  }
+
+  const protocolId = String(protocolSelect.value || "").trim();
+  if (!protocolId) {
+    showToast("Select a protocol first", "warning");
+    return;
+  }
+
+  const protocol = getPlanProtocolById(protocolId);
+  if (!protocol) {
+    showToast("Protocol not found", "error");
+    return;
+  }
+
+  if (typeof window.generatePeriodizedTrainingPlan !== "function") {
+    showToast("Plan generator is unavailable", "error");
+    return;
+  }
+
+  const level = normalizePlanLevelLocal(levelSelect.value || settings.experienceLevel || "beginner");
+  const weeks = Math.max(4, Math.min(24, Number(weeksInput.value) || getDefaultPlanWeeksLocal(level)));
+
+  const result = window.generatePeriodizedTrainingPlan(protocol, {
+    experienceLevel: level,
+    weeks,
+    weightUnit: settings.weightUnit || "kg",
+  });
+
+  if (!result || result.status !== "ready" || !result.plan) {
+    showToast((result && result.message) || "Could not generate plan", "error");
+    return;
+  }
+
+  saveTrainingPlan(result.plan);
+  _latestGeneratedPlan = result.plan;
+  _selectedPlanProtocolId = protocolId;
+  renderGeneratedPlanPreview(result.plan);
+
+  if (typeof window.notifyDataChanged === "function") {
+    window.notifyDataChanged({ source: "protocols", reason: "generateTrainingPlan" });
+  }
+
+  showToast("Plan generated: " + result.plan.totalWeeks + " weeks", "success");
+}
+
+function quickGeneratePlanForProtocol(protocolId) {
+  const id = String(protocolId || "").trim();
+  if (!id) return;
+  renderPlanGeneratorCard(id);
+  generatePeriodizedPlanFromUI(id);
+}
+
 
 // ========== REFRESH ==========
 function refreshProtocols() {
   const protocols = loadData(KEYS.protocols);
   if (!protocols.length) {
     $("protocolList").innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No protocols yet</div><button class="btn btn-primary btn-sm" data-action="newProtocol">Create your first protocol</button></div>';
+    renderPlanGeneratorCard();
     return;
   }
   $("protocolList").innerHTML = protocols
     .map(
       (p) =>
-        '<div class="card"' + (window._highlightRoutineIds && window._highlightRoutineIds.includes(p.id) ? ' style="border-color:var(--accent)"' : "") + '><div class="flex-between mb-8"><span style="font-weight:600;font-size:1rem">' +
+        '<div class="card"' + (window._highlightRoutineIds && window._highlightRoutineIds.includes(p.id) ? ' style="border-color:var(--accent)"' : "") + '><div class="flex-between mb-8 protocol-card-head"><span class="protocol-card-title">' +
         esc(p.name) +
-        ' <span class="text-xs">v' + (p.version || 1) + "</span></span><div><button class=\"btn btn-outline btn-sm\" data-use-protocol=\"" + p.id + '">Use</button> <button class="btn btn-outline btn-sm" data-delete-protocol="' + p.id + '">✕</button></div></div><div class="text-xs mb-8">' +
+        ' <span class="text-xs">v' + (p.version || 1) + "</span></span><div class=\"protocol-card-actions\"><button class=\"btn btn-outline btn-sm\" data-use-protocol=\"" + p.id + '">Use</button><button class="btn btn-outline btn-sm" data-generate-plan="' + p.id + '">Plan</button><button class="btn btn-outline btn-sm" data-delete-protocol="' + p.id + '">✕</button></div></div><div class="text-xs mb-8">' +
         esc(p.description || "") + (p.baseRoutineId ? " • variant" : "") + "</div>" +
         (p.exercises || [])
           .map(
@@ -26,6 +293,7 @@ function refreshProtocols() {
         '<div class="text-xs mt-8">Planned sets: ' + ((p.plannedSets || []).length || 0) + "</div></div>"
     )
     .join("");
+  renderPlanGeneratorCard();
 }
 
 // ========== MODAL ==========
@@ -353,6 +621,7 @@ function openRoutineDetail(id) {
     ).join("") +
     '</div>' +
     '<button class="btn btn-primary btn-block mt-12" data-start-routine="' + escAttr(routine.id) + '">START NOW ▶</button>' +
+    '<button class="btn btn-outline btn-block mt-8" data-generate-plan="' + escAttr(routine.id) + '">GENERATE PLAN</button>' +
     '</div>' +
     '</div>';
 
@@ -374,6 +643,12 @@ function openRoutineDetail(id) {
       if (startBtn) {
         closeModal();
         useProtocol(startBtn.dataset.startRoutine);
+        return;
+      }
+      const planBtn = e.target.closest("[data-generate-plan]");
+      if (planBtn) {
+        closeModal();
+        quickGeneratePlanForProtocol(planBtn.dataset.generatePlan);
       }
     });
   }
@@ -411,12 +686,49 @@ function initProtocolEvents() {
     if (openRoutine) { openRoutineDetail(openRoutine.dataset.openRoutine); return; }
     const useBtn = e.target.closest("[data-use-protocol]");
     if (useBtn) { useProtocol(useBtn.dataset.useProtocol); return; }
+    const planBtn = e.target.closest("[data-generate-plan]");
+    if (planBtn) { quickGeneratePlanForProtocol(planBtn.dataset.generatePlan); return; }
     const delBtn = e.target.closest("[data-delete-protocol]");
     if (delBtn) { deleteProtocol(delBtn.dataset.deleteProtocol); return; }
     const actionBtn = e.target.closest("[data-action]");
+    if (actionBtn && actionBtn.dataset.action === "generatePlan") {
+      generatePeriodizedPlanFromUI();
+      return;
+    }
     if (actionBtn && (actionBtn.dataset.action === "newProtocol" || actionBtn.dataset.action === "showProtocolModal")) {
       showProtocolModal();
       return;
+    }
+  });
+
+  panel.addEventListener("change", function (e) {
+    const target = e.target;
+    if (!target || !target.id) return;
+
+    if (target.id === "planProtocolSelect") {
+      _selectedPlanProtocolId = String(target.value || "").trim();
+      const latest = _selectedPlanProtocolId
+        ? getLatestPlanForProtocol(_selectedPlanProtocolId, $("planExperienceLevel") ? $("planExperienceLevel").value : settings.experienceLevel)
+        : null;
+      _latestGeneratedPlan = latest || null;
+      renderGeneratedPlanPreview(_latestGeneratedPlan);
+      return;
+    }
+
+    if (target.id === "planExperienceLevel") {
+      _planWeeksTouched = false;
+      syncPlanWeeksInput(true);
+      const latest = _selectedPlanProtocolId
+        ? getLatestPlanForProtocol(_selectedPlanProtocolId, target.value)
+        : null;
+      _latestGeneratedPlan = latest || null;
+      renderGeneratedPlanPreview(_latestGeneratedPlan);
+    }
+  });
+
+  panel.addEventListener("input", function (e) {
+    if (e.target && e.target.id === "planWeeksInput") {
+      _planWeeksTouched = true;
     }
   });
 

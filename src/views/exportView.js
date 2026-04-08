@@ -13,8 +13,8 @@ const DATA_SCHEMAS = {
   cardios: ["id", "timestamp", "date", "workout_id", "name", "duration_min", "distance_km", "calories_burned"],
   measurements: ["id", "timestamp", "date", "weight", "body_fat", "waist", "chest", "arms", "legs", "notes"],
   photos: ["id", "timestamp", "date", "label", "uri", "notes"],
-  food_items: ["id", "timestamp", "name", "serving", "calories", "protein", "carbs", "fat"],
-  food_logs: ["id", "timestamp", "date", "meal", "food_name", "serving", "calories", "protein", "carbs", "fat"],
+  food_items: ["id", "timestamp", "name", "serving", "calories", "protein", "carbs", "fat", "fiber", "sugar", "sodium"],
+  food_logs: ["id", "timestamp", "date", "meal", "food_name", "serving", "calories", "protein", "carbs", "fat", "fiber", "sugar", "sodium"],
   protocols: ["id", "timestamp", "name", "description", "version", "base_routine_id"],
   day_plans: ["id", "timestamp", "date", "name", "notes"],
 };
@@ -147,6 +147,9 @@ function normalizeExportPayload() {
       protein: f.protein || 0,
       carbs: f.carbs || 0,
       fat: f.fat || 0,
+      fiber: f.fiber || 0,
+      sugar: f.sugar || 0,
+      sodium: f.sodium || 0,
     })),
     protocols: protocols.map((p) => ({
       id: p.id,
@@ -263,8 +266,8 @@ function normalizeEntityRow(entity, row) {
     strength_sets: ["set_index", "reps", "weight_kg", "target_reps", "target_weight", "target_rpe", "effective_load"],
     cardios: ["duration_min", "distance_km", "calories_burned"],
     measurements: ["weight", "body_fat", "waist", "chest", "arms", "legs"],
-    food_items: ["calories", "protein", "carbs", "fat"],
-    food_logs: ["calories", "protein", "carbs", "fat"],
+    food_items: ["calories", "protein", "carbs", "fat", "fiber", "sugar", "sodium"],
+    food_logs: ["calories", "protein", "carbs", "fat", "fiber", "sugar", "sodium"],
     protocols: ["version"],
   };
   (numFields[entity] || []).forEach((field) => {
@@ -337,6 +340,9 @@ function commitImport(entity, mappedRows) {
       protein: Number(f.protein) || 0,
       carbs: Number(f.carbs) || 0,
       fat: Number(f.fat) || 0,
+      fiber: Number(f.fiber) || 0,
+      sugar: Number(f.sugar) || 0,
+      sodium: Number(f.sodium) || 0,
     }));
     saveData(KEYS.food, normalized);
   }
