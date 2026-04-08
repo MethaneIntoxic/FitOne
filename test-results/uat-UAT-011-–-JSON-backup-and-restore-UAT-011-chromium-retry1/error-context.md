@@ -1,0 +1,157 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - generic "Profile" [ref=e5] [cursor=pointer]:
+          - generic [ref=e6]: person
+        - heading "FITONE" [level=1] [ref=e7]
+      - generic [ref=e8]:
+        - generic [ref=e9]: Thursday, April 9
+        - button "Notifications" [ref=e10] [cursor=pointer]:
+          - generic [ref=e11]: notifications
+          - generic [ref=e12]: "3"
+    - generic [ref=e13]:
+      - generic [ref=e14]:
+        - button "Food" [ref=e15] [cursor=pointer]
+        - button "Workout" [ref=e16] [cursor=pointer]
+        - button "Body" [ref=e17] [cursor=pointer]
+      - generic [ref=e18]:
+        - generic [ref=e19]:
+          - generic [ref=e20]: 🧩 Meal Templates
+          - generic [ref=e21]:
+            - generic [ref=e22]:
+              - generic [ref=e23]: Saved Meal
+              - combobox [disabled] [ref=e24]:
+                - option "No saved meals yet" [selected]
+            - generic [ref=e25]:
+              - generic [ref=e26]: Portion
+              - spinbutton [ref=e27]: "1"
+          - generic [ref=e28]:
+            - button "Quick Add Meal" [ref=e29] [cursor=pointer]
+            - button "Save This Meal" [ref=e30] [cursor=pointer]
+          - generic [ref=e31]: Save meals once and log all items in one tap.
+        - generic [ref=e32]:
+          - generic [ref=e33]:
+            - generic [ref=e34]: 🥣 Recipe Builder
+            - button "Build Recipe" [ref=e35] [cursor=pointer]
+          - generic [ref=e36]: Create home-cooked recipes with per-serving macros and reuse them anytime.
+        - generic [ref=e37]:
+          - generic [ref=e39]: Log Food
+          - generic [ref=e40]:
+            - generic [ref=e41]: Food Name
+            - generic [ref=e42]:
+              - textbox "e.g., Chicken breast" [active] [ref=e43]
+              - button "📷 Scan" [ref=e44] [cursor=pointer]
+          - generic [ref=e45]:
+            - generic [ref=e46]:
+              - generic [ref=e47]: Date
+              - textbox [ref=e48]: 2026-04-09
+            - generic [ref=e49]:
+              - generic [ref=e50]: Meal
+              - combobox [ref=e51]:
+                - option "Breakfast"
+                - option "Lunch"
+                - option "Dinner" [selected]
+                - option "Snack"
+          - generic [ref=e52]:
+            - generic [ref=e53]:
+              - generic [ref=e54]: Calories
+              - spinbutton [ref=e55]
+              - generic [ref=e56]: Leave Calories empty to auto-calculate from Protein, Carbs, and Fat.
+            - generic [ref=e57]:
+              - generic [ref=e58]: Protein (g) (53g left)
+              - spinbutton [ref=e59]
+          - generic [ref=e60]:
+            - generic [ref=e61]:
+              - generic [ref=e62]: Carbs (g) (123g left)
+              - spinbutton [ref=e63]
+            - generic [ref=e64]:
+              - generic [ref=e65]: Fat (g) (35g left)
+              - spinbutton [ref=e66]
+          - generic [ref=e67]:
+            - generic [ref=e68]:
+              - generic [ref=e69]: Fiber (g) (30g left)
+              - spinbutton [ref=e70]
+            - generic [ref=e71]:
+              - generic [ref=e72]: Sugar (g) (50g left)
+              - spinbutton [ref=e73]
+            - generic [ref=e74]:
+              - generic [ref=e75]: Sodium (mg) (2300mg left)
+              - spinbutton [ref=e76]
+          - generic [ref=e77]:
+            - generic [ref=e78]: Serving Size
+            - textbox "e.g., 200g" [ref=e79]
+          - generic [ref=e80]:
+            - checkbox "Save as favorite" [ref=e81]
+            - generic [ref=e82]: Save as favorite
+          - button "Log Food" [ref=e83] [cursor=pointer]
+        - generic [ref=e84]:
+          - generic [ref=e85]:
+            - generic [ref=e86]: Recent Food
+            - button "Clear Today" [ref=e87] [cursor=pointer]
+          - generic [ref=e88]:
+            - generic: 🔍
+            - textbox "Search food..." [ref=e89]
+          - list [ref=e90]:
+            - generic [ref=e91]:
+              - generic [ref=e92]:
+                - generic [ref=e93]: Custom Lentil Dinner1:28 AM
+                - generic [ref=e94]: Apr 9 • dinner • 340g • P28 C42 F10
+              - generic [ref=e95]:
+                - generic [ref=e96]: 370 cal
+                - generic [ref=e97]:
+                  - button "🔄" [ref=e98] [cursor=pointer]
+                  - button "✏️" [ref=e99] [cursor=pointer]
+                  - button "✕" [ref=e100] [cursor=pointer]
+            - generic [ref=e101]:
+              - generic [ref=e102]:
+                - generic [ref=e103]: Chicken Rice Plate1:28 AM
+                - generic [ref=e104]: Apr 9 • lunch • 1 plate • P45 C55 F12
+              - generic [ref=e105]:
+                - generic [ref=e106]: 508 cal
+                - generic [ref=e107]:
+                  - button "🔄" [ref=e108] [cursor=pointer]
+                  - button "✏️" [ref=e109] [cursor=pointer]
+                  - button "✕" [ref=e110] [cursor=pointer]
+            - generic [ref=e111]:
+              - generic [ref=e112]:
+                - generic [ref=e113]: Greek Yogurt Bowl1:28 AM
+                - generic [ref=e114]: Apr 9 • breakfast • 220g • P24 C30 F8
+              - generic [ref=e115]:
+                - generic [ref=e116]: 288 cal
+                - generic [ref=e117]:
+                  - button "🔄" [ref=e118] [cursor=pointer]
+                  - button "✏️" [ref=e119] [cursor=pointer]
+                  - button "✕" [ref=e120] [cursor=pointer]
+  - generic:
+    - generic:
+      - generic: Quick Add
+      - button "Quick add food": 🍎
+    - generic:
+      - generic: Workout
+      - button "Log workout": 🏋️
+    - generic:
+      - generic: Bodyweight
+      - button "Quick add bodyweight": ⚖️
+    - generic:
+      - generic: Water
+      - button "Add water": 💧
+  - button "Quick actions menu":
+    - img
+  - tablist "Main navigation" [ref=e121]:
+    - tab "Dashboard" [ref=e122] [cursor=pointer]:
+      - generic [ref=e123]: dashboard
+      - text: Dashboard
+    - tab "Workouts" [selected] [ref=e124] [cursor=pointer]:
+      - generic [ref=e125]: fitness_center
+      - text: Workouts
+    - tab "Stats" [ref=e126] [cursor=pointer]:
+      - generic [ref=e127]: equalizer
+      - text: Stats
+    - tab "Profile" [ref=e128] [cursor=pointer]:
+      - generic [ref=e129]: person
+      - text: Profile
+```

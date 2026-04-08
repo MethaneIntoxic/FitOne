@@ -3,6 +3,127 @@
 let _selectedPlanProtocolId = "";
 let _planWeeksTouched = false;
 let _latestGeneratedPlan = null;
+let _plannerWeekOffset = 0;
+
+function plannerWeekStartDate(offsetWeeks) {
+  const now = new Date();
+  const day = (now.getDay() + 6) % 7; // Monday-based week
+  now.setHours(0, 0, 0, 0);
+  now.setDate(now.getDate() - day + (Number(offsetWeeks) || 0) * 7);
+  return now;
+}
+
+function plannerDateRange(offsetWeeks) {
+  const start = plannerWeekStartDate(offsetWeeks);
+  const dates = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    dates.push(localDateStr(d));
+  }
+  return dates;
+}
+
+function plannerProtocolOptions(selectedId) {
+  const user = loadData(KEYS.protocols).map(function (p) {
+    return { id: p.id, name: p.name, source: "my" };
+  });
+  const starter = (window.STARTER_ROUTINES || []).map(function (p) {
+    return { id: p.id, name: p.name, source: "starter" };
+  });
+  const merged = user.concat(starter);
+  const selected = String(selectedId || "");
+  return ['<option value="">Rest / Unscheduled</option>']
+    .concat(
+      merged.map(function (item) {
+        const isSelected = item.id === selected ? " selected" : "";
+        const source = item.source === "starter" ? "Starter" : "My";
+        return '<option value="' + escAttr(item.id) + '"' + isSelected + '>[' + source + '] ' + esc(item.name || "Protocol") + "</option>";
+      })
+    )
+    .join("");
+}
+
+function upsertDayPlan(date, protocolId, notes) {
+  const day = String(date || "").trim();
+  if (!day) return;
+
+  const protocols = getPlanProtocolCollection();
+  const selected = protocols.find(function (p) { return p.id === protocolId; });
+  const payload = {
+    id: "dayplan|" + day,
+    timestamp: Date.now(),
+    date: day,
+    protocolId: protocolId || "",
+    protocolName: selected && selected.name ? selected.name : "",
+    notes: String(notes || "").trim(),
+  };
+
+  const rows = loadData(KEYS.dayPlans).filter(function (row) {
+    return String((row && row.date) || "") !== day;
+  });
+
+  if (payload.protocolId || payload.notes) rows.push(payload);
+  saveData(KEYS.dayPlans, rows);
+
+  if (typeof window.notifyDataChanged === "function") {
+    window.notifyDataChanged({ source: "planner", reason: "dayPlan" });
+  }
+}
+
+function renderWeeklyPlannerCard() {
+  const panel = $("protocols-list");
+  if (!panel) return;
+
+  let card = $("weeklyPlannerCard");
+  if (!card) {
+    card = document.createElement("div");
+    card.className = "card";
+    card.id = "weeklyPlannerCard";
+    const protocolList = $("protocolList");
+    if (protocolList && protocolList.parentElement === panel) {
+      panel.insertBefore(card, protocolList);
+    } else {
+      panel.appendChild(card);
+    }
+  }
+
+  const dates = plannerDateRange(_plannerWeekOffset);
+  const plans = loadData(KEYS.dayPlans);
+  const byDate = {};
+  plans.forEach(function (row) {
+    if (!row || !row.date) return;
+    byDate[String(row.date)] = row;
+  });
+
+  const startLabel = fmtDate(dates[0]);
+  const endLabel = fmtDate(dates[6]);
+  const rows = dates.map(function (dateStr) {
+    const existing = byDate[dateStr] || {};
+    const notes = String(existing.notes || "");
+    return (
+      '<div class="planner-row">' +
+        '<div class="planner-row-date">' + esc(fmtDate(dateStr)) + '</div>' +
+        '<div class="planner-row-fields">' +
+          '<select data-plan-date="' + escAttr(dateStr) + '">' + plannerProtocolOptions(existing.protocolId || "") + '</select>' +
+          '<input type="text" data-plan-note="' + escAttr(dateStr) + '" value="' + escAttr(notes) + '" placeholder="Notes (focus, time, reminders)">' +
+        '</div>' +
+      '</div>'
+    );
+  }).join("");
+
+  card.innerHTML =
+    '<div class="flex-between mb-8">' +
+      '<div class="card-title">Weekly Planning</div>' +
+      '<div class="text-xs">' + esc(startLabel + " - " + endLabel) + '</div>' +
+    '</div>' +
+    '<div class="stat-row mb-8">' +
+      '<button class="btn btn-outline btn-sm" id="plannerPrevWeekBtn">Previous</button>' +
+      '<button class="btn btn-outline btn-sm" id="plannerThisWeekBtn">This Week</button>' +
+      '<button class="btn btn-outline btn-sm" id="plannerNextWeekBtn">Next</button>' +
+    '</div>' +
+    '<div class="planner-list">' + rows + '</div>';
+}
 
 function normalizePlanLevelLocal(value) {
   if (typeof window.normalizePlanExperienceLevel === "function") {
@@ -266,12 +387,91 @@ function quickGeneratePlanForProtocol(protocolId) {
   generatePeriodizedPlanFromUI(id);
 }
 
+function importStarterProgram(starterId) {
+  const id = String(starterId || "").trim();
+  if (!id) return;
+
+  const starter = (window.STARTER_ROUTINES || []).find((row) => row.id === id);
+  if (!starter) {
+    showToast("Starter program not found", "warning");
+    return;
+  }
+
+  const protocols = loadData(KEYS.protocols);
+  const duplicate = protocols.find((row) => row.baseRoutineId === starter.id || row.name === starter.name);
+  if (duplicate) {
+    showToast("Program already imported", "info");
+    return;
+  }
+
+  const exercises = (starter.exercises || []).map((ex) => ({
+    name: ex.name,
+    sets: Number(ex.sets) || 0,
+    reps: Number(ex.reps) || 0,
+    weight: Number(ex.weight) || 0,
+    targetReps: Number(ex.reps) || null,
+    targetWeight: Number(ex.weight) || null,
+    targetRPE: Number(ex.rpe) || null,
+  }));
+
+  const plannedSets = exercises.map((ex, idx) => ({
+    id: uid(),
+    exerciseId: String(ex.name || "").toLowerCase(),
+    exerciseName: ex.name,
+    setIndex: idx + 1,
+    targetReps: ex.targetReps,
+    targetWeight: ex.targetWeight,
+    targetRPE: ex.targetRPE,
+  }));
+
+  protocols.push({
+    id: uid(),
+    name: starter.name,
+    description: starter.description || "",
+    exercises,
+    plannedSets,
+    createdAt: Date.now(),
+    version: 1,
+    baseRoutineId: starter.id,
+    category: starter.category || "STRENGTH",
+    level: starter.level || "Beginner",
+    duration: Number(starter.duration) || 45,
+  });
+
+  saveData(KEYS.protocols, protocols);
+  refreshProtocols();
+  if (typeof refreshLibrary === "function") refreshLibrary();
+  if (typeof window.notifyDataChanged === "function") {
+    window.notifyDataChanged({ source: "protocols", reason: "importStarterProgram" });
+  }
+  showToast("Program imported: " + starter.name, "success");
+}
+
+function renderRecommendedProgramsHtml() {
+  const recommended = (window.STARTER_ROUTINES || []).filter((row) => row && row.isRecommendedProgram).slice(0, 4);
+  if (!recommended.length) return "";
+
+  return '<div class="recommended-programs-list">' + recommended.map((row) => {
+    const freq = Number(row.daysPerWeek) || 3;
+    return '<div class="recommended-program-item">' +
+      '<div class="title">' + esc(row.name) + '</div>' +
+      '<div class="meta">' + esc(row.level || "Beginner") + ' • ' + freq + ' days/week • ' + Math.max(20, Number(row.duration) || 45) + ' min</div>' +
+      '<div class="copy">' + esc(row.description || "") + '</div>' +
+      '<button class="btn btn-outline btn-sm mt-8" data-import-starter="' + escAttr(row.id) + '">Import Program</button>' +
+    '</div>';
+  }).join("") + '</div>';
+}
+
 
 // ========== REFRESH ==========
 function refreshProtocols() {
   const protocols = loadData(KEYS.protocols);
   if (!protocols.length) {
-    $("protocolList").innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No protocols yet</div><button class="btn btn-primary btn-sm" data-action="newProtocol">Create your first protocol</button></div>';
+    $("protocolList").innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No protocols yet</div><button class="btn btn-primary btn-sm" data-action="newProtocol">Create your first protocol</button></div>' +
+      '<div class="card mt-12"><div class="card-title">Recommended Programs</div><div class="text-xs" style="color:var(--text2)">Import a starter template built for beginner and intermediate progression.</div>' +
+      renderRecommendedProgramsHtml() +
+      '</div>';
+    renderWeeklyPlannerCard();
     renderPlanGeneratorCard();
     return;
   }
@@ -293,6 +493,7 @@ function refreshProtocols() {
         '<div class="text-xs mt-8">Planned sets: ' + ((p.plannedSets || []).length || 0) + "</div></div>"
     )
     .join("");
+  renderWeeklyPlannerCard();
   renderPlanGeneratorCard();
 }
 
@@ -485,14 +686,29 @@ function saveProtocol() {
 }
 
 function deleteProtocol(id) {
-  showConfirmModal("Delete Protocol", "📋", "Remove this workout protocol? This cannot be undone.", () => {
-    const data = loadData(KEYS.protocols).filter((p) => p.id !== id);
+  showConfirmModal("Delete Protocol", "📋", "Remove this workout protocol? You will have 5 seconds to undo.", () => {
+    const protocols = loadData(KEYS.protocols);
+    const idx = protocols.findIndex((p) => p.id === id);
+    if (idx < 0) return;
+    const removed = protocols[idx];
+    const data = protocols.filter((p) => p.id !== id);
     saveData(KEYS.protocols, data);
     refreshProtocols();
     if (typeof window.notifyDataChanged === "function") {
       window.notifyDataChanged({ source: "protocols", reason: "deleteProtocol" });
     }
-    showToast("Protocol deleted");
+    showUndoToast("Protocol deleted", () => {
+      const current = loadData(KEYS.protocols);
+      const next = current.slice();
+      if (!next.some((p) => p.id === removed.id)) {
+        next.splice(Math.max(0, Math.min(idx, next.length)), 0, removed);
+      }
+      saveData(KEYS.protocols, next);
+      refreshProtocols();
+      if (typeof window.notifyDataChanged === "function") {
+        window.notifyDataChanged({ source: "protocols", reason: "undoDeleteProtocol" });
+      }
+    });
   });
 }
 
@@ -682,6 +898,25 @@ function initProtocolEvents() {
   if (!panel) return;
 
   panel.addEventListener("click", (e) => {
+    const plannerPrev = e.target.closest("#plannerPrevWeekBtn");
+    if (plannerPrev) {
+      _plannerWeekOffset -= 1;
+      renderWeeklyPlannerCard();
+      return;
+    }
+    const plannerNext = e.target.closest("#plannerNextWeekBtn");
+    if (plannerNext) {
+      _plannerWeekOffset += 1;
+      renderWeeklyPlannerCard();
+      return;
+    }
+    const plannerThis = e.target.closest("#plannerThisWeekBtn");
+    if (plannerThis) {
+      _plannerWeekOffset = 0;
+      renderWeeklyPlannerCard();
+      return;
+    }
+
     const openRoutine = e.target.closest("[data-open-routine]");
     if (openRoutine) { openRoutineDetail(openRoutine.dataset.openRoutine); return; }
     const useBtn = e.target.closest("[data-use-protocol]");
@@ -690,6 +925,8 @@ function initProtocolEvents() {
     if (planBtn) { quickGeneratePlanForProtocol(planBtn.dataset.generatePlan); return; }
     const delBtn = e.target.closest("[data-delete-protocol]");
     if (delBtn) { deleteProtocol(delBtn.dataset.deleteProtocol); return; }
+    const importBtn = e.target.closest("[data-import-starter]");
+    if (importBtn) { importStarterProgram(importBtn.dataset.importStarter); return; }
     const actionBtn = e.target.closest("[data-action]");
     if (actionBtn && actionBtn.dataset.action === "generatePlan") {
       generatePeriodizedPlanFromUI();
@@ -703,7 +940,23 @@ function initProtocolEvents() {
 
   panel.addEventListener("change", function (e) {
     const target = e.target;
-    if (!target || !target.id) return;
+    if (!target) return;
+
+    if (target.hasAttribute("data-plan-date")) {
+      const date = target.getAttribute("data-plan-date") || "";
+      const noteInput = panel.querySelector('[data-plan-note="' + date + '"]');
+      upsertDayPlan(date, target.value || "", noteInput ? noteInput.value : "");
+      return;
+    }
+
+    if (target.hasAttribute("data-plan-note")) {
+      const date = target.getAttribute("data-plan-note") || "";
+      const select = panel.querySelector('[data-plan-date="' + date + '"]');
+      upsertDayPlan(date, select ? select.value : "", target.value || "");
+      return;
+    }
+
+    if (!target.id) return;
 
     if (target.id === "planProtocolSelect") {
       _selectedPlanProtocolId = String(target.value || "").trim();
@@ -729,6 +982,13 @@ function initProtocolEvents() {
   panel.addEventListener("input", function (e) {
     if (e.target && e.target.id === "planWeeksInput") {
       _planWeeksTouched = true;
+      return;
+    }
+
+    if (e.target && e.target.hasAttribute("data-plan-note")) {
+      const date = e.target.getAttribute("data-plan-note") || "";
+      const select = panel.querySelector('[data-plan-date="' + date + '"]');
+      upsertDayPlan(date, select ? select.value : "", e.target.value || "");
     }
   });
 
@@ -797,6 +1057,7 @@ function useProtocol(id) {
         '<button class="btn btn-outline btn-sm dense-col-2" data-remove-row>✕</button>';
     }
     $("exerciseRows").appendChild(row);
+    if (typeof enableExerciseRowDragAndDrop === "function") enableExerciseRowDragAndDrop(row);
     row.querySelector("[data-remove-row]").addEventListener("click", () => row.remove());
     if (typeof bindExerciseInputShortcuts === "function") bindExerciseInputShortcuts(row);
     if (typeof bindExerciseRowAdvancedToggle === "function") bindExerciseRowAdvancedToggle(row, n);

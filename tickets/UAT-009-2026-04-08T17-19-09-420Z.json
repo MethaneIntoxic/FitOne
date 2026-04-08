@@ -1,0 +1,18 @@
+{
+  "id": "T-UAT-009-1",
+  "scenarioId": "UAT-009",
+  "scenarioTitle": "Time-flexible session logging",
+  "persona": "Ravi – shift worker",
+  "category": "Strength",
+  "mode": "power",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Log a short session quickly from Log tab and verify it appears in Today + Recent.",
+  "expectedSummary": "Session persists with duration/type and updates workout cards immediately.",
+  "actualResult": "Error: expect(locator).toBeVisible() failed",
+  "errorMessage": "Error: expect(locator).toBeVisible() failed\n\nLocator:  locator('#app')\nExpected: visible\nReceived: hidden\nTimeout:  7000ms\n\nCall log:\n  - Expect \"toBeVisible\" with timeout 7000ms\n  - waiting for locator('#app')\n    11 × locator resolved to <div id=\"app\" class=\"app app-hidden\">…</div>\n       - unexpected value \"hidden\"\n",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-009-–-Time-flexible-session-logging-UAT-009-chromium-retry1\\test-failed-1.png",
+  "createdAt": "2026-04-08T17:19:09.420Z"
+}

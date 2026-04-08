@@ -1,0 +1,18 @@
+{
+  "id": "T-UAT-015-1",
+  "scenarioId": "UAT-015",
+  "scenarioTitle": "Performance baseline on static SPA",
+  "persona": "QA benchmark runner",
+  "category": "Performance",
+  "mode": "beginner",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Open app, switch major tabs, and verify UI becomes interactive quickly.",
+  "expectedSummary": "Critical surfaces render in expected time budget and remain responsive.",
+  "actualResult": "Error: expect(locator).toBeVisible() failed",
+  "errorMessage": "Error: expect(locator).toBeVisible() failed\n\nLocator:  locator('#app')\nExpected: visible\nReceived: hidden\nTimeout:  7000ms\n\nCall log:\n  - Expect \"toBeVisible\" with timeout 7000ms\n  - waiting for locator('#app')\n    11 × locator resolved to <div id=\"app\" class=\"app app-hidden\">…</div>\n       - unexpected value \"hidden\"\n",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-015-–-Performance-baseline-on-static-SPA-UAT-015-chromium-retry1\\test-failed-1.png",
+  "createdAt": "2026-04-08T17:20:48.559Z"
+}

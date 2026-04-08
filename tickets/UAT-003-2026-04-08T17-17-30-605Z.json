@@ -1,0 +1,18 @@
+{
+  "id": "T-UAT-003-1",
+  "scenarioId": "UAT-003",
+  "scenarioTitle": "First body check-in and goal alignment",
+  "persona": "Amira – new to tracking",
+  "category": "Onboarding",
+  "mode": "beginner",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Set body goal and log first body measurement with notes.",
+  "expectedSummary": "Body history records the entry and reflects selected units/goals cleanly.",
+  "actualResult": "Error: expect(locator).toBeVisible() failed",
+  "errorMessage": "Error: expect(locator).toBeVisible() failed\n\nLocator:  locator('#app')\nExpected: visible\nReceived: hidden\nTimeout:  7000ms\n\nCall log:\n  - Expect \"toBeVisible\" with timeout 7000ms\n  - waiting for locator('#app')\n    11 × locator resolved to <div id=\"app\" class=\"app app-hidden\">…</div>\n       - unexpected value \"hidden\"\n",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-003-–-First-body-check-in-and-goal-alignment-UAT-003-chromium-retry1\\test-failed-1.png",
+  "createdAt": "2026-04-08T17:17:30.605Z"
+}

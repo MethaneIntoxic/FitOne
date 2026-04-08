@@ -84,10 +84,195 @@ const KEYS = {
   mealTemplates: "ft_meal_templates",
   wellness: "ft_wellness",
   tdee: "ft_tdee",
+  syncOps: "ft_sync_ops",
+  webhookQueue: "ft_webhook_queue",
+  backupSnapshots: "ft_backup_snapshots",
+  xpProfile: "ft_xp_profile",
+  challengeHistory: "ft_challenge_history",
+  challenges: "ft_challenges",
 };
+
+const ENTITY_KEYS = Object.values(KEYS).filter((key) => key !== KEYS.settings);
+const ENTITY_DB_NAME = "fitone_entities_v1";
+const ENTITY_DB_STORE = "entities";
+
+let _entityStoreCache = Object.create(null);
+let _entityDbPromise = null;
+let _entityHydrated = false;
+
+function cloneStoreValue(value) {
+  if (typeof value === "undefined") return value;
+  try {
+    return JSON.parse(JSON.stringify(value));
+  } catch {
+    if (Array.isArray(value)) return value.slice();
+    if (value && typeof value === "object") return { ...value };
+    return value;
+  }
+}
+
+function isEntityKey(key) {
+  return key !== KEYS.settings;
+}
+
+function seedEntityCacheFromLocalStorage() {
+  ENTITY_KEYS.forEach(function (key) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw == null) return;
+      _entityStoreCache[key] = JSON.parse(raw);
+    } catch {
+      _entityStoreCache[key] = [];
+    }
+  });
+}
+
+function openEntityDb() {
+  if (typeof indexedDB === "undefined") {
+    return Promise.reject(new Error("IndexedDB unavailable"));
+  }
+
+  if (_entityDbPromise) return _entityDbPromise;
+
+  _entityDbPromise = new Promise(function (resolve, reject) {
+    const req = indexedDB.open(ENTITY_DB_NAME, 1);
+    req.onupgradeneeded = function () {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(ENTITY_DB_STORE)) {
+        db.createObjectStore(ENTITY_DB_STORE, { keyPath: "key" });
+      }
+    };
+    req.onsuccess = function () {
+      resolve(req.result);
+    };
+    req.onerror = function () {
+      reject(req.error || new Error("IndexedDB open failed"));
+    };
+  });
+
+  return _entityDbPromise;
+}
+
+function writeEntityRecord(key, value) {
+  return openEntityDb().then(function (db) {
+    return new Promise(function (resolve, reject) {
+      const tx = db.transaction(ENTITY_DB_STORE, "readwrite");
+      tx.objectStore(ENTITY_DB_STORE).put({ key: key, value: cloneStoreValue(value), updatedAt: Date.now() });
+      tx.oncomplete = function () {
+        resolve(true);
+      };
+      tx.onerror = function () {
+        reject(tx.error || new Error("IndexedDB write failed"));
+      };
+    });
+  });
+}
+
+function loadEntityRecords() {
+  return openEntityDb().then(function (db) {
+    return new Promise(function (resolve, reject) {
+      const tx = db.transaction(ENTITY_DB_STORE, "readonly");
+      const req = tx.objectStore(ENTITY_DB_STORE).getAll();
+      req.onsuccess = function () {
+        resolve(Array.isArray(req.result) ? req.result : []);
+      };
+      req.onerror = function () {
+        reject(req.error || new Error("IndexedDB read failed"));
+      };
+    });
+  });
+}
+
+function clearEntityStore() {
+  _entityStoreCache = Object.create(null);
+  ENTITY_KEYS.forEach(function (key) {
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      /* ignore */
+    }
+  });
+
+  return openEntityDb()
+    .then(function (db) {
+      return new Promise(function (resolve, reject) {
+        const tx = db.transaction(ENTITY_DB_STORE, "readwrite");
+        tx.objectStore(ENTITY_DB_STORE).clear();
+        tx.oncomplete = function () {
+          resolve(true);
+        };
+        tx.onerror = function () {
+          reject(tx.error || new Error("IndexedDB clear failed"));
+        };
+      });
+    })
+    .catch(function () {
+      return false;
+    });
+}
+
+if (typeof window !== "undefined") {
+  window.clearEntityStore = clearEntityStore;
+}
+
+function hydrateEntityStoreFromIndexedDb() {
+  loadEntityRecords()
+    .then(function (rows) {
+      const dbMap = Object.create(null);
+      rows.forEach(function (row) {
+        if (!row || !row.key) return;
+        dbMap[row.key] = row.value;
+      });
+
+      const writes = [];
+      ENTITY_KEYS.forEach(function (key) {
+        if (Object.prototype.hasOwnProperty.call(dbMap, key)) {
+          _entityStoreCache[key] = cloneStoreValue(dbMap[key]);
+          return;
+        }
+
+        if (Object.prototype.hasOwnProperty.call(_entityStoreCache, key)) {
+          writes.push(writeEntityRecord(key, _entityStoreCache[key]));
+        }
+      });
+
+      Promise.all(writes)
+        .catch(function () {
+          /* ignore seed write errors */
+        })
+        .finally(function () {
+          ENTITY_KEYS.forEach(function (key) {
+            try {
+              localStorage.removeItem(key);
+            } catch {
+              /* ignore */
+            }
+          });
+          _entityHydrated = true;
+          if (typeof window !== "undefined" && typeof window.dispatchEvent === "function") {
+            window.dispatchEvent(new CustomEvent("fitone:entityStoreReady", { detail: { source: "indexeddb" } }));
+          }
+        });
+    })
+    .catch(function () {
+      _entityHydrated = true;
+      if (typeof window !== "undefined" && typeof window.dispatchEvent === "function") {
+        window.dispatchEvent(new CustomEvent("fitone:entityStoreReady", { detail: { source: "localstorage" } }));
+      }
+    });
+}
+
+seedEntityCacheFromLocalStorage();
+hydrateEntityStoreFromIndexedDb();
 
 // ========== STORAGE READ/WRITE ==========
 function loadData(key) {
+  if (isEntityKey(key)) {
+    const value = _entityStoreCache[key];
+    if (typeof value === "undefined") return [];
+    return cloneStoreValue(value);
+  }
+
   try {
     return JSON.parse(localStorage.getItem(key)) || [];
   } catch {
@@ -96,6 +281,38 @@ function loadData(key) {
 }
 
 function saveData(key, data) {
+  if (isEntityKey(key)) {
+    const payload = cloneStoreValue(data);
+    _entityStoreCache[key] = payload;
+
+    if (!_entityHydrated) {
+      try {
+        localStorage.setItem(key, JSON.stringify(payload));
+      } catch {
+        /* ignore */
+      }
+    }
+
+    writeEntityRecord(key, payload)
+      .then(function () {
+        if (_entityHydrated) {
+          try {
+            localStorage.removeItem(key);
+          } catch {
+            /* ignore */
+          }
+        }
+      })
+      .catch(function () {
+        try {
+          localStorage.setItem(key, JSON.stringify(payload));
+        } catch {
+          showToast("Storage full! Clear old data.", "error");
+        }
+      });
+    return;
+  }
+
   try {
     localStorage.setItem(key, JSON.stringify(data));
   } catch (e) {
@@ -122,6 +339,9 @@ function defaultSettings() {
     measureUnit: "cm",
     darkMode: true,
     experienceLevel: "beginner",
+    uiComplexityMode: "auto",
+    accentColor: "#8B5CF6",
+    hapticsEnabled: true,
     bodyGoal: "maintain",
     localOnlyMode: true,
     localOnlyStrictMode: true,
@@ -136,6 +356,19 @@ function defaultSettings() {
     aiModulesEnabled: false,
     socialEnabled: false,
     disableCooldownSuggestions: false,
+    pwaInstallPromptEnabled: true,
+    pwaUpdateAutoApply: false,
+    autoBackupEnabled: false,
+    autoBackupFrequencyDays: 7,
+    autoBackupLastRunAt: 0,
+    webhookEnabled: false,
+    webhookUrl: "",
+    webhookEvents: ["food_logged", "workout_logged", "body_logged", "water_logged", "goal_completed", "wellness_saved"],
+    connectedWearables: [],
+    competitionName: "",
+    competitionDate: "",
+    competitionDivision: "",
+    plannerDefaultProtocolId: "",
     gyms: [],
     // W15.1 Profile Identity
     displayName: "",
@@ -179,19 +412,13 @@ function updateSettings(newSettings) {
 
 // ========== TDEE DATA ==========
 function loadTDEEData() {
-  try {
-    return JSON.parse(localStorage.getItem(KEYS.tdee));
-  } catch {
-    return null;
-  }
+  const value = loadData(KEYS.tdee);
+  if (!value || Array.isArray(value)) return null;
+  return value;
 }
 
 function saveTDEEData(data) {
-  try {
-    localStorage.setItem(KEYS.tdee, JSON.stringify(data));
-  } catch (e) {
-    /* silent */
-  }
+  saveData(KEYS.tdee, data || null);
 }
 
 function ensureRoutineMigrations() {
@@ -1617,4 +1844,469 @@ function getLast14Days() {
     days.push(localDateStr(d));
   }
   return days;
+}
+
+// ========== EXPERIENCE + HAPTICS ==========
+function normalizeExperienceLevel(value) {
+  const raw = String(value || "").toLowerCase().trim();
+  if (raw === "intermediate" || raw === "advanced" || raw === "competitor") return raw;
+  return "beginner";
+}
+
+function getEffectiveExperienceLevel() {
+  const selected = normalizeExperienceLevel(settings.experienceLevel || "beginner");
+  const mode = String(settings.uiComplexityMode || "auto").toLowerCase();
+
+  if (mode === "simple") return "beginner";
+  if (mode === "full") return selected;
+
+  const workoutsScore = loadData(KEYS.workouts).length * 2;
+  const foodScore = Math.floor(loadData(KEYS.food).length / 4);
+  const bodyScore = loadData(KEYS.body).length;
+  const score = workoutsScore + foodScore + bodyScore;
+
+  if (selected === "competitor" || score >= 240) return "competitor";
+  if (selected === "advanced" || score >= 120) return "advanced";
+  if (selected === "intermediate" || score >= 40) return "intermediate";
+  return "beginner";
+}
+
+function triggerHaptic(pattern) {
+  if (!settings.hapticsEnabled || !navigator || typeof navigator.vibrate !== "function") return false;
+
+  const map = {
+    light: [12],
+    success: [20, 30, 20],
+    warning: [30, 45, 30],
+    heavy: [60, 40, 60],
+  };
+
+  const sequence = Array.isArray(pattern) ? pattern : (map[String(pattern || "").toLowerCase()] || map.light);
+  try {
+    navigator.vibrate(sequence);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// ========== GAMIFICATION ==========
+function defaultXpProfile() {
+  return {
+    level: 1,
+    xp: 0,
+    totalEarned: 0,
+    lastAwardAt: 0,
+    history: [],
+  };
+}
+
+function loadXpProfile() {
+  const raw = loadData(KEYS.xpProfile);
+  if (!raw || Array.isArray(raw)) return defaultXpProfile();
+  return { ...defaultXpProfile(), ...raw };
+}
+
+function saveXpProfile(profile) {
+  saveData(KEYS.xpProfile, profile || defaultXpProfile());
+}
+
+function getXpRequiredForLevel(level) {
+  const lv = Math.max(1, Number(level) || 1);
+  return Math.round(80 + Math.pow(lv, 1.35) * 40);
+}
+
+function grantXP(amount, reason, meta) {
+  const gain = Math.max(0, Math.round(Number(amount) || 0));
+  if (!gain) {
+    return {
+      profile: loadXpProfile(),
+      gained: 0,
+      leveledUp: false,
+      levelsGained: 0,
+      reason: reason || "",
+    };
+  }
+
+  const profile = loadXpProfile();
+  profile.totalEarned = Math.max(0, Number(profile.totalEarned) || 0) + gain;
+  profile.xp = Math.max(0, Number(profile.xp) || 0) + gain;
+  profile.lastAwardAt = Date.now();
+
+  let levelsGained = 0;
+  while (profile.xp >= getXpRequiredForLevel(profile.level)) {
+    profile.xp -= getXpRequiredForLevel(profile.level);
+    profile.level += 1;
+    levelsGained += 1;
+  }
+
+  profile.history = (profile.history || [])
+    .concat({
+      ts: Date.now(),
+      gained: gain,
+      reason: String(reason || "activity"),
+      meta: meta || null,
+    })
+    .slice(-80);
+
+  saveXpProfile(profile);
+  return {
+    profile,
+    gained: gain,
+    leveledUp: levelsGained > 0,
+    levelsGained,
+    reason: String(reason || "activity"),
+  };
+}
+
+function getDailyChallengeSnapshot(dateStr) {
+  const day = dateStr || today();
+  const food = loadData(KEYS.food).filter((row) => row.date === day);
+  const workouts = loadData(KEYS.workouts).filter((row) => row.date === day);
+  const water = loadData(KEYS.water)
+    .filter((row) => row.date === day)
+    .reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
+  const protein = food.reduce((sum, row) => sum + (Number(row.protein) || 0), 0);
+
+  const challenges = [
+    {
+      id: "food-3",
+      label: "Log 3 meals",
+      xp: 20,
+      target: 3,
+      value: food.length,
+    },
+    {
+      id: "workout-1",
+      label: "Complete 1 workout",
+      xp: 40,
+      target: 1,
+      value: workouts.length,
+    },
+    {
+      id: "water-goal",
+      label: "Hit hydration goal",
+      xp: 25,
+      target: Math.max(1, Number(settings.waterGoal) || 2000),
+      value: water,
+      unit: "ml",
+    },
+    {
+      id: "protein-goal",
+      label: "Hit protein goal",
+      xp: 30,
+      target: Math.max(1, Number(settings.proteinGoal) || 150),
+      value: protein,
+      unit: "g",
+    },
+  ];
+
+  const history = loadData(KEYS.challengeHistory);
+  const dateKey = "challenge|" + day;
+  const existing = Array.isArray(history)
+    ? history.find((row) => String(row && row.id) === dateKey)
+    : null;
+
+  const completedMap = existing && existing.completed ? existing.completed : {};
+  const completedNow = {};
+  let awardedXP = 0;
+
+  challenges.forEach((challenge) => {
+    const done = Number(challenge.value) >= Number(challenge.target);
+    const wasDone = !!completedMap[challenge.id];
+    if (done && !wasDone) {
+      awardedXP += Number(challenge.xp) || 0;
+    }
+    completedNow[challenge.id] = done || wasDone;
+    challenge.completed = completedNow[challenge.id];
+    challenge.progress = Math.min(1, Number(challenge.value) / Math.max(1, Number(challenge.target)));
+  });
+
+  if (awardedXP > 0 || !existing) {
+    const nextHistory = (Array.isArray(history) ? history.filter((row) => String(row && row.id) !== dateKey) : []).concat({
+      id: dateKey,
+      date: day,
+      completed: completedNow,
+      updatedAt: Date.now(),
+    });
+    saveData(KEYS.challengeHistory, nextHistory);
+  }
+
+  if (awardedXP > 0) {
+    grantXP(awardedXP, "daily-challenges", { date: day });
+  }
+
+  return {
+    date: day,
+    awardedXP,
+    challenges,
+  };
+}
+
+function getMonthBounds(dateStr) {
+  const ref = dateStr ? new Date(dateStr + "T00:00:00") : new Date();
+  const start = new Date(ref.getFullYear(), ref.getMonth(), 1);
+  const end = new Date(ref.getFullYear(), ref.getMonth() + 1, 0);
+  return {
+    startDate: localDateStr(start),
+    endDate: localDateStr(end),
+    monthKey: String(ref.getFullYear()) + "-" + String(ref.getMonth() + 1).padStart(2, "0"),
+    monthLabel: ref.toLocaleDateString(undefined, { month: "long", year: "numeric" }),
+  };
+}
+
+function ensureDeadlineChallenges(dateStr) {
+  const bounds = getMonthBounds(dateStr);
+  const current = loadData(KEYS.challenges);
+  const rows = Array.isArray(current) ? current.slice() : [];
+
+  const defaults = [
+    {
+      id: "deadline-workouts-" + bounds.monthKey,
+      title: "Log 20 workouts in " + bounds.monthLabel,
+      metric: "workouts",
+      target: 20,
+      xp: 180,
+      startDate: bounds.startDate,
+      endDate: bounds.endDate,
+      createdAt: Date.now(),
+      completedAt: 0,
+      rewarded: false,
+    },
+    {
+      id: "deadline-protein-days-" + bounds.monthKey,
+      title: "Hit protein goal on 25 days in " + bounds.monthLabel,
+      metric: "protein-days",
+      target: 25,
+      xp: 220,
+      startDate: bounds.startDate,
+      endDate: bounds.endDate,
+      createdAt: Date.now(),
+      completedAt: 0,
+      rewarded: false,
+    },
+  ];
+
+  let changed = false;
+  defaults.forEach(function (seed) {
+    if (!rows.some(function (row) { return row && row.id === seed.id; })) {
+      rows.push(seed);
+      changed = true;
+    }
+  });
+
+  if (changed) saveData(KEYS.challenges, rows);
+  return rows;
+}
+
+function getRangeWorkoutCount(startDate, endDate) {
+  return loadData(KEYS.workouts).filter(function (row) {
+    return row && row.date >= startDate && row.date <= endDate;
+  }).length;
+}
+
+function getRangeProteinGoalDays(startDate, endDate) {
+  const proteinGoal = Math.max(1, Number(settings.proteinGoal) || 150);
+  const totals = Object.create(null);
+  loadData(KEYS.food).forEach(function (row) {
+    if (!row || !row.date || row.date < startDate || row.date > endDate) return;
+    totals[row.date] = (Number(totals[row.date]) || 0) + (Number(row.protein) || 0);
+  });
+
+  return Object.keys(totals).filter(function (dateKey) {
+    return Number(totals[dateKey]) >= proteinGoal;
+  }).length;
+}
+
+function evaluateDeadlineChallenges(dateStr, options) {
+  const opts = options || {};
+  const allowAward = opts.award !== false;
+  const day = dateStr || today();
+  const refMs = Date.parse(day + "T00:00:00") || Date.now();
+  const rows = ensureDeadlineChallenges(day);
+
+  let changed = false;
+  let awardedXP = 0;
+
+  const evaluated = rows.map(function (row) {
+    const challenge = { ...(row || {}) };
+    const startDate = String(challenge.startDate || day);
+    const endDate = String(challenge.endDate || day);
+
+    let value = 0;
+    if (challenge.metric === "workouts") {
+      value = getRangeWorkoutCount(startDate, endDate);
+    } else if (challenge.metric === "protein-days") {
+      value = getRangeProteinGoalDays(startDate, endDate);
+    }
+
+    const target = Math.max(1, Number(challenge.target) || 1);
+    const completed = value >= target;
+    const progress = Math.min(1, value / target);
+
+    const endMs = Date.parse(endDate + "T00:00:00");
+    const remainingDays = Number.isFinite(endMs)
+      ? Math.max(0, Math.ceil((endMs - refMs) / (24 * 60 * 60 * 1000)))
+      : 0;
+
+    if (completed && !Number(challenge.completedAt)) {
+      challenge.completedAt = Date.now();
+      changed = true;
+    }
+
+    if (completed && allowAward && !challenge.rewarded) {
+      awardedXP += Math.max(0, Number(challenge.xp) || 0);
+      challenge.rewarded = true;
+      changed = true;
+    }
+
+    challenge.value = value;
+    challenge.progress = progress;
+    challenge.remainingDays = remainingDays;
+    challenge.completed = completed || !!challenge.completedAt;
+
+    return challenge;
+  });
+
+  if (changed) {
+    saveData(KEYS.challenges, evaluated);
+  }
+
+  if (awardedXP > 0) {
+    grantXP(awardedXP, "deadline-challenges", { date: day });
+  }
+
+  return {
+    date: day,
+    awardedXP: awardedXP,
+    challenges: evaluated.sort(function (a, b) {
+      const aDone = a && a.completed ? 1 : 0;
+      const bDone = b && b.completed ? 1 : 0;
+      if (aDone !== bDone) return aDone - bDone;
+      return (Number(a.remainingDays) || 0) - (Number(b.remainingDays) || 0);
+    }),
+  };
+}
+
+function getDeadlineChallengeSnapshot(dateStr, options) {
+  return evaluateDeadlineChallenges(dateStr, options || {});
+}
+
+// ========== WEBHOOKS ==========
+function sanitizeWebhookUrl(url) {
+  const raw = String(url || "").trim();
+  if (!raw) return "";
+  try {
+    const parsed = new URL(raw);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return "";
+    return parsed.toString();
+  } catch {
+    return "";
+  }
+}
+
+function loadWebhookQueue() {
+  const queue = loadData(KEYS.webhookQueue);
+  return Array.isArray(queue) ? queue : [];
+}
+
+function saveWebhookQueue(queue) {
+  saveData(KEYS.webhookQueue, Array.isArray(queue) ? queue.slice(-200) : []);
+}
+
+function shouldEmitWebhookEvent(eventName) {
+  if (!settings.webhookEnabled) return false;
+  if (!sanitizeWebhookUrl(settings.webhookUrl)) return false;
+  const configured = Array.isArray(settings.webhookEvents) ? settings.webhookEvents : [];
+  if (!configured.length) return true;
+  return configured.includes(String(eventName || ""));
+}
+
+function enqueueWebhookEvent(eventName, payload) {
+  const queue = loadWebhookQueue();
+  queue.push({
+    id: uid(),
+    ts: Date.now(),
+    event: String(eventName || "event"),
+    payload: payload || {},
+    retries: 0,
+  });
+  saveWebhookQueue(queue);
+  return queue.length;
+}
+
+async function postWebhookPayload(url, body, timeoutMs) {
+  const timeout = Math.max(1500, Number(timeoutMs) || 4500);
+  const ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+  const timer = ctrl
+    ? setTimeout(function () {
+        try {
+          ctrl.abort();
+        } catch {
+          /* ignore */
+        }
+      }, timeout)
+    : null;
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body || {}),
+      signal: ctrl ? ctrl.signal : undefined,
+    });
+    return { ok: !!(res && res.ok), status: res ? res.status : 0 };
+  } catch {
+    return { ok: false, status: 0 };
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+async function flushWebhookQueue() {
+  const url = sanitizeWebhookUrl(settings.webhookUrl);
+  if (!settings.webhookEnabled || !url) {
+    return { sent: 0, pending: loadWebhookQueue().length, skipped: true };
+  }
+  if (typeof navigator !== "undefined" && navigator.onLine === false) {
+    return { sent: 0, pending: loadWebhookQueue().length, offline: true };
+  }
+
+  const queue = loadWebhookQueue();
+  if (!queue.length) return { sent: 0, pending: 0 };
+
+  let sent = 0;
+  const keep = [];
+
+  for (let i = 0; i < queue.length; i++) {
+    const item = queue[i];
+    const result = await postWebhookPayload(url, {
+      id: item.id,
+      ts: item.ts,
+      event: item.event,
+      payload: item.payload,
+      source: "fitone",
+    });
+
+    if (result.ok) {
+      sent += 1;
+      continue;
+    }
+
+    const retries = Math.max(0, Number(item.retries) || 0) + 1;
+    if (retries <= 5) {
+      keep.push({ ...item, retries });
+    }
+  }
+
+  saveWebhookQueue(keep);
+  return { sent, pending: keep.length };
+}
+
+function emitWebhookEvent(eventName, payload) {
+  if (!shouldEmitWebhookEvent(eventName)) {
+    return Promise.resolve({ queued: false, pending: loadWebhookQueue().length });
+  }
+  enqueueWebhookEvent(eventName, payload || {});
+  return flushWebhookQueue();
 }

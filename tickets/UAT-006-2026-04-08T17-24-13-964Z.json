@@ -1,0 +1,18 @@
+{
+  "id": "T-UAT-006-1",
+  "scenarioId": "UAT-006",
+  "scenarioTitle": "First day of food tracking (Beginner)",
+  "persona": "Amira – new to tracking",
+  "category": "Nutrition",
+  "mode": "beginner",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Log breakfast/lunch/dinner including a custom food and an edited portion.",
+  "expectedSummary": "Per-meal and daily macros update correctly; portion edits are simple; no duplicate/ghost entries.",
+  "actualResult": "Error: expect(locator).toHaveCount(expected) failed",
+  "errorMessage": "Error: expect(locator).toHaveCount(expected) failed\n\nLocator:  locator('#bodyGoalSelector .goal-option')\nExpected: 3\nReceived: 4\nTimeout:  7000ms\n\nCall log:\n  - Expect \"toHaveCount\" with timeout 7000ms\n  - waiting for locator('#bodyGoalSelector .goal-option')\n    11 × locator resolved to 4 elements\n       - unexpected value \"4\"\n",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-006-–-First-day-of-food-tracking-Beginner-UAT-006-chromium-retry1\\test-failed-1.png",
+  "createdAt": "2026-04-08T17:24:13.964Z"
+}

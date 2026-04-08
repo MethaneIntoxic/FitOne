@@ -1,0 +1,18 @@
+{
+  "id": "T-UAT-009-1",
+  "scenarioId": "UAT-009",
+  "scenarioTitle": "Time-flexible session logging",
+  "persona": "Ravi – shift worker",
+  "category": "Strength",
+  "mode": "power",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Log a short session quickly from Log tab and verify it appears in Today + Recent.",
+  "expectedSummary": "Session persists with duration/type and updates workout cards immediately.",
+  "actualResult": "Test timeout of 30000ms exceeded.",
+  "errorMessage": "Test timeout of 30000ms exceeded.",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-009-–-Time-flexible-session-logging-UAT-009-chromium-retry1\\test-failed-1.png",
+  "createdAt": "2026-04-08T17:27:20.059Z"
+}

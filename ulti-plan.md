@@ -1,107 +1,50 @@
 # Ulti-Plan SSOT
 
-## 1) Vibe Translation
+## 1) Objective
 
-Goal: Continue wireframe-driven implementation in FitOne with full redesign Phase R completed (R1, R2, R3 complete) and Phase W function-level roadmap as the immediate target, while preserving the current Kinetic Obsidian UX and local-only architecture.
+Close Phase 4/5 implementation and release-gate work in FitOne while preserving the local-first architecture and current Kinetic Obsidian UX language.
 
-Chosen stack (already established in repo):
-- Frontend: Vanilla JavaScript SPA
-- Styling: CSS (Kinetic Obsidian design system)
-- Persistence: localStorage via existing dataStore abstractions
-- Assets: static SVG + existing icon system
+## 2) Current Architecture Focus
 
-Reference alignment used for this turn:
-- MDN Web SVG guidance (SVG embedding, scripting, and standards)
-- MDN localStorage behavior and origin constraints
+- Frontend: Vanilla JavaScript SPA (`index.html` + `src/**/*.js`)
+- Persistence: localStorage entities managed via `src/dataStore.js`
+- Platform layer: PWA/service worker + offline-first workflows
+- Validation stack: Playwright (e2e) + Vitest (unit)
 
-## 2) Current System Architecture Snapshot
+## 3) Synced Implementation Status
 
-Relevant modules and responsibilities:
-- src/views/exerciseDetailView.js
-  - Renders full-screen exercise detail overlay
-  - Already includes badge, title, description, PB and last-session stat circles
-- src/exerciseDatabase.js
-  - Canonical metadata source for exercise information
-- src/prTracker.js and workout history via dataStore
-  - Supplies PB and last-session values
-- styles/main.css
-  - Holds exercise-detail and routine-detail visual language
-- index.html
-  - Loads exercise detail view script globally
+Recent completion highlights (now reflected in `todo.md`):
+- Phase 4 data/sync platform: #35, #34, #37, #22, #23, #24 completed
+- Phase 4 performance and storage: #36, #48, #49 completed
+- Phase 4 architecture/tooling: #46 completed via incremental module bootstrap + Vite pipeline
+- Phase 5 adaptive/engagement/polish: #51, #52, #53, #54, #55, #56, #16, #17, #20, #21, #31, #32, #33, #41, #42, #43, #44, #45, #38, #50 completed
+- Unit test coverage (#47): vitest baseline plus analytics math coverage implemented (`tests/dataStore.unit.test.mjs`, `tests/unit/dataStore.analytics.test.mjs`)
 
-W5.3 implemented architecture extension:
-- Add a muscle-map render block inside exercise detail view:
-  - Left column: muscle groups with percentage bars
-  - Right column: body silhouette visual target
-- Data flow for muscle activations:
-  1. Try explicit per-exercise muscle activation metadata (bundled map)
-  2. Fallback heuristic from category/name if explicit map missing
-  3. Ensure safe defaults so every exercise renders without blank sections
-- Static asset:
-  - assets/body-outline.svg (front/back neutral silhouette)
-- UI section contract in modal:
-  - renderMuscleMap(exerciseName, info) returns deterministic HTML block
-  - Must remain compatible with existing modal open/close behavior
+## 4) Validation Snapshot (Current Turn)
 
-W5.4 required architecture extension:
-- Provide bundled `formTips` JSON for exercise entries in `src/exerciseDatabase.js`
-- Render a collapsible execution protocol section in `src/views/exerciseDetailView.js`
-- Ensure the protocol section remains optional and does not force expanded UI for advanced users
+- Syntax check: pass on targeted core files
+- Unit tests: pass (`npm run test:unit`)
+- Runtime smoke checks (interactive):
+  - Settings diagnostics/PWA/backup/webhook/peer-sync controls present and functional
+  - Cardio distance/pace persistence functional (`ft_workouts` + `ft_cardios` updated)
+  - Weekly planner persistence functional (`ft_day_plans` updated)
+  - Wearable sample import functional after connection
+- Legacy Playwright UAT suite remains mostly red due stale selectors/flow assumptions (outdated against current tab structure and first-run flow)
 
-## 3) Implementation Tracking
+## 5) Remaining High-Priority Work
 
-All actionable implementation tasks are tracked in `todo.md`.
+- Full release-gate regression sweep across first-run/onboarding, tab navigation, logging flows, analytics, and settings
 
-`ulti-plan.md` remains the architecture/guardrails document only.
+## 6) Guardrails
 
-Current synced checkpoint (from `todo.md`):
-- W5.1 complete
-- W5.2 complete
-- W5.3 complete
-- W5.4 complete
-- W5.5 complete
-- W5.6 complete
-- W6.1 complete
-- W6.2 complete
-- W6.3 complete
-- W7.1-W7.5 complete
-- W8.1-W8.6 complete
-- W9.1-W9.5 complete
-- W10.1-W10.4 complete
-- W11.1-W11.3 complete
-- W13.1-W13.4 complete
-- W14.1-W14.4 complete
-- W15.1-W15.5 complete
-- W16.1-W16.5 complete
-- W17.1 complete
-- W12.1 complete
-- W12.2 complete
-- R1 complete
-- R2 complete
-- R3 complete
-- Phase W complete through #5. Next target: #46 (ES Modules Migration)
+- Keep all changes backend-free and cost-free
+- Preserve local data compatibility (no breaking key migrations without bridge logic)
+- Avoid large visual-system drift from existing product language
+- Keep ticket tracking authoritative in `todo.md`
 
-## 4) DO NOT List
+## 7) Execution Order (Next)
 
-- Do not change tab structure, onboarding flow, or unrelated W phases
-- Do not regress W5.1/W5.2 modal behavior (back, close overlay, PB, last session)
-- Do not introduce paid APIs, backend dependencies, or new external services
-- Do not alter existing data keys in localStorage in a breaking way
-- Do not restyle unrelated flows outside the currently targeted panel parity slice
-- Do not add placeholder TODO code; all logic must be complete and executable
-
-## 5) Delegation Strategy
-
-Lead (this agent):
-- Final architecture decisions
-- Core implementation and integration in exerciseDetailView.js and main.css
-- Validation, regression check, todo synchronization
-
-Subagent delegation (conditional):
-- If needed for speed/isolation, one subagent may be used for pure SVG asset drafting
-- If a subagent is used, final integration and acceptance remains with Lead
-- 3-strike fix policy applies to all delegated or local changes
-
-## 6) Acceptance Criteria Source
-
-Acceptance criteria checklists are tracked in `todo.md` under W5.3.
+1. Stabilize/modernize test layer: align Playwright UAT to current UI contract and keep the Vitest suite green
+2. Run full release-gate regression pass across all tabs and first-run flows
+3. Triage and close any regression defects from the sweep
+4. Final release gate sweep and regression pass

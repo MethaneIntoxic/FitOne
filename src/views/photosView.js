@@ -219,10 +219,29 @@ function initPhotoEvents() {
     e.preventDefault();
     const id = thumb.dataset.photoId;
     showConfirmModal('Delete Photo', '📸', 'Remove this progress photo?', () => {
-      const data = loadData(KEYS.photos).filter(p => p.id !== id);
-      saveData(KEYS.photos, data);
+      const previous = loadData(KEYS.photos);
+      const next = previous.filter(p => p.id !== id);
+      if (next.length === previous.length) return;
+
+      saveData(KEYS.photos, next);
       refreshPhotos();
-      showToast('Photo deleted');
+      if (typeof window.notifyDataChanged === 'function') {
+        window.notifyDataChanged({ source: 'photos', reason: 'deletePhoto' });
+      }
+
+      if (typeof showUndoToast === 'function') {
+        showUndoToast('Photo deleted', () => {
+          saveData(KEYS.photos, previous);
+          refreshPhotos();
+          showToast('Photo restored');
+          if (typeof trackUXTelemetry === 'function') trackUXTelemetry('logging.undoCount');
+          if (typeof window.notifyDataChanged === 'function') {
+            window.notifyDataChanged({ source: 'photos', reason: 'undoDeletePhoto' });
+          }
+        });
+      } else {
+        showToast('Photo deleted');
+      }
     });
   });
 }

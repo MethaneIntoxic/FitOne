@@ -1,0 +1,18 @@
+{
+  "id": "T-UAT-012-1",
+  "scenarioId": "UAT-012",
+  "scenarioTitle": "CSV export and import mapping",
+  "persona": "Ravi – spreadsheet user",
+  "category": "Export",
+  "mode": "power",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Export CSV files and import a CSV sample through mapping UI.",
+  "expectedSummary": "At least one CSV download is produced and import commit confirms inserted rows.",
+  "actualResult": "Error: expect(locator).toBeVisible() failed",
+  "errorMessage": "Error: expect(locator).toBeVisible() failed\n\nLocator:  locator('#app')\nExpected: visible\nReceived: hidden\nTimeout:  7000ms\n\nCall log:\n  - Expect \"toBeVisible\" with timeout 7000ms\n  - waiting for locator('#app')\n    11 × locator resolved to <div id=\"app\" class=\"app app-hidden\">…</div>\n       - unexpected value \"hidden\"\n",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-012-–-CSV-export-and-import-mapping-UAT-012-chromium-retry1\\test-failed-1.png",
+  "createdAt": "2026-04-08T17:19:58.882Z"
+}

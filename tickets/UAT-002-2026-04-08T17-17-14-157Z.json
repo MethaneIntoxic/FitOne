@@ -1,0 +1,18 @@
+{
+  "id": "T-UAT-002-1",
+  "scenarioId": "UAT-002",
+  "scenarioTitle": "Privacy-first setup (Local-only strict mode)",
+  "persona": "Noah – privacy focused",
+  "category": "Privacy",
+  "mode": "beginner",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Open Settings, verify Data & Privacy details, keep Local-only + strict mode enabled.",
+  "expectedSummary": "Privacy copy clearly states on-device storage and local-only mode remains enabled.",
+  "actualResult": "Error: expect(locator).toBeVisible() failed",
+  "errorMessage": "Error: expect(locator).toBeVisible() failed\n\nLocator:  locator('#app')\nExpected: visible\nReceived: hidden\nTimeout:  7000ms\n\nCall log:\n  - Expect \"toBeVisible\" with timeout 7000ms\n  - waiting for locator('#app')\n    11 × locator resolved to <div id=\"app\" class=\"app app-hidden\">…</div>\n       - unexpected value \"hidden\"\n",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-002-–-Privacy-firs-5f683-al-only-strict-mode-UAT-002-chromium-retry1\\test-failed-1.png",
+  "createdAt": "2026-04-08T17:17:14.157Z"
+}

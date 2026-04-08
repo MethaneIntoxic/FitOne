@@ -78,6 +78,80 @@ const STARTER_ROUTINES = [
       { name: 'Lat Pulldown', sets: 2, reps: 15, weight: 40 },
       { name: 'Push-Up', sets: 2, reps: 15, weight: 0 }
     ]
+  },
+  {
+    id: 'starter_starting_strength_3x5',
+    name: 'Starting Strength 3x5',
+    description: 'Three days per week of heavy compound lifts focused on linear progression and movement mastery.',
+    level: 'Beginner',
+    category: 'STRENGTH',
+    duration: 60,
+    daysPerWeek: 3,
+    isStarter: true,
+    isRecommendedProgram: true,
+    exercises: [
+      { name: 'Barbell Squat', sets: 3, reps: 5, weight: 60 },
+      { name: 'Barbell Bench Press', sets: 3, reps: 5, weight: 45 },
+      { name: 'Deadlift', sets: 1, reps: 5, weight: 80 },
+      { name: 'Overhead Press', sets: 3, reps: 5, weight: 30 },
+      { name: 'Barbell Row', sets: 3, reps: 8, weight: 40 }
+    ]
+  },
+  {
+    id: 'starter_push_pull_legs_6d',
+    name: 'Push / Pull / Legs',
+    description: 'Classic six-day split for intermediate lifters, balancing hypertrophy volume and recovery windows.',
+    level: 'Intermediate',
+    category: 'STRENGTH',
+    duration: 70,
+    daysPerWeek: 6,
+    isStarter: true,
+    isRecommendedProgram: true,
+    exercises: [
+      { name: 'Barbell Bench Press', sets: 4, reps: 6, weight: 70 },
+      { name: 'Overhead Press', sets: 3, reps: 8, weight: 45 },
+      { name: 'Lat Pulldown', sets: 4, reps: 10, weight: 55 },
+      { name: 'Barbell Row', sets: 4, reps: 8, weight: 65 },
+      { name: 'Barbell Squat', sets: 4, reps: 6, weight: 90 },
+      { name: 'Romanian Deadlift', sets: 3, reps: 8, weight: 90 }
+    ]
+  },
+  {
+    id: 'starter_upper_lower_4d',
+    name: 'Upper / Lower 4-Day',
+    description: 'Four-day split alternating upper and lower body sessions for strength and hypertrophy progression.',
+    level: 'Intermediate',
+    category: 'STRENGTH',
+    duration: 65,
+    daysPerWeek: 4,
+    isStarter: true,
+    isRecommendedProgram: true,
+    exercises: [
+      { name: 'Incline Dumbbell Press', sets: 4, reps: 8, weight: 30 },
+      { name: 'Pull-Up', sets: 4, reps: 6, weight: 0 },
+      { name: 'Barbell Squat', sets: 4, reps: 5, weight: 85 },
+      { name: 'Leg Press', sets: 3, reps: 10, weight: 180 },
+      { name: 'Overhead Press', sets: 3, reps: 8, weight: 42 },
+      { name: 'Romanian Deadlift', sets: 3, reps: 8, weight: 95 }
+    ]
+  },
+  {
+    id: 'starter_full_body_3x',
+    name: 'Full Body 3x',
+    description: 'Beginner-friendly full body plan with manageable volume and clear progression cadence.',
+    level: 'Beginner',
+    category: 'STRENGTH',
+    duration: 50,
+    daysPerWeek: 3,
+    isStarter: true,
+    isRecommendedProgram: true,
+    exercises: [
+      { name: 'Goblet Squat', sets: 3, reps: 10, weight: 18 },
+      { name: 'Dumbbell Bench Press', sets: 3, reps: 10, weight: 18 },
+      { name: 'Lat Pulldown', sets: 3, reps: 12, weight: 40 },
+      { name: 'Romanian Deadlift', sets: 3, reps: 10, weight: 50 },
+      { name: 'Plank', sets: 3, reps: 1, weight: 45 }
+    ]
   }
 ];
 

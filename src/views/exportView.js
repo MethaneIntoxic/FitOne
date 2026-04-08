@@ -184,6 +184,206 @@ function exportGlobalJSON() {
   showToast("Global JSON exported");
 }
 
+function buildBackupSnapshot(reason) {
+  return {
+    version: 4,
+    type: "backup",
+    reason: String(reason || "manual"),
+    exported_at: new Date().toISOString(),
+    settings: loadSettings(),
+    entities: normalizeExportPayload(),
+  };
+}
+
+function saveBackupSnapshotLocally(snapshot) {
+  const history = loadData(KEYS.backupSnapshots);
+  const next = (Array.isArray(history) ? history : []).concat({
+    id: uid(),
+    exported_at: snapshot.exported_at,
+    reason: snapshot.reason,
+    size: JSON.stringify(snapshot).length,
+    snapshot: snapshot,
+  });
+  saveData(KEYS.backupSnapshots, next.slice(-20));
+}
+
+function createBackupSnapshot(options) {
+  const opts = options || {};
+  const snapshot = buildBackupSnapshot(opts.reason || "manual");
+  saveBackupSnapshotLocally(snapshot);
+
+  if (opts.download !== false) {
+    download("fitone-backup-" + today() + ".json", JSON.stringify(snapshot, null, 2), "application/json");
+  }
+
+  const next = {
+    ...settings,
+    autoBackupLastRunAt: Date.now(),
+  };
+  updateSettings(next);
+  localStorage.setItem(KEYS.settings, JSON.stringify(next));
+
+  return {
+    ok: true,
+    exportedAt: snapshot.exported_at,
+    size: JSON.stringify(snapshot).length,
+  };
+}
+
+function runScheduledBackupIfDue() {
+  if (!settings.autoBackupEnabled) return { ok: false, skipped: "disabled" };
+  const cadenceDays = Math.max(1, Number(settings.autoBackupFrequencyDays) || 7);
+  const lastRun = Number(settings.autoBackupLastRunAt) || 0;
+  const now = Date.now();
+  const dueAt = lastRun + cadenceDays * 24 * 60 * 60 * 1000;
+
+  if (lastRun && now < dueAt) {
+    return { ok: false, skipped: "not-due", dueAt: dueAt };
+  }
+
+  return createBackupSnapshot({ reason: "auto", download: false });
+}
+
+function parseDurationToMinutes(rawValue) {
+  const raw = String(rawValue || "").trim();
+  if (!raw) return 0;
+
+  if (/^\d+(\.\d+)?$/.test(raw)) {
+    return Math.max(0, Number(raw));
+  }
+
+  const hhmmss = raw.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if (hhmmss) {
+    const h = Number(hhmmss[1]) || 0;
+    const m = Number(hhmmss[2]) || 0;
+    const s = Number(hhmmss[3]) || 0;
+    return h * 60 + m + s / 60;
+  }
+
+  const iso = raw.match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/i);
+  if (iso) {
+    const h = Number(iso[1]) || 0;
+    const m = Number(iso[2]) || 0;
+    const s = Number(iso[3]) || 0;
+    return h * 60 + m + s / 60;
+  }
+
+  return 0;
+}
+
+function normalizeActivityDate(rawValue) {
+  const raw = String(rawValue || "").trim();
+  if (!raw) return today();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  const parsed = Date.parse(raw);
+  if (!Number.isFinite(parsed)) return today();
+  return localDateStr(new Date(parsed));
+}
+
+function activityRowValue(row, candidates) {
+  const keys = Object.keys(row || {});
+  const lowerMap = {};
+  keys.forEach((key) => {
+    lowerMap[String(key).toLowerCase()] = key;
+  });
+  for (let i = 0; i < candidates.length; i++) {
+    const found = lowerMap[String(candidates[i]).toLowerCase()];
+    if (found) return row[found];
+  }
+  return "";
+}
+
+function detectActivityImportSource(headers, filename) {
+  const lowered = (headers || []).map((h) => String(h || "").toLowerCase());
+  const fileName = String(filename || "").toLowerCase();
+  if (fileName.includes("strava") || lowered.includes("activity type") || lowered.includes("moving time")) return "strava";
+  if (fileName.includes("garmin") || lowered.includes("avg pace") || lowered.includes("activity type")) return "garmin";
+  return "generic";
+}
+
+function importActivityRows(rows, source) {
+  const cardios = loadData(KEYS.cardios);
+  const workouts = loadData(KEYS.workouts);
+  let imported = 0;
+
+  (rows || []).forEach((row) => {
+    const date = normalizeActivityDate(activityRowValue(row, ["Activity Date", "Date", "Start Time", "start_time"]));
+    const name = String(activityRowValue(row, ["Activity Name", "Title", "Workout Name", "Name"]) || "Cardio Session").trim();
+    const durationMin = parseDurationToMinutes(activityRowValue(row, ["Moving Time", "Elapsed Time", "Duration", "Time"]));
+
+    const distanceRaw = Number(activityRowValue(row, ["Distance", "Distance (km)", "distance_km", "distance"]));
+    const distanceKm = Number.isFinite(distanceRaw)
+      ? (distanceRaw > 200 ? distanceRaw / 1000 : distanceRaw)
+      : 0;
+    const calories = Math.max(0, Number(activityRowValue(row, ["Calories", "Energy", "calories"])) || 0);
+
+    if (!name || (!durationMin && !distanceKm && !calories)) return;
+
+    const pace = distanceKm > 0 ? durationMin / distanceKm : 0;
+    const workoutId = uid();
+    const ts = Date.now();
+
+    workouts.push({
+      id: workoutId,
+      timestamp: ts,
+      date: date,
+      name: name,
+      type: "cardio",
+      duration: Math.round(durationMin),
+      caloriesBurned: Math.round(calories),
+      notes: "Imported from " + source,
+      exercises: [],
+      protocolId: null,
+    });
+
+    cardios.push({
+      id: uid(),
+      timestamp: ts,
+      date: date,
+      workout_id: workoutId,
+      name: name,
+      duration_min: Number(durationMin.toFixed(2)),
+      distance_km: Number(distanceKm.toFixed(3)),
+      calories_burned: Math.round(calories),
+      source: source,
+      avg_pace_min_per_km: pace > 0 ? Number(pace.toFixed(2)) : 0,
+      route_points: [],
+    });
+
+    imported += 1;
+  });
+
+  if (imported > 0) {
+    saveData(KEYS.workouts, workouts);
+    saveData(KEYS.cardios, cardios);
+    if (typeof window.notifyDataChanged === "function") {
+      window.notifyDataChanged({ source: "data", reason: "import-activity", count: imported });
+    }
+  }
+
+  return imported;
+}
+
+function onActivityImportChosen(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    try {
+      const text = String((e && e.target && e.target.result) || "");
+      const parsed = parseCsv(text);
+      const source = detectActivityImportSource(parsed.headers || [], file.name || "");
+      const count = importActivityRows(parsed.rows || [], source);
+      if (count > 0) showToast("Imported " + count + " cardio rows from " + source, "success");
+      else showToast("No usable activity rows found", "warning");
+    } catch (err) {
+      showToast("Activity import failed: " + err.message, "error");
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = "";
+}
+
 function exportAllCsvFiles() {
   const entities = normalizeExportPayload();
   Object.keys(DATA_SCHEMAS).forEach((entity) => {
@@ -529,21 +729,59 @@ function printTemplate(kind) {
 }
 
 function clearAllData() {
+  const backup = {
+    settings: { ...settings },
+    onboardingComplete: localStorage.getItem("ft_onboarding_complete") || "",
+    entities: {},
+  };
+
+  Object.keys(KEYS).forEach((alias) => {
+    if (alias === "settings") return;
+    backup.entities[alias] = loadData(KEYS[alias]);
+  });
+
   showConfirmModal(
     "Delete All Data",
     "🗑️",
-    "This will permanently erase ALL your fitness data and settings.",
+    "This will erase all fitness data and settings. You will have 5 seconds to undo.",
     () => {
-      Object.values(KEYS).forEach((k) => localStorage.removeItem(k));
-      updateSettings(defaultSettings());
-      if (_loadSettingsUICallback) _loadSettingsUICallback();
-      if (typeof window.notifyDataChanged === "function") {
-        window.notifyDataChanged({ source: "data", reason: "clearAllData" });
-      } else {
-        refreshToday();
-        refreshLog();
-      }
-      showToast("All data deleted");
+      Promise.resolve(typeof window.clearEntityStore === "function" ? window.clearEntityStore() : false)
+        .finally(() => {
+          Object.values(KEYS).forEach((k) => localStorage.removeItem(k));
+          localStorage.removeItem("ft_onboarding_complete");
+          updateSettings(defaultSettings());
+          localStorage.setItem(KEYS.settings, JSON.stringify(settings));
+          if (_loadSettingsUICallback) _loadSettingsUICallback();
+          if (typeof window.notifyDataChanged === "function") {
+            window.notifyDataChanged({ source: "data", reason: "clearAllData" });
+          } else {
+            refreshToday();
+            refreshLog();
+          }
+
+          showUndoToast("All data deleted", () => {
+            Object.keys(backup.entities).forEach((alias) => {
+              const key = KEYS[alias];
+              if (!key) return;
+              saveData(key, backup.entities[alias]);
+            });
+
+            updateSettings({ ...backup.settings });
+            localStorage.setItem(KEYS.settings, JSON.stringify(settings));
+
+            if (backup.onboardingComplete) {
+              localStorage.setItem("ft_onboarding_complete", backup.onboardingComplete);
+            }
+
+            if (_loadSettingsUICallback) _loadSettingsUICallback();
+            if (typeof window.notifyDataChanged === "function") {
+              window.notifyDataChanged({ source: "data", reason: "undoClearAllData" });
+            } else {
+              refreshToday();
+              refreshLog();
+            }
+          });
+        });
     }
   );
 }
@@ -555,6 +793,7 @@ function initExportEvents() {
   if (!panel) return;
   const importFile = $("importFile");
   const programFile = $("programImportFile");
+  const activityFile = $("activityImportFile");
 
   panel.addEventListener("click", (e) => {
     const id = e.target && e.target.id;
@@ -562,6 +801,7 @@ function initExportEvents() {
     if (id === "exportGlobalJsonBtn") exportGlobalJSON();
     else if (id === "exportGlobalCsvBtn") exportAllCsvFiles();
     else if (id === "importDataBtn" && importFile) importFile.click();
+    else if (id === "importActivityCsvBtn" && activityFile) activityFile.click();
     else if (id === "deleteAllDataBtn") clearAllData();
     else if (id === "commitImportBtn") commitImport(_pendingImportType, transformMappedRows(_pendingImportType));
     else if (id === "programImportBtn" && programFile) programFile.click();
@@ -581,4 +821,8 @@ function initExportEvents() {
 
   if (importFile) importFile.addEventListener("change", onImportFileChosen);
   if (programFile) programFile.addEventListener("change", handleProgramFile);
+  if (activityFile) activityFile.addEventListener("change", onActivityImportChosen);
 }
+
+window.createBackupSnapshot = createBackupSnapshot;
+window.runScheduledBackupIfDue = runScheduledBackupIfDue;

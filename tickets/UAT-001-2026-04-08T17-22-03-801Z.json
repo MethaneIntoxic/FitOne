@@ -1,0 +1,18 @@
+{
+  "id": "T-UAT-001-1",
+  "scenarioId": "UAT-001",
+  "scenarioTitle": "Install & first-run (Beginner, Android PWA)",
+  "persona": "Amira – new to tracking",
+  "category": "Onboarding",
+  "mode": "beginner",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Install FitOne as a PWA on Android, run onboarding in Beginner mode, set basic goals.",
+  "expectedSummary": "PWA installs & launches standalone; onboarding uses simple language and leads clearly to today's log.",
+  "actualResult": "Error: expect(locator).toHaveCount(expected) failed",
+  "errorMessage": "Error: expect(locator).toHaveCount(expected) failed\n\nLocator:  locator('#bodyGoalSelector .goal-option')\nExpected: 3\nReceived: 4\nTimeout:  7000ms\n\nCall log:\n  - Expect \"toHaveCount\" with timeout 7000ms\n  - waiting for locator('#bodyGoalSelector .goal-option')\n    11 × locator resolved to 4 elements\n       - unexpected value \"4\"\n",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-001-–-Install-first-run-Beginner-Android-PWA-UAT-001-chromium-retry1\\test-failed-1.png",
+  "createdAt": "2026-04-08T17:22:03.801Z"
+}

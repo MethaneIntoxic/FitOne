@@ -403,6 +403,9 @@ test.beforeEach(async ({ page }) => {
   await page.goto("/");
   await page.evaluate(() => {
     localStorage.clear();
+    // UAT scenarios validate feature flows; skip first-run gate in automation.
+    localStorage.setItem("ft_onboarding_complete", "1");
+    localStorage.setItem("ft_onboarding_done", "1");
   });
   await page.reload();
   await expect(page.locator("#app")).toBeVisible();

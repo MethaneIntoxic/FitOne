@@ -1,0 +1,18 @@
+{
+  "id": "T-UAT-010-1",
+  "scenarioId": "UAT-010",
+  "scenarioTitle": "Recomposition trend visibility",
+  "persona": "Mina – body recomposition",
+  "category": "Analytics",
+  "mode": "power",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Log food, workouts, and body entries then inspect calorie, workout, and weight analytics views.",
+  "expectedSummary": "Charts and weekly summary cards render with coherent trend context.",
+  "actualResult": "Error: expect(locator).toBeVisible() failed",
+  "errorMessage": "Error: expect(locator).toBeVisible() failed\n\nLocator:  locator('#app')\nExpected: visible\nReceived: hidden\nTimeout:  7000ms\n\nCall log:\n  - Expect \"toBeVisible\" with timeout 7000ms\n  - waiting for locator('#app')\n    11 × locator resolved to <div id=\"app\" class=\"app app-hidden\">…</div>\n       - unexpected value \"hidden\"\n",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-010-–-Recomposition-trend-visibility-UAT-010-chromium-retry1\\test-failed-1.png",
+  "createdAt": "2026-04-08T17:19:25.887Z"
+}

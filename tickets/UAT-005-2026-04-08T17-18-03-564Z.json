@@ -1,0 +1,18 @@
+{
+  "id": "T-UAT-005-1",
+  "scenarioId": "UAT-005",
+  "scenarioTitle": "Beginner meal logging with macro auto-calc",
+  "persona": "Amira – new to tracking",
+  "category": "Nutrition",
+  "mode": "beginner",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Log meals with protein/carbs/fat and rely on calorie auto-calc guidance.",
+  "expectedSummary": "Macro-derived calories are applied and recent food list is accurate.",
+  "actualResult": "Error: expect(locator).toBeVisible() failed",
+  "errorMessage": "Error: expect(locator).toBeVisible() failed\n\nLocator:  locator('#app')\nExpected: visible\nReceived: hidden\nTimeout:  7000ms\n\nCall log:\n  - Expect \"toBeVisible\" with timeout 7000ms\n  - waiting for locator('#app')\n    11 × locator resolved to <div id=\"app\" class=\"app app-hidden\">…</div>\n       - unexpected value \"hidden\"\n",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-005-–-Beginner-mea-8e0f6-ith-macro-auto-calc-UAT-005-chromium-retry1\\test-failed-1.png",
+  "createdAt": "2026-04-08T17:18:03.564Z"
+}

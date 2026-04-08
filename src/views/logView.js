@@ -3,6 +3,8 @@
 
 
 let exerciseRowCount = 0;
+let _recentFoodQuery = "";
+let _recentWorkoutQuery = "";
 const MICRONUTRIENT_DAILY_TARGETS = {
   fiber: 30,
   sugar: 50,
@@ -459,13 +461,28 @@ function notifyDataChangedFromLog(reason) {
   refreshToday();
 }
 
+function updateExerciseGuideForRow(index) {
+  const slot = $("exguide_" + index);
+  const nameEl = $("exname_" + index);
+  if (!slot) return;
+  if (!nameEl || !nameEl.value || typeof renderExerciseGuideInline !== "function") {
+    slot.innerHTML = '<div class="exercise-guide-empty text-xs">Select an exercise to view target muscles and form cues.</div>';
+    return;
+  }
+  slot.innerHTML = renderExerciseGuideInline(nameEl.value, { openByDefault: false });
+}
+
 function getExerciseRowHtml(index, seed, planned) {
   const ex = seed || {};
   const ps = planned || {};
-  const beginnerMode = (settings && settings.experienceLevel || 'beginner') === 'beginner';
+  const level = typeof getEffectiveExperienceLevel === "function"
+    ? getEffectiveExperienceLevel()
+    : ((settings && settings.experienceLevel) || "beginner");
+  const beginnerMode = level === "beginner";
   const linkWithNext = !!ex.linkWithNext;
   const groupType = ex.groupType || "superset";
   return '' +
+    '<button class="btn btn-outline btn-sm dense-col-1 exercise-drag-handle" data-drag-handle aria-label="Drag to reorder" title="Drag to reorder" draggable="false">↕</button>' +
     '<div class="form-group dense-col-3"><input type="text" placeholder="Exercise name" id="exname_' + index + '" value="' + escAttr(ex.name || "") + '"></div>' +
     '<button class="btn btn-outline btn-sm dense-col-1" data-browse-row="' + index + '" aria-label="Browse exercises" title="Browse by muscle group" style="font-size:13px;padding:0">LIB</button>' +
     '<button class="btn btn-outline btn-sm dense-col-1" onclick="if(typeof showExerciseDetailModal === \'function\') showExerciseDetailModal($(\'exname_' + index + '\').value)" aria-label="Exercise info" title="View Details" style="font-size:16px;padding:0">ℹ️</button>' +
@@ -474,6 +491,7 @@ function getExerciseRowHtml(index, seed, planned) {
     '<div class="form-group dense-col-2"><input type="number" placeholder="Wt" id="exwt_' + index + '" value="' + (ex.weight || "") + '"></div>' +
     '<button class="btn btn-outline btn-sm dense-col-1" data-remove-row aria-label="Remove exercise row">✕</button>' +
     '<div class="dense-col-12 progression-chip hidden" id="exprg_' + index + '"></div>' +
+    '<div class="dense-col-12 exercise-guide-slot" id="exguide_' + index + '"></div>' +
     '<div class="dense-col-12 exercise-grouping-row">' +
       '<label class="exercise-group-link" for="exlinknext_' + index + '">' +
         '<input type="checkbox" id="exlinknext_' + index + '"' + (linkWithNext ? ' checked' : '') + '>' +
@@ -546,6 +564,55 @@ function bindExerciseRowSetupHandlers(index) {
       if (setup && notes) notes.value = setup.notes || "";
     });
   }
+}
+
+function enableExerciseRowDragAndDrop(row) {
+  if (!row) return;
+  row.setAttribute("draggable", "true");
+
+  row.addEventListener("dragstart", (event) => {
+    row.classList.add("is-dragging");
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", row.id || "");
+    }
+  });
+
+  row.addEventListener("dragend", () => {
+    row.classList.remove("is-dragging");
+    document.querySelectorAll("#exerciseRows .is-drag-over").forEach((el) => el.classList.remove("is-drag-over"));
+    refreshExerciseGroupVisuals();
+  });
+
+  row.addEventListener("dragover", (event) => {
+    event.preventDefault();
+    row.classList.add("is-drag-over");
+    if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+  });
+
+  row.addEventListener("dragleave", () => {
+    row.classList.remove("is-drag-over");
+  });
+
+  row.addEventListener("drop", (event) => {
+    event.preventDefault();
+    row.classList.remove("is-drag-over");
+    const sourceId = event.dataTransfer ? event.dataTransfer.getData("text/plain") : "";
+    if (!sourceId || sourceId === row.id) return;
+
+    const container = $("exerciseRows");
+    const sourceRow = $(sourceId);
+    if (!container || !sourceRow) return;
+
+    const bounds = row.getBoundingClientRect();
+    const after = event.clientY > bounds.top + bounds.height / 2;
+    if (after) {
+      container.insertBefore(sourceRow, row.nextSibling);
+    } else {
+      container.insertBefore(sourceRow, row);
+    }
+    refreshExerciseGroupVisuals();
+  });
 }
 
 // ========== FAVORITES ==========
@@ -1096,12 +1163,36 @@ function openRecipeBuilderModal(recipeId) {
 function deleteRecipe(recipeId) {
   const id = String(recipeId || "").trim();
   if (!id) return;
-  showConfirmModal("Delete Recipe", "🥣", "Remove this recipe and its reusable food item?", function () {
-    saveData(KEYS.recipes, loadData(KEYS.recipes).filter((row) => row.id !== id));
-    saveData(KEYS.foodItems, loadData(KEYS.foodItems).filter((row) => String(row.sourceRecipeId || "") !== id));
+  showConfirmModal("Delete Recipe", "🥣", "Remove this recipe and its reusable food item? You can undo for 5 seconds.", function () {
+    const allRecipes = loadData(KEYS.recipes);
+    const allItems = loadData(KEYS.foodItems);
+    const removedRecipe = allRecipes.find((row) => row.id === id) || null;
+    const removedItems = allItems.filter((row) => String(row.sourceRecipeId || "") === id);
+
+    saveData(KEYS.recipes, allRecipes.filter((row) => row.id !== id));
+    saveData(KEYS.foodItems, allItems.filter((row) => String(row.sourceRecipeId || "") !== id));
     refreshRecipeQuickList();
     notifyDataChangedFromLog("deleteRecipe");
-    showToast("Recipe deleted", "info");
+    showUndoToast("Recipe deleted", function () {
+      if (removedRecipe) {
+        const recipes = loadData(KEYS.recipes);
+        if (!recipes.some((row) => row.id === removedRecipe.id)) {
+          recipes.push(removedRecipe);
+          saveData(KEYS.recipes, recipes);
+        }
+      }
+
+      if (removedItems.length) {
+        const items = loadData(KEYS.foodItems);
+        const merged = items.concat(removedItems.filter(function (row) {
+          return !items.some(function (cur) { return cur.id === row.id; });
+        }));
+        saveData(KEYS.foodItems, merged);
+      }
+
+      refreshRecipeQuickList();
+      notifyDataChangedFromLog("undoDeleteRecipe");
+    });
   });
 }
 
@@ -1222,15 +1313,23 @@ function logFood() {
   const card = $("foodFormCard");
   if (card) { card.classList.add("log-success"); setTimeout(() => card.classList.remove("log-success"), 600); }
   notifyDataChangedFromLog("logFood");
+  if (typeof triggerHaptic === "function") triggerHaptic("success");
   setTimeout(() => { if ($("foodName")) $("foodName").focus(); }, 300);
 }
 
 function clearTodayFood() {
   showConfirmModal("Clear Today's Food", "⚠️", "This will remove all food entries for today. You can always log them again.", () => {
-    const data = loadData(KEYS.food).filter((f) => f.date !== today());
+    const allFood = loadData(KEYS.food);
+    const removed = allFood.filter((f) => f.date === today());
+    const data = allFood.filter((f) => f.date !== today());
     saveData(KEYS.food, data);
     notifyDataChangedFromLog("clearTodayFood");
-    showToast("Today's food cleared");
+    showUndoToast("Today's food cleared", () => {
+      if (!removed.length) return;
+      const current = loadData(KEYS.food);
+      saveData(KEYS.food, current.concat(removed));
+      notifyDataChangedFromLog("undoClearTodayFood");
+    });
   });
 }
 
@@ -1358,6 +1457,7 @@ function addExerciseRow(seed) {
   row.id = "exrow_" + exerciseRowCount;
   row.innerHTML = getExerciseRowHtml(exerciseRowCount, seed);
   $("exerciseRows").appendChild(row);
+  enableExerciseRowDragAndDrop(row);
   bindExerciseInputShortcuts(row);
   bindExerciseRowAdvancedToggle(row, exerciseRowCount);
   bindExerciseGroupingControls(row, exerciseRowCount);
@@ -1372,6 +1472,7 @@ function addExerciseRow(seed) {
   if (nameInput) {
     nameInput.addEventListener('change', () => {
       const name = nameInput.value.trim();
+      updateExerciseGuideForRow(idx);
       const chip = $('exprg_' + idx);
       if (chip) {
         chip.classList.add('hidden');
@@ -1399,7 +1500,9 @@ function addExerciseRow(seed) {
       }
       refreshExerciseGroupVisuals();
     });
+    nameInput.addEventListener('input', () => updateExerciseGuideForRow(idx));
   }
+  updateExerciseGuideForRow(idx);
   refreshExerciseGroupVisuals();
 }
 
@@ -1416,25 +1519,139 @@ function openExerciseBrowserForRow(rowIndex) {
   showToast("Exercise browser is unavailable", "warning");
 }
 
+let _gpsWatchId = null;
+let _gpsRoutePoints = [];
+
+function updateGpsTrackingStatus(text) {
+  const status = $("gpsTrackStatus");
+  if (status) status.textContent = text;
+}
+
+function routeDistanceKm(points) {
+  const rows = Array.isArray(points) ? points : [];
+  if (rows.length < 2) return 0;
+
+  function toRad(deg) {
+    return (Number(deg) || 0) * Math.PI / 180;
+  }
+
+  let total = 0;
+  for (let i = 1; i < rows.length; i++) {
+    const a = rows[i - 1];
+    const b = rows[i];
+    const lat1 = toRad(a.lat);
+    const lat2 = toRad(b.lat);
+    const dLat = lat2 - lat1;
+    const dLng = toRad(b.lng) - toRad(a.lng);
+    const sinDLat = Math.sin(dLat / 2);
+    const sinDLng = Math.sin(dLng / 2);
+    const hav = sinDLat * sinDLat + Math.cos(lat1) * Math.cos(lat2) * sinDLng * sinDLng;
+    const c = 2 * Math.atan2(Math.sqrt(hav), Math.sqrt(1 - hav));
+    total += 6371 * c;
+  }
+  return total;
+}
+
+function startGpsTracking() {
+  if (!navigator.geolocation) {
+    showToast("GPS is not supported on this device", "warning");
+    return;
+  }
+  if (_gpsWatchId != null) {
+    showToast("GPS tracking already running", "info");
+    return;
+  }
+
+  _gpsRoutePoints = [];
+  updateGpsTrackingStatus("GPS acquiring...");
+  _gpsWatchId = navigator.geolocation.watchPosition(
+    (position) => {
+      const coords = position && position.coords ? position.coords : null;
+      if (!coords) return;
+      _gpsRoutePoints.push({
+        lat: Number(coords.latitude) || 0,
+        lng: Number(coords.longitude) || 0,
+        acc: Number(coords.accuracy) || 0,
+        ts: Date.now(),
+      });
+      const dist = routeDistanceKm(_gpsRoutePoints);
+      updateGpsTrackingStatus("Tracking • " + _gpsRoutePoints.length + " points • " + dist.toFixed(2) + " km");
+    },
+    () => {
+      updateGpsTrackingStatus("GPS error");
+      showToast("GPS permission denied or unavailable", "warning");
+    },
+    {
+      enableHighAccuracy: true,
+      maximumAge: 3000,
+      timeout: 15000,
+    }
+  );
+
+  showToast("GPS tracking started", "success");
+}
+
+function stopGpsTracking() {
+  if (_gpsWatchId != null && navigator.geolocation) {
+    navigator.geolocation.clearWatch(_gpsWatchId);
+  }
+  _gpsWatchId = null;
+
+  const routeInput = $("workoutRouteData");
+  if (routeInput) routeInput.value = JSON.stringify(_gpsRoutePoints);
+
+  const distanceKm = routeDistanceKm(_gpsRoutePoints);
+  if ($("workoutDistanceKm") && !_gpsRoutePoints.length) {
+    updateGpsTrackingStatus("GPS idle");
+    return;
+  }
+
+  if ($("workoutDistanceKm") && (!$("workoutDistanceKm").value || Number($("workoutDistanceKm").value) <= 0)) {
+    $("workoutDistanceKm").value = distanceKm > 0 ? distanceKm.toFixed(2) : "";
+  }
+  updateGpsTrackingStatus(_gpsRoutePoints.length
+    ? "GPS stopped • " + _gpsRoutePoints.length + " points • " + distanceKm.toFixed(2) + " km"
+    : "GPS idle");
+  showToast("GPS tracking stopped", "info");
+}
+
 function logWorkout() {
   clearFormErrors();
   const name = $("workoutName").value.trim();
   if (!name) { showFormError("workoutName", "workoutNameError"); return; }
   const dur = parseInt($("workoutDuration").value) || 0;
   const burned = parseInt($("workoutCalories").value) || 0;
-  if (dur < 0 || burned < 0) { showToast("Values cannot be negative", "error"); return; }
+  const distanceInput = parseFloat($("workoutDistanceKm") ? $("workoutDistanceKm").value : "") || 0;
+  const paceInput = parseFloat($("workoutPaceMinKm") ? $("workoutPaceMinKm").value : "") || 0;
+  if (dur < 0 || burned < 0 || distanceInput < 0 || paceInput < 0) { showToast("Values cannot be negative", "error"); return; }
+
+  if (_gpsWatchId != null) {
+    stopGpsTracking();
+  }
 
   const date = $("workoutDate").value || today();
+  let routePoints = [];
+  try {
+    routePoints = JSON.parse($("workoutRouteData") ? $("workoutRouteData").value || "[]" : "[]");
+  } catch {
+    routePoints = [];
+  }
+  const routeKm = routeDistanceKm(routePoints);
+  const distanceKm = Math.max(distanceInput, routeKm);
+  const avgPaceMinPerKm = paceInput > 0 ? paceInput : (distanceKm > 0 && dur > 0 ? dur / distanceKm : 0);
+
   const exercises = [];
   const userBodyweight = getPrimaryBodyweight();
   const groupIdByStartRow = {};
   let groupCounter = 0;
-  for (let i = 1; i <= exerciseRowCount; i++) {
+  const exerciseRows = Array.from(document.querySelectorAll("#exerciseRows .stat-row[id^='exrow_']"));
+  exerciseRows.forEach((row) => {
+    const i = Number(String(row.id || "").replace("exrow_", "")) || 0;
+    if (!i) return;
     const el = $("exname_" + i);
-    if (!el) continue;
+    if (!el) return;
     const eName = el.value.trim();
-    if (!eName) continue;
-    const row = el.closest('.stat-row[id^="exrow_"]');
+    if (!eName) return;
     const groupContext = row ? getExerciseGroupContext(row) : null;
     const linkWithNext = row ? isExerciseRowLinkedWithNext(row) : false;
     let groupId = null;
@@ -1478,12 +1695,15 @@ function logWorkout() {
       : (typeof calculate1RM === "function" ? calculate1RM(exObj.weight, exObj.reps) : 0);
     exercises.push(exObj);
     if (exObj.machineSetupNotes) upsertMachineSetup(eName, exObj.gymName, exObj.machineSetupNotes);
-  }
+  });
 
   const entry = {
     id: uid(), date, name,
     type: $("workoutType").value,
     duration: dur, caloriesBurned: burned,
+    distanceKm: Number(distanceKm.toFixed(3)),
+    avgPaceMinPerKm: avgPaceMinPerKm > 0 ? Number(avgPaceMinPerKm.toFixed(2)) : 0,
+    routePoints: Array.isArray(routePoints) ? routePoints : [],
     exercises, notes: $("workoutNotes").value.trim(),
     protocolId: $("workoutProtocol").value || null,
     timestamp: Date.now(),
@@ -1520,13 +1740,38 @@ function logWorkout() {
     });
   });
   saveData(KEYS.strengthSets, flatSets);
-  ["workoutName", "workoutDuration", "workoutCalories", "workoutNotes"].forEach((id) => ($(id).value = ""));
+
+  if (entry.type === "cardio" || entry.distanceKm > 0 || entry.avgPaceMinPerKm > 0) {
+    const cardios = loadData(KEYS.cardios);
+    cardios.push({
+      id: uid(),
+      timestamp: entry.timestamp,
+      date: entry.date,
+      workout_id: entry.id,
+      name: entry.name,
+      duration_min: entry.duration || 0,
+      distance_km: entry.distanceKm || 0,
+      calories_burned: entry.caloriesBurned || 0,
+      avg_pace_min_per_km: entry.avgPaceMinPerKm || 0,
+      source: entry.routePoints && entry.routePoints.length ? "gps" : "manual",
+      route_points: entry.routePoints || [],
+    });
+    saveData(KEYS.cardios, cardios);
+  }
+
+  ["workoutName", "workoutDuration", "workoutCalories", "workoutDistanceKm", "workoutPaceMinKm", "workoutNotes"].forEach((id) => {
+    if ($(id)) $(id).value = "";
+  });
+  if ($("workoutRouteData")) $("workoutRouteData").value = "[]";
+  _gpsRoutePoints = [];
+  updateGpsTrackingStatus("GPS idle");
   $("workoutDate").value = today();
   $("exerciseRows").innerHTML = "";
   exerciseRowCount = 0;
   const card = $("workoutFormCard");
   if (card) { card.classList.add("log-success"); setTimeout(() => card.classList.remove("log-success"), 600); }
   notifyDataChangedFromLog("logWorkout");
+  if (typeof triggerHaptic === "function") triggerHaptic("success");
   // Check for personal records
   if (typeof checkWorkoutForPRs === 'function') {
     if (prs.length > 0 && typeof celebratePRs === 'function') {
@@ -1714,6 +1959,7 @@ function logBody() {
   if (card) { card.classList.add("log-success"); setTimeout(() => card.classList.remove("log-success"), 600); }
   notifyDataChangedFromLog("logBody");
   showToast("Body measurements saved! 📏");
+  if (typeof triggerHaptic === "function") triggerHaptic("success");
 }
 
 function deleteBody(id) {
@@ -1971,7 +2217,8 @@ function skipRest() {
 function finishTimer() {
   const completedRow = _timerRowIndex;
   stopTimer();
-  if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  if (typeof triggerHaptic === "function") triggerHaptic("heavy");
+  else if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
   if (settings.voiceCountdown && "speechSynthesis" in window) {
     const goUtterance = new SpeechSynthesisUtterance("Go");
     goUtterance.rate = 1.08;
@@ -1984,21 +2231,99 @@ function finishTimer() {
 
 // ========== SEARCH / FILTER ==========
 function filterRecentFood() {
-  const q = ($("searchFood").value || "").toLowerCase();
-  const items = $("recentFood").querySelectorAll(".list-item");
-  items.forEach((item) => {
-    const title = item.querySelector(".list-item-title");
-    item.style.display = !q || (title && title.textContent.toLowerCase().includes(q)) ? "" : "none";
-  });
+  _recentFoodQuery = (($("searchFood") && $("searchFood").value) || "").toLowerCase().trim();
+  renderRecentFoodList(window._allFood || []);
 }
 
 function filterRecentWorkouts() {
-  const q = ($("searchWorkout").value || "").toLowerCase();
-  const items = $("recentWorkouts").querySelectorAll(".list-item");
-  items.forEach((item) => {
-    const title = item.querySelector(".list-item-title");
-    item.style.display = !q || (title && title.textContent.toLowerCase().includes(q)) ? "" : "none";
-  });
+  _recentWorkoutQuery = (($("searchWorkout") && $("searchWorkout").value) || "").toLowerCase().trim();
+  renderRecentWorkoutList(window._allWorkouts || []);
+}
+
+function buildRecentFoodItemHtml(f) {
+  const time = f.timestamp ? fmtTime(f.timestamp) : "";
+  return '<div class="list-item"><div class="list-item-main"><div class="list-item-title">' + esc(f.name) + '<span class="entry-time">' + time + '</span></div><div class="list-item-sub">' + fmtDate(f.date) + " • " + (f.meal || "") + (f.serving ? " • " + esc(f.serving) : "") + " • P" + (f.protein || 0) + " C" + (f.carbs || 0) + " F" + (f.fat || 0) + esc(formatMicronutrientInline(f)) + '</div></div><div class="list-item-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><div style="font-weight:600">' + f.calories + ' cal</div><div style="display:flex;gap:4px"><button class="btn-icon" data-duplicate-food="' + f.id + '" title="Log again">🔄</button><button class="btn-icon" data-edit-food="' + f.id + '" title="Edit">✏️</button><button class="btn-delete" data-delete-food="' + f.id + '" title="Delete">✕</button></div></div></div>';
+}
+
+function buildRecentWorkoutItemHtml(w) {
+  const time = w.timestamp ? fmtTime(w.timestamp) : "";
+  const setPreview = renderWorkoutSetPreview(w);
+  const targetHints = (w.exercises || []).map((ex) => renderTargetChip(ex)).filter(Boolean).slice(0, 2).join("");
+  return '<div class="list-item" data-open-workout="' + w.id + '"><div class="list-item-main"><div class="list-item-title">' + esc(w.name) + '<span class="entry-time">' + time + '</span></div><div class="list-item-sub">' + fmtDate(w.date) + " • " + w.type + " • " + (w.duration || 0) + " min • " + (w.exercises || []).length + ' ex</div>' + setPreview + targetHints + '</div><div class="list-item-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span class="tag tag-blue">' + (w.caloriesBurned || 0) + ' cal</span><button class="btn-delete" data-delete-workout="' + w.id + '" title="Delete">✕</button></div></div>';
+}
+
+function buildRecentBodyItemHtml(b) {
+  const time = b.timestamp ? fmtTime(b.timestamp) : "";
+  return '<div class="list-item"><div class="list-item-main"><div class="list-item-title">' + b.weight + " " + settings.weightUnit + '<span class="entry-time">' + time + '</span></div><div class="list-item-sub">' + fmtDate(b.date) + (b.bodyFat ? " • BF " + b.bodyFat + "%" : "") + (b.waist ? " • Waist " + b.waist + settings.measureUnit : "") + '</div></div><div class="list-item-right"><button class="btn-delete" data-delete-body="' + b.id + '" title="Delete">✕</button></div></div>';
+}
+
+function renderRecentFoodList(allFood) {
+  const source = Array.isArray(allFood) ? allFood : [];
+  const q = _recentFoodQuery;
+  const visible = q
+    ? source.filter((f) => String((f && f.name) || "").toLowerCase().includes(q))
+    : source;
+  const container = $("recentFood");
+  if (!container) return;
+
+  const emptyHtml = '<div class="empty"><div class="empty-icon">🍽️</div><div class="empty-text">Ready to fuel your day? 🍎</div><button class="btn btn-primary btn-sm" data-action="focusFood">Log your first meal</button></div>';
+  if (!visible.length) {
+    container.innerHTML = q
+      ? '<div class="empty"><div class="empty-icon">🔎</div><div class="empty-text">No food entries match your search.</div></div>'
+      : emptyHtml;
+    return;
+  }
+
+  const capped = visible.slice(0, 600);
+  if (typeof renderVirtualList === "function") {
+    renderVirtualList(container, capped, buildRecentFoodItemHtml, { pageSize: 50, emptyHtml: emptyHtml });
+  } else {
+    container.innerHTML = capped.slice(0, 30).map(buildRecentFoodItemHtml).join("");
+  }
+}
+
+function renderRecentWorkoutList(allWorkouts) {
+  const source = Array.isArray(allWorkouts) ? allWorkouts : [];
+  const q = _recentWorkoutQuery;
+  const visible = q
+    ? source.filter((w) => String((w && w.name) || "").toLowerCase().includes(q))
+    : source;
+  const container = $("recentWorkouts");
+  if (!container) return;
+
+  const emptyHtml = '<div class="empty"><div class="empty-icon">🏋️</div><div class="empty-text">Time to move! Let\'s crush it 💪</div><button class="btn btn-primary btn-sm" data-action="focusWorkout">Log your first workout</button></div>';
+  if (!visible.length) {
+    container.innerHTML = q
+      ? '<div class="empty"><div class="empty-icon">🔎</div><div class="empty-text">No workout entries match your search.</div></div>'
+      : emptyHtml;
+    return;
+  }
+
+  const capped = visible.slice(0, 600);
+  if (typeof renderVirtualList === "function") {
+    renderVirtualList(container, capped, buildRecentWorkoutItemHtml, { pageSize: 40, emptyHtml: emptyHtml });
+  } else {
+    container.innerHTML = capped.slice(0, 30).map(buildRecentWorkoutItemHtml).join("");
+  }
+}
+
+function renderBodyHistoryList(allBody) {
+  const source = Array.isArray(allBody) ? allBody : [];
+  const container = $("bodyHistory");
+  if (!container) return;
+
+  const emptyHtml = '<div class="empty"><div class="empty-icon">📏</div><div class="empty-text">Track your progress — log your first measurement</div><button class="btn btn-primary btn-sm" data-action="focusBody">Get started</button></div>';
+  if (!source.length) {
+    container.innerHTML = emptyHtml;
+    return;
+  }
+
+  const capped = source.slice(0, 600);
+  if (typeof renderVirtualList === "function") {
+    renderVirtualList(container, capped, buildRecentBodyItemHtml, { pageSize: 45, emptyHtml: emptyHtml });
+  } else {
+    container.innerHTML = capped.slice(0, 30).map(buildRecentBodyItemHtml).join("");
+  }
 }
 
 // ========== POPULATE PROTOCOL SELECT ==========
@@ -2016,44 +2341,11 @@ function refreshLog() {
   const allBody = loadData(KEYS.body).sort((a, b) => b.timestamp - a.timestamp);
   window._allFood = allFood;
   window._allWorkouts = allWorkouts;
-  const food = allFood.slice(0, 30);
-  const workouts = allWorkouts.slice(0, 30);
-  const body = allBody.slice(0, 30);
+  window._allBody = allBody;
 
-  if (food.length) {
-    $("recentFood").innerHTML = food
-      .map((f) => {
-        const time = f.timestamp ? fmtTime(f.timestamp) : "";
-        return '<div class="list-item"><div class="list-item-main"><div class="list-item-title">' + esc(f.name) + '<span class="entry-time">' + time + '</span></div><div class="list-item-sub">' + fmtDate(f.date) + " • " + (f.meal || "") + (f.serving ? " • " + esc(f.serving) : "") + " • P" + (f.protein || 0) + " C" + (f.carbs || 0) + " F" + (f.fat || 0) + esc(formatMicronutrientInline(f)) + '</div></div><div class="list-item-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><div style="font-weight:600">' + f.calories + ' cal</div><div style="display:flex;gap:4px"><button class="btn-icon" data-duplicate-food="' + f.id + '" title="Log again">🔄</button><button class="btn-icon" data-edit-food="' + f.id + '" title="Edit">✏️</button><button class="btn-delete" data-delete-food="' + f.id + '" title="Delete">✕</button></div></div></div>';
-      })
-      .join("");
-  } else {
-    $("recentFood").innerHTML = '<div class="empty"><div class="empty-icon">🍽️</div><div class="empty-text">Ready to fuel your day? 🍎</div><button class="btn btn-primary btn-sm" data-action="focusFood">Log your first meal</button></div>';
-  }
-
-  if (workouts.length) {
-    $("recentWorkouts").innerHTML = workouts
-      .map((w) => {
-        const time = w.timestamp ? fmtTime(w.timestamp) : "";
-        const setPreview = renderWorkoutSetPreview(w);
-        const targetHints = (w.exercises || []).map((ex) => renderTargetChip(ex)).filter(Boolean).slice(0, 2).join("");
-        return '<div class="list-item" data-open-workout="' + w.id + '"><div class="list-item-main"><div class="list-item-title">' + esc(w.name) + '<span class="entry-time">' + time + '</span></div><div class="list-item-sub">' + fmtDate(w.date) + " • " + w.type + " • " + (w.duration || 0) + " min • " + (w.exercises || []).length + ' ex</div>' + setPreview + targetHints + '</div><div class="list-item-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span class="tag tag-blue">' + (w.caloriesBurned || 0) + ' cal</span><button class="btn-delete" data-delete-workout="' + w.id + '" title="Delete">✕</button></div></div>';
-      })
-      .join("");
-  } else {
-    $("recentWorkouts").innerHTML = '<div class="empty"><div class="empty-icon">🏋️</div><div class="empty-text">Time to move! Let\'s crush it 💪</div><button class="btn btn-primary btn-sm" data-action="focusWorkout">Log your first workout</button></div>';
-  }
-
-  if (body.length) {
-    $("bodyHistory").innerHTML = body
-      .map((b) => {
-        const time = b.timestamp ? fmtTime(b.timestamp) : "";
-        return '<div class="list-item"><div class="list-item-main"><div class="list-item-title">' + b.weight + " " + settings.weightUnit + '<span class="entry-time">' + time + '</span></div><div class="list-item-sub">' + fmtDate(b.date) + (b.bodyFat ? " • BF " + b.bodyFat + "%" : "") + (b.waist ? " • Waist " + b.waist + settings.measureUnit : "") + '</div></div><div class="list-item-right"><button class="btn-delete" data-delete-body="' + b.id + '" title="Delete">✕</button></div></div>';
-      })
-      .join("");
-  } else {
-    $("bodyHistory").innerHTML = '<div class="empty"><div class="empty-icon">📏</div><div class="empty-text">Track your progress — log your first measurement</div><button class="btn btn-primary btn-sm" data-action="focusBody">Get started</button></div>';
-  }
+  renderRecentFoodList(allFood);
+  renderRecentWorkoutList(allWorkouts);
+  renderBodyHistoryList(allBody);
 
   populateProtocolSelect();
   refreshFavorites();
@@ -2067,6 +2359,15 @@ function refreshLog() {
 function initLogEvents() {
   const panel = $("panel-log");
   if (!panel) return;
+
+  ["recentFood", "recentWorkouts", "bodyHistory"].forEach((id) => {
+    const el = $(id);
+    if (!el) return;
+    el.setAttribute("role", "list");
+    el.setAttribute("aria-live", "polite");
+  });
+  const exRows = $("exerciseRows");
+  if (exRows) exRows.setAttribute("aria-label", "Workout exercise rows");
 
   panel.addEventListener("click", (e) => {
     // data-action buttons
@@ -2085,6 +2386,8 @@ function initLogEvents() {
       else if (action === "logBody") logBody();
       else if (action === "startTimer") startTimer(parseInt(actionEl.dataset.seconds) || 60);
       else if (action === "stopTimer") stopTimer();
+      else if (action === "startGpsTracking") startGpsTracking();
+      else if (action === "stopGpsTracking") stopGpsTracking();
       else if (action === "focusFood" && $("foodName")) $("foodName").focus();
       else if (action === "focusWorkout" && $("workoutName")) $("workoutName").focus();
       else if (action === "focusBody" && $("bodyWeight")) $("bodyWeight").focus();

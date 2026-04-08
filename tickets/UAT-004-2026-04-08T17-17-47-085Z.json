@@ -1,0 +1,18 @@
+{
+  "id": "T-UAT-004-1",
+  "scenarioId": "UAT-004",
+  "scenarioTitle": "Hydration quick-add + custom ml",
+  "persona": "Leo – office professional",
+  "category": "Daily Tracking",
+  "mode": "beginner",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Add water via quick buttons and custom amount, then undo one action.",
+  "expectedSummary": "Water total and percentage update immediately and undo works correctly.",
+  "actualResult": "Error: expect(locator).toBeVisible() failed",
+  "errorMessage": "Error: expect(locator).toBeVisible() failed\n\nLocator:  locator('#app')\nExpected: visible\nReceived: hidden\nTimeout:  7000ms\n\nCall log:\n  - Expect \"toBeVisible\" with timeout 7000ms\n  - waiting for locator('#app')\n    11 × locator resolved to <div id=\"app\" class=\"app app-hidden\">…</div>\n       - unexpected value \"hidden\"\n",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-004-–-Hydration-quick-add-custom-ml-UAT-004-chromium-retry1\\test-failed-1.png",
+  "createdAt": "2026-04-08T17:17:47.085Z"
+}

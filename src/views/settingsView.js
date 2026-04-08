@@ -30,6 +30,191 @@ function normalizePlateSystem(value) {
   return "kg";
 }
 
+function normalizeExperienceSetting(value) {
+  const raw = String(value || "").toLowerCase().trim();
+  if (raw === "intermediate" || raw === "advanced" || raw === "competitor") return raw;
+  return "beginner";
+}
+
+function normalizeUiComplexityMode(value) {
+  const raw = String(value || "").toLowerCase().trim();
+  if (raw === "simple" || raw === "full") return raw;
+  return "auto";
+}
+
+function normalizeHexColor(value, fallback) {
+  const base = String(value || "").trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(base)) return base.toUpperCase();
+  if (/^[0-9a-fA-F]{6}$/.test(base)) return ("#" + base).toUpperCase();
+  return String(fallback || "#8B5CF6").toUpperCase();
+}
+
+function shiftHexChannel(channel, delta) {
+  return Math.max(0, Math.min(255, Math.round(channel + delta)));
+}
+
+function tintHexColor(hex, ratio) {
+  const safe = normalizeHexColor(hex, "#8B5CF6").slice(1);
+  const r = parseInt(safe.slice(0, 2), 16);
+  const g = parseInt(safe.slice(2, 4), 16);
+  const b = parseInt(safe.slice(4, 6), 16);
+  const delta = Math.round(255 * Math.max(-1, Math.min(1, Number(ratio) || 0)));
+  const rr = shiftHexChannel(r, delta);
+  const gg = shiftHexChannel(g, delta);
+  const bb = shiftHexChannel(b, delta);
+  return (
+    "#" +
+    rr.toString(16).padStart(2, "0") +
+    gg.toString(16).padStart(2, "0") +
+    bb.toString(16).padStart(2, "0")
+  ).toUpperCase();
+}
+
+function applyThemeAndAccent(targetSettings) {
+  const s = targetSettings || settings;
+  const dark = !!s.darkMode;
+  const accent = normalizeHexColor(s.accentColor, "#8B5CF6");
+  const accent2 = tintHexColor(accent, dark ? 0.22 : 0.12);
+  const accentSoft = tintHexColor(accent, dark ? -0.42 : 0.45);
+
+  document.documentElement.setAttribute("data-theme", dark ? "" : "light");
+  document.documentElement.style.setProperty("--accent", accent);
+  document.documentElement.style.setProperty("--primary", accent);
+  document.documentElement.style.setProperty("--accent2", accent2);
+  document.documentElement.style.setProperty("--brand-primary", accent);
+  document.documentElement.style.setProperty("--brand-primary-light", accent2);
+  document.documentElement.style.setProperty("--brand-primary-soft", accentSoft);
+
+  const tc = document.querySelector('meta[name="theme-color"]');
+  if (tc) tc.content = dark ? tintHexColor(accent, -0.35) : accent;
+}
+
+function parseWebhookEventsInput(raw) {
+  const cleaned = String(raw || "")
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => part.toLowerCase());
+  return Array.from(new Set(cleaned));
+}
+
+function getCompetitionCountdownSummary() {
+  const raw = String(settings.competitionDate || "").trim();
+  if (!raw) return "Set a competition date to enable prep countdown and competitor timeline cues.";
+  const target = Date.parse(raw + "T00:00:00");
+  if (!Number.isFinite(target)) return "Competition date is invalid. Please choose a valid date.";
+
+  const now = new Date();
+  const todayStart = Date.parse(localDateStr(now) + "T00:00:00");
+  const days = Math.ceil((target - todayStart) / (24 * 60 * 60 * 1000));
+
+  if (days < 0) return "Competition date passed " + Math.abs(days) + " day" + (Math.abs(days) === 1 ? "" : "s") + " ago.";
+
+  let phase = "Build";
+  if (days <= 7) phase = "Peak Week";
+  else if (days <= 21) phase = "Final Taper";
+  else if (days <= 56) phase = "Conditioning";
+
+  return days + " day" + (days === 1 ? "" : "s") + " to show day • Current phase: " + phase;
+}
+
+const GOAL_PROFILE_KEYS = ["training", "rest", "carb-up", "peak-week"];
+
+function goalProfileDomKey(profileKey) {
+  return String(profileKey || "").replace(/[^a-z0-9]/gi, "").toLowerCase();
+}
+
+function goalProfileFieldId(profileKey, metricKey) {
+  return "settingMacro_" + goalProfileDomKey(profileKey) + "_" + metricKey;
+}
+
+function ensureGoalMacroProfilesForEditor() {
+  const current = settings.goalMacroProfiles;
+  const fallback = {
+    training: {
+      calories: Number(settings.calorieGoal) || 2000,
+      protein: Number(settings.proteinGoal) || 150,
+      carbs: Number(settings.carbsGoal) || 250,
+      fat: Number(settings.fatGoal) || 65,
+    },
+    rest: {
+      calories: Math.max(1200, (Number(settings.calorieGoal) || 2000) - 250),
+      protein: Number(settings.proteinGoal) || 150,
+      carbs: Math.max(40, (Number(settings.carbsGoal) || 250) - 60),
+      fat: Math.max(35, Number(settings.fatGoal) || 65),
+    },
+    "carb-up": {
+      calories: (Number(settings.calorieGoal) || 2000) + 180,
+      protein: Math.max(90, (Number(settings.proteinGoal) || 150) - 20),
+      carbs: (Number(settings.carbsGoal) || 250) + 80,
+      fat: Math.max(30, (Number(settings.fatGoal) || 65) - 10),
+    },
+    "peak-week": {
+      calories: (Number(settings.calorieGoal) || 2000) - 80,
+      protein: Number(settings.proteinGoal) || 150,
+      carbs: Math.max(80, (Number(settings.carbsGoal) || 250) - 30),
+      fat: Math.max(30, (Number(settings.fatGoal) || 65) - 8),
+    },
+  };
+
+  if (!current || typeof current !== "object") return fallback;
+
+  const out = {};
+  GOAL_PROFILE_KEYS.forEach((key) => {
+    const row = current[key];
+    out[key] = {
+      calories: Math.max(1200, Number(row && row.calories) || fallback[key].calories),
+      protein: Math.max(50, Number(row && row.protein) || fallback[key].protein),
+      carbs: Math.max(0, Number(row && row.carbs) || fallback[key].carbs),
+      fat: Math.max(20, Number(row && row.fat) || fallback[key].fat),
+    };
+  });
+
+  return out;
+}
+
+function renderMacroProfileEditorHtml() {
+  const profiles = ensureGoalMacroProfilesForEditor();
+  return GOAL_PROFILE_KEYS.map((key) => {
+    const row = profiles[key] || {};
+    const domKey = goalProfileDomKey(key);
+    const label = getGoalDayProfileLabel(key);
+    return (
+      '<div class="macro-profile-row">' +
+        '<div class="flex-between mb-8">' +
+          '<strong class="text-sm">' + esc(label) + '</strong>' +
+          '<button class="btn btn-outline btn-sm" data-apply-goal-profile="' + escAttr(key) + '">Apply</button>' +
+        '</div>' +
+        '<div class="stat-row">' +
+          '<div class="form-group" style="flex:1"><label>Cal</label><input type="number" id="' + goalProfileFieldId(domKey, "calories") + '" value="' + Math.round(Number(row.calories) || 0) + '"></div>' +
+          '<div class="form-group" style="flex:1"><label>P</label><input type="number" id="' + goalProfileFieldId(domKey, "protein") + '" value="' + Math.round(Number(row.protein) || 0) + '"></div>' +
+          '<div class="form-group" style="flex:1"><label>C</label><input type="number" id="' + goalProfileFieldId(domKey, "carbs") + '" value="' + Math.round(Number(row.carbs) || 0) + '"></div>' +
+          '<div class="form-group" style="flex:1"><label>F</label><input type="number" id="' + goalProfileFieldId(domKey, "fat") + '" value="' + Math.round(Number(row.fat) || 0) + '"></div>' +
+        '</div>' +
+      '</div>'
+    );
+  }).join("");
+}
+
+function readMacroProfilesFromUI() {
+  const out = {};
+  GOAL_PROFILE_KEYS.forEach((key) => {
+    const domKey = goalProfileDomKey(key);
+    const calsEl = $(goalProfileFieldId(domKey, "calories"));
+    const proEl = $(goalProfileFieldId(domKey, "protein"));
+    const carbEl = $(goalProfileFieldId(domKey, "carbs"));
+    const fatEl = $(goalProfileFieldId(domKey, "fat"));
+    if (!calsEl || !proEl || !carbEl || !fatEl) return;
+    out[key] = {
+      calories: Math.max(1200, Number(calsEl.value) || 1200),
+      protein: Math.max(50, Number(proEl.value) || 50),
+      carbs: Math.max(0, Number(carbEl.value) || 0),
+      fat: Math.max(20, Number(fatEl.value) || 20),
+    };
+  });
+  return out;
+}
+
 function updateRestTimeDisplay() {
   const baseDisplay = $("settingRestTimeDisplay");
   const baseHidden = $("settingRestTime");
@@ -427,6 +612,8 @@ function buildSettingsPayload() {
   const gymItems = Array.from(document.querySelectorAll("#gymList .gym-chip"))
     .map((el) => (el.getAttribute("data-gym") || "").trim())
     .filter(Boolean);
+  const webhookEventsText = settingVal("settingWebhookEvents", (settings.webhookEvents || []).join(","));
+  const parsedWebhookEvents = parseWebhookEventsInput(webhookEventsText);
   return {
     ...settings,
     calorieGoal: settingNum("settingCalorieGoal", 2000),
@@ -458,6 +645,10 @@ function buildSettingsPayload() {
     goalDayProfile: normalizeGoalDayProfile(settingVal("settingGoalDayProfile", settings.goalDayProfile || "training")),
     measureUnit: settingVal("settingMeasureUnit", "cm"),
     darkMode: settingBool("settingTheme", true),
+    accentColor: normalizeHexColor(settingVal("settingAccentColorText", settingVal("settingAccentColor", settings.accentColor || "#8B5CF6")), settings.accentColor || "#8B5CF6"),
+    experienceLevel: normalizeExperienceSetting(settingVal("settingExperienceLevel", settings.experienceLevel || "beginner")),
+    uiComplexityMode: normalizeUiComplexityMode(settingVal("settingUiComplexityMode", settings.uiComplexityMode || "auto")),
+    hapticsEnabled: settingBool("settingHapticsEnabled", settings.hapticsEnabled !== false),
     bodyGoal: settings.bodyGoal || "maintain",
     localOnlyMode: settingBool("settingLocalOnlyMode", true),
     localOnlyStrictMode: settingBool("settingLocalOnlyStrictMode", true),
@@ -468,6 +659,18 @@ function buildSettingsPayload() {
     aiModulesEnabled: settingBool("settingAiModulesEnabled", false),
     socialEnabled: settingBool("settingSocialEnabled", false),
     disableCooldownSuggestions: settingBool("settingDisableCooldown", false),
+    pwaInstallPromptEnabled: settingBool("settingPwaInstallPromptEnabled", settings.pwaInstallPromptEnabled !== false),
+    pwaUpdateAutoApply: settingBool("settingPwaUpdateAutoApply", !!settings.pwaUpdateAutoApply),
+    autoBackupEnabled: settingBool("settingAutoBackupEnabled", !!settings.autoBackupEnabled),
+    autoBackupFrequencyDays: Math.max(1, Math.min(30, settingNum("settingAutoBackupFrequencyDays", settings.autoBackupFrequencyDays || 7))),
+    autoBackupLastRunAt: Number(settings.autoBackupLastRunAt) || 0,
+    webhookEnabled: settingBool("settingWebhookEnabled", !!settings.webhookEnabled),
+    webhookUrl: settingVal("settingWebhookUrl", settings.webhookUrl || "").trim(),
+    webhookEvents: parsedWebhookEvents.length ? parsedWebhookEvents : (settings.webhookEvents || []),
+    connectedWearables: Array.isArray(settings.connectedWearables) ? settings.connectedWearables : [],
+    competitionName: settingVal("settingCompetitionName", settings.competitionName || "").trim(),
+    competitionDate: settingVal("settingCompetitionDate", settings.competitionDate || "").trim(),
+    competitionDivision: settingVal("settingCompetitionDivision", settings.competitionDivision || "").trim(),
     gyms: gymItems,
   };
 }
@@ -475,9 +678,7 @@ function buildSettingsPayload() {
 function toggleTheme() {
   const newSettings = buildSettingsPayload();
   updateSettings(newSettings);
-  document.documentElement.setAttribute("data-theme", newSettings.darkMode ? "" : "light");
-  const tc = document.querySelector('meta[name="theme-color"]');
-  if (tc) tc.content = newSettings.darkMode ? "#6C63FF" : "#4F46E5";
+  applyThemeAndAccent(newSettings);
   saveSettingsFromUI();
 }
 
@@ -502,6 +703,7 @@ function saveSettingsFromUI() {
   }
   updateSettings(next);
   localStorage.setItem(KEYS.settings, JSON.stringify(next));
+  applyThemeAndAccent(next);
   updateBodyLabels();
   renderAdvancedSettings();
   refreshGoalSyncStatus();
@@ -578,14 +780,27 @@ function renderAdvancedSettings() {
     const online = navigator.onLine ? "Online" : "Offline";
     const localSize = estimateLocalStorageSize();
     const queuedOps = listPendingSyncOperations().length;
+    const webhookQueueSize = typeof loadWebhookQueue === "function" ? loadWebhookQueue().length : 0;
+    const lastBackupText = settings.autoBackupLastRunAt
+      ? new Date(Number(settings.autoBackupLastRunAt) || 0).toLocaleString()
+      : "Never";
     diagnostics.innerHTML =
       '<div class="card-title">Offline & Storage Diagnostics</div>' +
       '<div class="text-sm">Network status: <strong>' + online + "</strong></div>" +
       '<div class="text-sm mt-8">Service worker: <span id="swStatusText">Checking...</span></div>' +
       '<div class="text-sm mt-8">Local data size estimate: <strong>' + localSize + " bytes</strong></div>" +
-      '<div class="text-xs mt-8">External sync queue: ' + queuedOps + ' pending (local-only mode).</div>';
+      '<div class="text-xs mt-8">External sync queue: ' + queuedOps + ' pending operations.</div>' +
+      '<div class="text-xs mt-8">Webhook queue: ' + webhookQueueSize + ' pending events.</div>' +
+      '<div class="toggle-row mt-12"><span>Enable auto backup</span><label class="toggle"><input type="checkbox" id="settingAutoBackupEnabled"' + (settings.autoBackupEnabled ? " checked" : "") + '><span class="toggle-slider"></span></label></div>' +
+      '<div class="form-group mt-8"><label>Backup cadence (days)</label><input type="number" id="settingAutoBackupFrequencyDays" min="1" max="30" value="' + Math.max(1, Number(settings.autoBackupFrequencyDays) || 7) + '"></div>' +
+      '<div class="text-xs mt-8">Last backup: ' + esc(lastBackupText) + '</div>' +
+      '<div class="stat-row mt-8"><button class="btn btn-outline btn-sm" id="runBackupNowBtn">Backup Now</button><button class="btn btn-outline btn-sm" id="checkPwaUpdateBtn">Check App Update</button></div>' +
+      '<div class="toggle-row mt-12"><span>PWA install prompts</span><label class="toggle"><input type="checkbox" id="settingPwaInstallPromptEnabled"' + (settings.pwaInstallPromptEnabled !== false ? " checked" : "") + '><span class="toggle-slider"></span></label></div>' +
+      '<div class="toggle-row mt-8"><span>Auto-apply app updates</span><label class="toggle"><input type="checkbox" id="settingPwaUpdateAutoApply"' + (settings.pwaUpdateAutoApply ? " checked" : "") + '><span class="toggle-slider"></span></label></div>' +
+      '<button class="btn btn-outline btn-sm mt-8" id="triggerPwaInstallBtn">Install App</button>' +
+      '<div class="text-xs mt-8" id="pwaRuntimeStatus">Install status: pending detection.</div>';
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.getRegistration("/FitOne/").then((reg) => {
+      navigator.serviceWorker.getRegistration().then((reg) => {
         const el = $("swStatusText");
         if (!el) return;
         if (!reg) el.textContent = "Not registered";
@@ -595,13 +810,43 @@ function renderAdvancedSettings() {
     } else if ($("swStatusText")) {
       $("swStatusText").textContent = "Unsupported";
     }
+
+    const pwaStatus = $("pwaRuntimeStatus");
+    if (pwaStatus) {
+      if (window._deferredInstallPrompt) {
+        pwaStatus.textContent = "Install prompt is available for this device/browser.";
+      } else if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) {
+        pwaStatus.textContent = "App is already installed (standalone mode).";
+      } else {
+        pwaStatus.textContent = "Install prompt not currently available.";
+      }
+    }
   }
 
   const telemetry = loadUXTelemetry();
   const uxDiag = $("settingsUXDiagnosticsCard");
   if (uxDiag) {
+    const selectedExp = normalizeExperienceSetting(settings.experienceLevel || "beginner");
+    const selectedUiMode = normalizeUiComplexityMode(settings.uiComplexityMode || "auto");
+    const accent = normalizeHexColor(settings.accentColor || "#8B5CF6", "#8B5CF6");
     uxDiag.innerHTML =
-      '<div class="card-title">UX Diagnostics</div>' +
+      '<div class="card-title">Experience & Interface</div>' +
+      '<div class="form-group"><label>Experience level</label><select id="settingExperienceLevel">' +
+        '<option value="beginner"' + (selectedExp === "beginner" ? " selected" : "") + '>Beginner</option>' +
+        '<option value="intermediate"' + (selectedExp === "intermediate" ? " selected" : "") + '>Intermediate</option>' +
+        '<option value="advanced"' + (selectedExp === "advanced" ? " selected" : "") + '>Advanced</option>' +
+        '<option value="competitor"' + (selectedExp === "competitor" ? " selected" : "") + '>Competitor</option>' +
+      '</select></div>' +
+      '<div class="form-group"><label>UI complexity mode</label><select id="settingUiComplexityMode">' +
+        '<option value="auto"' + (selectedUiMode === "auto" ? " selected" : "") + '>Auto adapt</option>' +
+        '<option value="simple"' + (selectedUiMode === "simple" ? " selected" : "") + '>Simple (beginner-first)</option>' +
+        '<option value="full"' + (selectedUiMode === "full" ? " selected" : "") + '>Full controls</option>' +
+      '</select></div>' +
+      '<div class="form-group"><label>Accent color</label><div class="stat-row">' +
+        '<input type="color" id="settingAccentColor" value="' + accent + '" style="max-width:84px">' +
+        '<input type="text" id="settingAccentColorText" value="' + accent + '" placeholder="#RRGGBB" maxlength="7">' +
+      '</div></div>' +
+      '<div class="toggle-row"><span>Haptic feedback</span><label class="toggle"><input type="checkbox" id="settingHapticsEnabled"' + (settings.hapticsEnabled !== false ? " checked" : "") + '><span class="toggle-slider"></span></label></div>' +
       '<div class="toggle-row"><span>Enable local UX telemetry</span><label class="toggle"><input type="checkbox" id="settingUxTelemetryEnabled"' + (settings.uxTelemetryEnabled ? " checked" : "") + '><span class="toggle-slider"></span></label></div>' +
       '<ul class="telemetry-list text-sm mt-8">' +
       "<li>Undo actions: <strong>" + (telemetry.logging.undoCount || 0) + "</strong></li>" +
@@ -622,10 +867,31 @@ function renderAdvancedSettings() {
   const wearables = $("settingsWearablesCard");
   if (wearables) {
     const integrationsHidden = settings.localOnlyStrictMode ? '<div class="text-xs mt-8">Integrations are hidden by Local-only strict mode.</div>' : "";
+    const connected = Array.isArray(settings.connectedWearables) ? settings.connectedWearables : [];
+    const vendorRows = listSupportedVendors().map((vendor) => {
+      const isConnected = connected.includes(vendor.id);
+      return (
+        '<div class="flex-between mt-8">' +
+          '<div><div class="text-sm"><strong>' + esc(vendor.name || vendor.id) + '</strong></div><div class="text-xs">' + esc(vendor.mode || "manual") + " • " + esc((vendor.capabilities || []).join(", ")) + '</div></div>' +
+          '<div style="display:flex;gap:6px">' +
+            '<button class="btn btn-outline btn-sm" data-wearable-toggle="' + escAttr(vendor.id) + '">' + (isConnected ? "Disconnect" : "Connect") + '</button>' +
+            '<button class="btn btn-outline btn-sm" data-wearable-sample="' + escAttr(vendor.id) + '">Sample Sync</button>' +
+          '</div>' +
+        '</div>'
+      );
+    }).join("");
+
     wearables.innerHTML =
       '<div class="card-title">Wearables & Integrations</div>' +
-      '<p class="text-sm">FitOne works fully without any wearables. Future optional integrations will appear here.</p>' +
-      '<div class="text-xs mt-8">Supported vendors now: ' + listSupportedVendors().length + "</div>" + integrationsHidden;
+      '<p class="text-sm">FitOne works fully without any wearable accounts. You can still connect export-based integrations below.</p>' +
+      vendorRows +
+      '<hr style="margin:12px 0;border:none;border-top:1px solid rgba(255,255,255,0.08)">' +
+      '<div class="card-title" style="font-size:0.95rem">Peer-to-Peer Sync</div>' +
+      '<p class="text-xs">Create a sync code on one device and paste it on another device. No server required.</p>' +
+      '<textarea id="peerSyncCodeInput" rows="3" placeholder="Paste sync code here"></textarea>' +
+      '<div class="stat-row mt-8"><button class="btn btn-outline btn-sm" id="createPeerSyncCodeBtn">Create Sync Code</button><button class="btn btn-outline btn-sm" id="applyPeerSyncCodeBtn">Apply Sync Code</button></div>' +
+      '<div class="text-xs mt-8" id="peerSyncSummary">Pending local sync ops: ' + listPendingSyncOperations().length + '</div>' +
+      integrationsHidden;
   }
 
   const gymsCard = $("settingsGymProfilesCard");
@@ -642,12 +908,15 @@ function renderAdvancedSettings() {
 
   const social = $("settingsSocialCard");
   if (social) {
+    const webhookEvents = Array.isArray(settings.webhookEvents) ? settings.webhookEvents.join(",") : "";
     social.innerHTML =
-      '<div class="card-title">Social (Opt-in)</div>' +
+      '<div class="card-title">Automation & Webhooks</div>' +
       '<div class="toggle-row"><span>Enable social mock features</span><label class="toggle"><input type="checkbox" id="settingSocialEnabled"' + (settings.socialEnabled ? " checked" : "") + '><span class="toggle-slider"></span></label></div>' +
-      (settings.socialEnabled
-        ? '<div class="text-xs mt-8">Mock view: future sharing could include anonymized protocol summaries and milestones (local preview only).</div>'
-        : '<div class="text-xs mt-8">Social UI stays hidden by default.</div>');
+      '<div class="toggle-row mt-8"><span>Enable outgoing webhook</span><label class="toggle"><input type="checkbox" id="settingWebhookEnabled"' + (settings.webhookEnabled ? " checked" : "") + '><span class="toggle-slider"></span></label></div>' +
+      '<div class="form-group mt-8"><label>Webhook URL</label><input type="url" id="settingWebhookUrl" placeholder="https://example.com/hook" value="' + escAttr(settings.webhookUrl || "") + '"></div>' +
+      '<div class="form-group"><label>Webhook events (comma separated)</label><input type="text" id="settingWebhookEvents" value="' + escAttr(webhookEvents) + '" placeholder="food_logged,workout_logged"></div>' +
+      '<div class="stat-row"><button class="btn btn-outline btn-sm" id="testWebhookBtn">Send Test Event</button><button class="btn btn-outline btn-sm" id="flushWebhookQueueBtn">Flush Queue</button></div>' +
+      '<div class="text-xs mt-8">Events are queued locally when offline and retried later.</div>';
   }
 
   const about = $("settingsAboutCard");
@@ -665,7 +934,18 @@ function renderAdvancedSettings() {
       '<p class="text-xs mt-8">No full-screen blocking ads. No autoplay audio/video ads. Core logging features will not be moved behind a paywall.</p>' +
       '<div class="form-group mt-8"><label>Monetization notes</label><textarea id="settingMonetizationNotes">' + esc(settings.monetizationNotes || "") + "</textarea></div>" +
       '<p class="text-xs mt-8">Core FitOne functionality does not require AI. If AI features are added in the future, they will be optional and can be disabled here.</p>' +
-      '<div class="text-xs mt-8">Monetization ledger</div><ul class="text-xs mt-8">' + (ledger || "<li>No entries</li>") + "</ul>";
+      '<div class="text-xs mt-8">Monetization ledger</div><ul class="text-xs mt-8">' + (ledger || "<li>No entries</li>") + "</ul>" +
+      '<hr style="margin:12px 0;border:none;border-top:1px solid rgba(255,255,255,0.08)">' +
+      '<div class="card-title" style="font-size:0.95rem">Competition Prep Timeline</div>' +
+      '<div class="form-group"><label>Competition name</label><input type="text" id="settingCompetitionName" value="' + escAttr(settings.competitionName || "") + '" placeholder="e.g., State Championships"></div>' +
+      '<div class="form-group"><label>Competition date</label><input type="date" id="settingCompetitionDate" value="' + escAttr(settings.competitionDate || "") + '"></div>' +
+      '<div class="form-group"><label>Division</label><input type="text" id="settingCompetitionDivision" value="' + escAttr(settings.competitionDivision || "") + '" placeholder="Classic Physique"></div>' +
+      '<div class="text-xs mt-8" id="competitionCountdownHint">' + esc(getCompetitionCountdownSummary()) + '</div>' +
+      '<hr style="margin:12px 0;border:none;border-top:1px solid rgba(255,255,255,0.08)">' +
+      '<div class="card-title" style="font-size:0.95rem">Macro Profiles</div>' +
+      '<div class="text-xs mb-8">Set training/rest/carb-up/peak-week macros. Apply a profile to make it your active daily target.</div>' +
+      renderMacroProfileEditorHtml() +
+      '<button class="btn btn-outline btn-sm mt-8" id="saveMacroProfilesBtn">Save Macro Profiles</button>';
   }
   bindDynamicSettingsEvents($("panel-settings"));
 }
@@ -699,9 +979,7 @@ function loadSettingsUI() {
   if ($("settingFocusMode")) $("settingFocusMode").checked = !!settings.focusMode;
   if ($("settingVoiceCountdown")) $("settingVoiceCountdown").checked = !!settings.voiceCountdown;
   $("settingTheme").checked = settings.darkMode;
-  document.documentElement.setAttribute("data-theme", settings.darkMode ? "" : "light");
-  const tc = document.querySelector('meta[name="theme-color"]');
-  if (tc) tc.content = settings.darkMode ? "#6C63FF" : "#4F46E5";
+  applyThemeAndAccent(settings);
   updateBodyLabels();
   document.querySelectorAll(".goal-option").forEach((b) => {
     b.classList.toggle("active", b.dataset.goal === (settings.bodyGoal || "maintain"));
@@ -752,12 +1030,43 @@ function bindDynamicSettingsEvents(panel) {
     "settingAiModulesEnabled",
     "settingSocialEnabled",
     "settingDisableCooldown",
+    "settingExperienceLevel",
+    "settingUiComplexityMode",
+    "settingHapticsEnabled",
+    "settingAutoBackupEnabled",
+    "settingAutoBackupFrequencyDays",
+    "settingPwaInstallPromptEnabled",
+    "settingPwaUpdateAutoApply",
+    "settingWebhookEnabled",
+    "settingCompetitionName",
+    "settingCompetitionDate",
+    "settingCompetitionDivision",
   ].forEach((id) => {
     const el = $(id);
     if (el) el.addEventListener("change", saveSettingsFromUI);
   });
-  const notes = $("settingMonetizationNotes");
-  if (notes) notes.addEventListener("change", saveSettingsFromUI);
+  ["settingMonetizationNotes", "settingWebhookUrl", "settingWebhookEvents", "settingAccentColorText"].forEach((id) => {
+    const el = $(id);
+    if (el) el.addEventListener("change", saveSettingsFromUI);
+  });
+
+  const accentPicker = $("settingAccentColor");
+  const accentText = $("settingAccentColorText");
+  if (accentPicker) {
+    accentPicker.addEventListener("input", () => {
+      if (accentText) accentText.value = normalizeHexColor(accentPicker.value, "#8B5CF6");
+      applyThemeAndAccent({ ...settings, accentColor: accentPicker.value });
+    });
+    accentPicker.addEventListener("change", saveSettingsFromUI);
+  }
+  if (accentText) {
+    accentText.addEventListener("input", () => {
+      const normalized = normalizeHexColor(accentText.value, settings.accentColor || "#8B5CF6");
+      if (accentPicker) accentPicker.value = normalized;
+      applyThemeAndAccent({ ...settings, accentColor: normalized });
+    });
+  }
+
   const resetBtn = $("resetTelemetryBtn");
   if (resetBtn) {
     resetBtn.addEventListener("click", () => {
@@ -807,6 +1116,169 @@ function bindDynamicSettingsEvents(panel) {
       localStorage.setItem(KEYS.settings, JSON.stringify(next));
       renderAdvancedSettings();
       showToast("Gym profile removed");
+    });
+  });
+
+  const backupNowBtn = $("runBackupNowBtn");
+  if (backupNowBtn) {
+    backupNowBtn.addEventListener("click", () => {
+      if (typeof createBackupSnapshot === "function") {
+        const result = createBackupSnapshot({ download: true, reason: "manual" });
+        if (result && result.ok) {
+          const next = { ...settings, autoBackupLastRunAt: Date.now() };
+          updateSettings(next);
+          localStorage.setItem(KEYS.settings, JSON.stringify(next));
+          renderAdvancedSettings();
+          showToast("Backup snapshot created", "success");
+        } else {
+          showToast("Backup failed", "error");
+        }
+      } else {
+        showToast("Backup tools are loading", "info");
+      }
+    });
+  }
+
+  const installBtn = $("triggerPwaInstallBtn");
+  if (installBtn) {
+    installBtn.addEventListener("click", async () => {
+      if (typeof window.promptPwaInstall === "function") {
+        const result = await window.promptPwaInstall();
+        if (result && result.installed) showToast("App installed", "success");
+        else if (result && result.dismissed) showToast("Install prompt dismissed", "info");
+        else showToast("Install prompt unavailable", "warning");
+      } else {
+        showToast("Install prompt unavailable on this device", "warning");
+      }
+    });
+  }
+
+  const updateBtn = $("checkPwaUpdateBtn");
+  if (updateBtn) {
+    updateBtn.addEventListener("click", async () => {
+      if (typeof window.checkForAppUpdate === "function") {
+        const result = await window.checkForAppUpdate();
+        if (result && result.updated) showToast("Update ready. Reload to apply.", "success");
+        else showToast("No update found", "info");
+      } else {
+        showToast("Update check is unavailable", "warning");
+      }
+    });
+  }
+
+  panel.querySelectorAll("[data-wearable-toggle]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const vendorId = btn.getAttribute("data-wearable-toggle") || "";
+      if (!vendorId) return;
+      if (isIntegrationEnabled(vendorId)) {
+        disconnectVendor(vendorId);
+        showToast("Wearable disconnected", "info");
+      } else {
+        const result = connectVendor(vendorId);
+        if (result && result.connected) showToast(result.vendor + " connected", "success");
+      }
+      renderAdvancedSettings();
+    });
+  });
+
+  panel.querySelectorAll("[data-wearable-sample]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const vendorId = btn.getAttribute("data-wearable-sample") || "";
+      const result = importWearableSample(vendorId);
+      if (result && result.imported) showToast("Sample wearable workout imported", "success");
+      else showToast("Connect vendor first", "warning");
+      renderAdvancedSettings();
+    });
+  });
+
+  const createSyncCodeBtn = $("createPeerSyncCodeBtn");
+  if (createSyncCodeBtn) {
+    createSyncCodeBtn.addEventListener("click", async () => {
+      const code = typeof createPeerSyncCode === "function" ? createPeerSyncCode() : "";
+      if (!code) {
+        showToast("Could not generate sync code", "error");
+        return;
+      }
+      const input = $("peerSyncCodeInput");
+      if (input) input.value = code;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        try {
+          await navigator.clipboard.writeText(code);
+          showToast("Sync code copied", "success");
+        } catch {
+          showToast("Sync code generated", "info");
+        }
+      } else {
+        showToast("Sync code generated", "info");
+      }
+    });
+  }
+
+  const applySyncCodeBtn = $("applyPeerSyncCodeBtn");
+  if (applySyncCodeBtn) {
+    applySyncCodeBtn.addEventListener("click", () => {
+      const input = $("peerSyncCodeInput");
+      const code = input ? String(input.value || "").trim() : "";
+      if (!code) {
+        showToast("Paste a sync code first", "warning");
+        return;
+      }
+      try {
+        const result = applyPeerSyncCode(code, "merge");
+        showToast("Peer sync applied", "success");
+        if (result && result.applied) renderAdvancedSettings();
+      } catch (err) {
+        showToast("Sync code invalid: " + err.message, "error");
+      }
+    });
+  }
+
+  const testWebhookBtn = $("testWebhookBtn");
+  if (testWebhookBtn) {
+    testWebhookBtn.addEventListener("click", () => {
+      emitWebhookEvent("test_ping", {
+        ts: Date.now(),
+        source: "settings",
+        user: settings.displayName || "Athlete",
+      }).then(() => showToast("Webhook test queued", "success"));
+    });
+  }
+
+  const flushWebhookBtn = $("flushWebhookQueueBtn");
+  if (flushWebhookBtn) {
+    flushWebhookBtn.addEventListener("click", async () => {
+      const result = await flushWebhookQueue();
+      showToast("Webhook flush: " + (result.sent || 0) + " sent, " + (result.pending || 0) + " pending", "info");
+      renderAdvancedSettings();
+    });
+  }
+
+  const saveProfilesBtn = $("saveMacroProfilesBtn");
+  if (saveProfilesBtn) {
+    saveProfilesBtn.addEventListener("click", () => {
+      const profiles = readMacroProfilesFromUI();
+      if (!Object.keys(profiles).length) {
+        showToast("No macro profiles found", "warning");
+        return;
+      }
+      const next = { ...settings, goalMacroProfiles: profiles };
+      updateSettings(next);
+      localStorage.setItem(KEYS.settings, JSON.stringify(next));
+      loadSettingsUI();
+      showToast("Macro profiles saved", "success");
+    });
+  }
+
+  panel.querySelectorAll("[data-apply-goal-profile]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const profiles = readMacroProfilesFromUI();
+      if (Object.keys(profiles).length) {
+        const merged = { ...settings, goalMacroProfiles: profiles };
+        updateSettings(merged);
+        localStorage.setItem(KEYS.settings, JSON.stringify(merged));
+      }
+      const profile = btn.getAttribute("data-apply-goal-profile") || "training";
+      applyCompeteGoalProfile(profile);
     });
   });
 }

@@ -215,6 +215,10 @@ function addWater(amount) {
   refreshWater();
   refreshWaterInsights();
   showToast("+" + amount + "ml water 💧");
+  if (typeof triggerHaptic === "function") triggerHaptic("light");
+  if (typeof window.notifyDataChanged === "function") {
+    window.notifyDataChanged({ source: "today", reason: "addWater", amount: amount });
+  }
 }
 
 function undoWater() {
@@ -282,6 +286,10 @@ function saveWellness() {
   saveData(KEYS.wellness, data);
   showToast("Wellness saved! 🧘");
   refreshReadiness();
+  if (typeof triggerHaptic === "function") triggerHaptic("light");
+  if (typeof window.notifyDataChanged === "function") {
+    window.notifyDataChanged({ source: "today", reason: "saveWellness" });
+  }
 }
 
 // ========== INSIGHTS ==========
@@ -814,6 +822,10 @@ function refreshToday() {
   // W3.6 Bottom stat boxes
   refreshDashboardBottom(workouts);
 
+  // W5 enhancements
+  renderCompetitionPrepCard();
+  renderGamificationCard();
+
   // W3.1 Header avatar
   refreshHeaderAvatar();
 }
@@ -883,6 +895,118 @@ function refreshDashboardBottom(workouts) {
     const burned = (workouts || []).reduce(function (a, w) { return a + (w.caloriesBurned || 0); }, 0);
     calBurn.textContent = burned + " cal";
   }
+}
+
+function ensureTodayInjectedCard(cardId) {
+  let card = $(cardId);
+  if (card) return card;
+  const panel = $("panel-today");
+  if (!panel) return null;
+  card = document.createElement("div");
+  card.className = "card";
+  card.id = cardId;
+  const wellness = $("wellnessCard");
+  if (wellness && wellness.parentElement === panel) {
+    panel.insertBefore(card, wellness);
+  } else {
+    panel.appendChild(card);
+  }
+  return card;
+}
+
+function getCompetitionCountdownData() {
+  const raw = String(settings.competitionDate || "").trim();
+  if (!raw) return null;
+  const target = Date.parse(raw + "T00:00:00");
+  if (!Number.isFinite(target)) return null;
+
+  const nowStart = Date.parse(today() + "T00:00:00");
+  const daysLeft = Math.ceil((target - nowStart) / (24 * 60 * 60 * 1000));
+  let phase = "Build";
+  if (daysLeft <= 7) phase = "Peak Week";
+  else if (daysLeft <= 21) phase = "Taper";
+  else if (daysLeft <= 56) phase = "Conditioning";
+  return { daysLeft: daysLeft, phase: phase };
+}
+
+function renderCompetitionPrepCard() {
+  const shouldShow = (settings.bodyGoal || "") === "compete" || !!String(settings.competitionDate || "").trim();
+  const existing = $("todayCompetitionCard");
+  if (!shouldShow) {
+    if (existing) existing.remove();
+    return;
+  }
+
+  const card = ensureTodayInjectedCard("todayCompetitionCard");
+  if (!card) return;
+
+  const countdown = getCompetitionCountdownData();
+  const day = today();
+  const sodium = loadData(KEYS.food)
+    .filter((row) => row.date === day)
+    .reduce((sum, row) => sum + (Number(row.sodium) || 0), 0);
+  const water = getWaterToday();
+  const waterTarget = Math.max(1200, Number(settings.waterGoal) || 2000);
+  const sodiumTarget = countdown && countdown.daysLeft <= 7 ? 2600 : 3200;
+
+  const countdownText = !countdown
+    ? "Set your competition date in Settings to unlock countdown coaching."
+    : (countdown.daysLeft >= 0
+      ? countdown.daysLeft + " day" + (countdown.daysLeft === 1 ? "" : "s") + " to show day • " + countdown.phase
+      : "Show day passed " + Math.abs(countdown.daysLeft) + " day" + (Math.abs(countdown.daysLeft) === 1 ? "" : "s") + " ago");
+
+  card.innerHTML =
+    '<div class="flex-between mb-8"><div class="card-title">Competition Prep</div><span class="tag tag-purple">' + esc((settings.competitionDivision || "Open").toUpperCase()) + '</span></div>' +
+    '<div class="text-sm" style="font-weight:600">' + esc(settings.competitionName || "Competition Target") + '</div>' +
+    '<div class="text-xs mt-8" style="color:var(--text2)">' + esc(countdownText) + '</div>' +
+    '<div class="summary-grid mt-12">' +
+      '<div class="summary-item"><div class="val">' + Math.round(water) + ' ml</div><div class="lbl">Water (' + waterTarget + ' target)</div></div>' +
+      '<div class="summary-item"><div class="val">' + Math.round(sodium) + ' mg</div><div class="lbl">Sodium (' + sodiumTarget + ' target)</div></div>' +
+    '</div>';
+}
+
+function renderGamificationCard() {
+  const card = ensureTodayInjectedCard("todayGamificationCard");
+  if (!card) return;
+
+  const xp = typeof loadXpProfile === "function" ? loadXpProfile() : { level: 1, xp: 0, totalEarned: 0 };
+  const required = typeof getXpRequiredForLevel === "function" ? getXpRequiredForLevel(xp.level) : 100;
+  const pct = Math.max(0, Math.min(100, Math.round((Number(xp.xp) / Math.max(1, required)) * 100)));
+  const challenge = typeof getDailyChallengeSnapshot === "function"
+    ? getDailyChallengeSnapshot(today())
+    : { challenges: [] };
+  const deadline = typeof getDeadlineChallengeSnapshot === "function"
+    ? getDeadlineChallengeSnapshot(today(), { award: false })
+    : { challenges: [] };
+
+  const challengeRows = (challenge.challenges || []).map((row) => {
+    const unit = row.unit ? " " + row.unit : "";
+    const progress = Math.min(100, Math.round((Number(row.value) / Math.max(1, Number(row.target))) * 100));
+    return '<div class="text-xs mt-8">' +
+      '<div class="flex-between"><span>' + esc(row.label) + '</span><span>' + Math.round(Number(row.value) || 0) + unit + ' / ' + Math.round(Number(row.target) || 0) + unit + ' • +' + Math.round(Number(row.xp) || 0) + ' XP</span></div>' +
+      '<div class="progress mt-4"><div class="progress-fill" style="width:' + progress + '%"></div></div>' +
+    '</div>';
+  }).join("");
+
+  const deadlineRows = (deadline.challenges || []).slice(0, 2).map((row) => {
+    const value = Math.round(Number(row.value) || 0);
+    const target = Math.max(1, Math.round(Number(row.target) || 0));
+    const progress = Math.min(100, Math.round((value / target) * 100));
+    const daysLeft = Math.max(0, Number(row.remainingDays) || 0);
+    const suffix = row.completed ? "Completed" : (daysLeft + " day" + (daysLeft === 1 ? "" : "s") + " left");
+    return '<div class="text-xs mt-8">' +
+      '<div class="flex-between"><span>⏳ ' + esc(row.title || "Deadline challenge") + '</span><span>' + value + '/' + target + ' • ' + esc(suffix) + '</span></div>' +
+      '<div class="progress mt-4"><div class="progress-fill" style="width:' + progress + '%"></div></div>' +
+    '</div>';
+  }).join("");
+
+  card.innerHTML =
+    '<div class="flex-between mb-8"><div class="card-title">XP & Challenges</div><span class="tag tag-blue">LV ' + Math.max(1, Number(xp.level) || 1) + '</span></div>' +
+    '<div class="text-xs" style="color:var(--text2)">Progress to next level: ' + Math.max(0, Math.round(Number(xp.xp) || 0)) + ' / ' + required + ' XP</div>' +
+    '<div class="progress mt-8"><div class="progress-fill" style="width:' + pct + '%"></div></div>' +
+    '<div class="text-xs mt-8" style="color:var(--text2)">Total earned XP: ' + Math.max(0, Math.round(Number(xp.totalEarned) || 0)) + '</div>' +
+    challengeRows +
+    deadlineRows;
 }
 
 // ========== EVENT DELEGATION ==========

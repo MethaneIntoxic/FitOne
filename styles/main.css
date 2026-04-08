@@ -5873,3 +5873,248 @@ body.timer-locked #timerOverlay {
     grid-template-columns: 1fr;
   }
 }
+
+/* ========== PHASE 4/5 ADDITIONS ========== */
+.exercise-drag-handle {
+  cursor: grab;
+  font-weight: 700;
+  min-width: 44px;
+}
+
+.stat-row.is-dragging {
+  opacity: 0.55;
+  transform: scale(0.99);
+}
+
+.stat-row.is-drag-over {
+  outline: 2px dashed var(--accent);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+#weeklyPlannerCard .planner-list {
+  display: grid;
+  gap: 8px;
+}
+
+#weeklyPlannerCard .planner-row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+#weeklyPlannerCard .planner-row-date {
+  font-size: 0.78rem;
+  color: var(--text2);
+  font-weight: 700;
+}
+
+#weeklyPlannerCard .planner-row-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+#weeklyPlannerCard .planner-row-fields select,
+#weeklyPlannerCard .planner-row-fields input {
+  min-height: 38px;
+}
+
+.macro-profile-row {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 8px;
+  margin-top: 8px;
+  background: rgba(255, 255, 255, 0.015);
+}
+
+@media (max-width: 640px) {
+  #weeklyPlannerCard .planner-row {
+    grid-template-columns: 1fr;
+  }
+
+  #weeklyPlannerCard .planner-row-fields {
+    grid-template-columns: 1fr;
+  }
+}
+
+.exercise-guide-slot {
+  margin-top: 2px;
+}
+
+.exercise-guide-empty {
+  color: var(--text2);
+  padding: 6px 2px;
+}
+
+.exercise-guide-inline {
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.exercise-guide-inline summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.76rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 8px 10px;
+  color: var(--text2);
+}
+
+.exercise-guide-inline .hint {
+  color: var(--accent2);
+  font-size: 0.65rem;
+}
+
+.exercise-guide-body {
+  padding: 2px 10px 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.exercise-guide-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.exercise-guide-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.exercise-guide-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text2);
+}
+
+.exercise-guide-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.exercise-guide-chip {
+  font-size: 0.7rem;
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text1);
+}
+
+.exercise-guide-chip.is-primary {
+  background: rgba(139, 92, 246, 0.2);
+  color: #d8c8ff;
+}
+
+.exercise-guide-row {
+  margin-top: 5px;
+}
+
+.exercise-guide-row-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.exercise-guide-row-copy {
+  font-size: 0.78rem;
+  color: var(--text2);
+  line-height: 1.45;
+}
+
+.exercise-guide-mistakes {
+  margin-top: 6px;
+  padding-left: 16px;
+  display: grid;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--text2);
+}
+
+.analytics-custom-range-row {
+  margin-top: 8px;
+}
+
+.analytics-report-card .card-title {
+  margin-bottom: 8px;
+}
+
+.analytics-report-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.analytics-report-item {
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 8px;
+}
+
+.analytics-report-item .label {
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text2);
+}
+
+.analytics-report-item .value {
+  margin-top: 3px;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.analytics-report-meta {
+  margin-top: 10px;
+  font-size: 0.72rem;
+  color: var(--text2);
+}
+
+.recommended-programs-list {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.recommended-program-item {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 10px;
+}
+
+.recommended-program-item .title {
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.recommended-program-item .meta {
+  margin-top: 2px;
+  font-size: 0.72rem;
+  color: var(--text2);
+}
+
+.recommended-program-item .copy {
+  margin-top: 6px;
+  font-size: 0.77rem;
+  color: var(--text2);
+}

@@ -1,0 +1,18 @@
+{
+  "id": "T-UAT-014-1",
+  "scenarioId": "UAT-014",
+  "scenarioTitle": "Assisted pull-ups with effective load",
+  "persona": "Kay – powerlifter",
+  "category": "Strength",
+  "mode": "power",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Log assisted pull-ups with decreasing assistance; check PR and trend graphs.",
+  "expectedSummary": "Effective load (bodyweight minus assist) increases over time; PRs reflect this; no bogus spikes.",
+  "actualResult": "Error: expect(locator).toBeVisible() failed",
+  "errorMessage": "Error: expect(locator).toBeVisible() failed\n\nLocator:  locator('#app')\nExpected: visible\nReceived: hidden\nTimeout:  7000ms\n\nCall log:\n  - Expect \"toBeVisible\" with timeout 7000ms\n  - waiting for locator('#app')\n    11 × locator resolved to <div id=\"app\" class=\"app app-hidden\">…</div>\n       - unexpected value \"hidden\"\n",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-014-–-Assisted-pull-ups-with-effective-load-UAT-014-chromium-retry1\\test-failed-1.png",
+  "createdAt": "2026-04-08T17:20:32.108Z"
+}

@@ -12,6 +12,8 @@ function refreshCurrentTab(tab) {
 }
 let _navState = { tab: "today", at: Date.now() };
 const NOTIFICATIONS_LAST_SEEN_KEY = "ft_notifications_last_seen";
+const REMINDER_STATE_KEY = "ft_reminder_state";
+let _reminderIntervalId = null;
 
 function getLastSeenNotificationTs() {
   const raw = Number(localStorage.getItem(NOTIFICATIONS_LAST_SEEN_KEY));
@@ -39,6 +41,127 @@ function updateNotificationBadge() {
 
   badge.textContent = unread > 99 ? "99+" : String(unread);
   badge.classList.toggle("hidden", unread <= 0);
+}
+
+function loadReminderState() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(REMINDER_STATE_KEY) || "{}");
+    return raw && typeof raw === "object" ? raw : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveReminderState(state) {
+  try {
+    localStorage.setItem(REMINDER_STATE_KEY, JSON.stringify(state || {}));
+  } catch {
+    /* ignore */
+  }
+}
+
+function sendLocalReminder(reminderId, title, body, routeHash) {
+  if (!settings.pushNotifications) return;
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+
+  const payload = {
+    body: body,
+    icon: "./icons/icon-192.png",
+    badge: "./icons/icon-192.png",
+    tag: String(reminderId || "fitone-reminder"),
+    data: { route: routeHash || "#today" },
+  };
+
+  if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+    navigator.serviceWorker.ready
+      .then(function (reg) {
+        if (reg && typeof reg.showNotification === "function") {
+          return reg.showNotification(title, payload);
+        }
+        return new Notification(title, payload);
+      })
+      .catch(function () {
+        try {
+          new Notification(title, payload);
+        } catch {
+          /* ignore */
+        }
+      });
+    return;
+  }
+
+  try {
+    new Notification(title, payload);
+  } catch {
+    /* ignore */
+  }
+}
+
+function runReminderChecks() {
+  if (!settings.pushNotifications) return;
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+
+  const now = new Date();
+  const day = today();
+  const hour = now.getHours();
+  const reminderState = loadReminderState();
+
+  const todayFood = loadData(KEYS.food).filter(function (row) {
+    return row && row.date === day;
+  });
+  const todayWorkouts = loadData(KEYS.workouts).filter(function (row) {
+    return row && row.date === day;
+  });
+  const todayWater = getWaterToday();
+
+  const hasLunchLog = todayFood.some(function (row) {
+    const meal = String((row && row.meal) || "").toLowerCase();
+    return meal === "lunch";
+  });
+  if (!hasLunchLog && hour >= 12 && hour <= 14 && reminderState.lunchDay !== day) {
+    sendLocalReminder(
+      "fitone-reminder-lunch-" + day,
+      "Time to log lunch",
+      "Add your midday meal to keep macros and micronutrients on track.",
+      "#log"
+    );
+    reminderState.lunchDay = day;
+  }
+
+  const hasWorkoutPlan = loadData(KEYS.dayPlans).some(function (row) {
+    return row && row.date === day && row.protocolId;
+  });
+  if (hasWorkoutPlan && !todayWorkouts.length && hour >= 18 && hour <= 21 && reminderState.workoutDay !== day) {
+    sendLocalReminder(
+      "fitone-reminder-workout-" + day,
+      "Workout scheduled today",
+      "Your planned workout is still open. Start your session when ready.",
+      "#log"
+    );
+    reminderState.workoutDay = day;
+  }
+
+  const waterGoal = Math.max(1200, Number(settings.waterGoal) || 2000);
+  const waterSlot = day + "-" + String(Math.floor(hour / 2));
+  if (hour >= 9 && hour <= 22 && todayWater < waterGoal * 0.6 && reminderState.waterSlot !== waterSlot) {
+    sendLocalReminder(
+      "fitone-reminder-water-" + waterSlot,
+      "Drink water",
+      "Hydration check: you are below your daily water target.",
+      "#today"
+    );
+    reminderState.waterSlot = waterSlot;
+  }
+
+  saveReminderState(reminderState);
+}
+
+function initReminderScheduler() {
+  runReminderChecks();
+  if (_reminderIntervalId) {
+    clearInterval(_reminderIntervalId);
+  }
+  _reminderIntervalId = window.setInterval(runReminderChecks, 15 * 60 * 1000);
 }
 
 function openPulseCenter() {
@@ -98,18 +221,90 @@ window.notifyDataChanged = function (detail) {
   window.dispatchEvent(new CustomEvent("fitone:dataChanged", { detail: detail || {} }));
 };
 
-window.addEventListener("fitone:dataChanged", () => {
+function webhookEventForReason(reason) {
+  const key = String(reason || "").toLowerCase();
+  if (key === "logfood" || key === "duplicatefood" || key === "quickfood" || key === "quickaddfavorite") return "food_logged";
+  if (key === "logworkout" || key === "quickworkout") return "workout_logged";
+  if (key === "logbody" || key === "quickbodyweight") return "body_logged";
+  if (key === "addwater") return "water_logged";
+  if (key === "savewellness") return "wellness_saved";
+  return "";
+}
+
+function awardXPFromDataChange(detail) {
+  if (typeof grantXP !== "function") return;
+  const reason = String((detail && detail.reason) || "").toLowerCase();
+  const xpMap = {
+    logfood: 10,
+    duplicatefood: 8,
+    quickfood: 8,
+    quickaddfavorite: 8,
+    logworkout: 40,
+    logbody: 16,
+    quickbodyweight: 10,
+    addwater: 3,
+    savewellness: 6,
+  };
+  const gain = Number(xpMap[reason]) || 0;
+  let result = null;
+  if (gain > 0) result = grantXP(gain, reason, { source: detail && detail.source ? detail.source : "unknown" });
+
+  if (typeof getDailyChallengeSnapshot === "function") {
+    const challenge = getDailyChallengeSnapshot(today());
+    if (challenge && challenge.awardedXP > 0) {
+      showToast("Daily challenge XP +" + challenge.awardedXP, "success");
+    }
+  }
+
+  if (typeof getDeadlineChallengeSnapshot === "function") {
+    const deadlines = getDeadlineChallengeSnapshot(today(), { award: true });
+    if (deadlines && Number(deadlines.awardedXP) > 0) {
+      showToast("Deadline challenge XP +" + deadlines.awardedXP, "success");
+    }
+  }
+
+  if (result && result.leveledUp) {
+    showToast("Level up! You are now Lv." + result.profile.level, "success");
+    if (typeof triggerHaptic === "function") triggerHaptic("heavy");
+  }
+}
+
+window.addEventListener("fitone:dataChanged", (event) => {
+  const detail = event && event.detail ? event.detail : {};
+
+  if (typeof enqueueSyncOperation === "function") {
+    enqueueSyncOperation(detail.reason || "mutation", detail);
+  }
+
+  const webhookEvent = webhookEventForReason(detail.reason);
+  if (webhookEvent && typeof emitWebhookEvent === "function") {
+    emitWebhookEvent(webhookEvent, {
+      reason: detail.reason || "mutation",
+      source: detail.source || "app",
+      at: Date.now(),
+    });
+  }
+
+  awardXPFromDataChange(detail);
+
   refreshLog();
   refreshToday();
   populateProtocolSelect();
   refreshFavorites();
   updateNotificationBadge();
+  runReminderChecks();
   const activeMain = document.querySelector(".tab-btn.active");
   if (!activeMain) return;
   if (activeMain.dataset.tab === "analytics") refreshAnalytics();
   if (activeMain.dataset.tab === "protocols") refreshProtocols();
   // Check achievements on any data change
   if (typeof checkAchievements === 'function') setTimeout(checkAchievements, 500);
+});
+
+window.addEventListener("fitone:entityStoreReady", () => {
+  refreshToday();
+  refreshLog();
+  updateNotificationBadge();
 });
 
 function activateMainTab(tab, options) {
@@ -609,6 +804,29 @@ function init() {
   if (typeof renderAchievementGallery === 'function') renderAchievementGallery();
   if (typeof checkAchievements === 'function') setTimeout(checkAchievements, 1000);
 
+  if (typeof runScheduledBackupIfDue === "function") {
+    const backupResult = runScheduledBackupIfDue();
+    if (backupResult && backupResult.ok) {
+      showToast("Scheduled backup completed", "info");
+    }
+  }
+
+  if (typeof getDeadlineChallengeSnapshot === "function") {
+    const deadlines = getDeadlineChallengeSnapshot(today(), { award: true });
+    if (deadlines && Number(deadlines.awardedXP) > 0) {
+      showToast("Deadline challenge XP +" + deadlines.awardedXP, "success");
+    }
+  }
+
+  initReminderScheduler();
+
+  if (typeof flushWebhookQueue === "function") {
+    flushWebhookQueue();
+  }
+  window.addEventListener("online", () => {
+    if (typeof flushWebhookQueue === "function") flushWebhookQueue();
+  });
+
   // First-launch flow: welcome screen -> onboarding
   if (shouldShowWelcomeScreen()) {
     showWelcomeScreen();
@@ -628,18 +846,123 @@ function init() {
 
 init();
 
-// ========== SERVICE WORKER REGISTRATION ==========
+// ========== PWA INSTALL + SERVICE WORKER UPDATES ==========
+window._deferredInstallPrompt = null;
+window._swRegistration = null;
+window._swUpdateReady = false;
+
+function publishPwaInstallAvailability() {
+  window.dispatchEvent(
+    new CustomEvent("fitone:pwaInstallAvailability", {
+      detail: { available: !!window._deferredInstallPrompt },
+    })
+  );
+}
+
+window.addEventListener("beforeinstallprompt", (event) => {
+  if (settings.pwaInstallPromptEnabled === false) return;
+  event.preventDefault();
+  window._deferredInstallPrompt = event;
+  publishPwaInstallAvailability();
+});
+
+window.addEventListener("appinstalled", () => {
+  window._deferredInstallPrompt = null;
+  publishPwaInstallAvailability();
+  showToast("FitOne installed", "success");
+});
+
+window.promptPwaInstall = async function () {
+  if (settings.pwaInstallPromptEnabled === false) {
+    return { installed: false, disabled: true };
+  }
+  const promptEvent = window._deferredInstallPrompt;
+  if (!promptEvent) return { installed: false, unavailable: true };
+
+  promptEvent.prompt();
+  const choice = await promptEvent.userChoice;
+  const accepted = !!(choice && choice.outcome === "accepted");
+  window._deferredInstallPrompt = null;
+  publishPwaInstallAvailability();
+  return {
+    installed: accepted,
+    dismissed: !accepted,
+  };
+};
+
+window.checkForAppUpdate = async function () {
+  const reg = window._swRegistration;
+  if (!reg) return { updated: false, reason: "no-registration" };
+
+  await reg.update();
+  const waiting = reg.waiting;
+  if (waiting) {
+    window._swUpdateReady = true;
+    waiting.postMessage({ type: "SKIP_WAITING" });
+    return { updated: true, waiting: true };
+  }
+
+  return { updated: false, waiting: false };
+};
+
+function bindServiceWorkerUpdateLifecycle(registration) {
+  if (!registration) return;
+  if (registration.waiting) {
+    window._swUpdateReady = true;
+    if (settings.pwaUpdateAutoApply) {
+      registration.waiting.postMessage({ type: "SKIP_WAITING" });
+    } else {
+      showToast("App update ready. Use Check App Update to apply.", "info");
+    }
+  }
+
+  registration.addEventListener("updatefound", () => {
+    const worker = registration.installing;
+    if (!worker) return;
+    worker.addEventListener("statechange", () => {
+      if (worker.state === "installed" && navigator.serviceWorker.controller) {
+        window._swUpdateReady = true;
+        if (settings.pwaUpdateAutoApply) {
+          worker.postMessage({ type: "SKIP_WAITING" });
+        } else {
+          showToast("A new FitOne version is ready.", "info");
+        }
+      }
+    });
+  });
+}
+
 if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.addEventListener("message", (event) => {
+    const data = event && event.data ? event.data : {};
+    if (data.type !== "OPEN_ROUTE") return;
+    const route = String(data.route || "#today");
+    const tab = tabFromHash(route);
+    if (tab) {
+      activateMainTab(tab);
+      return;
+    }
+    window.location.hash = route;
+  });
+
   window.addEventListener("load", () => {
     const swUrl = new URL("./sw.js", window.location.href);
     const swScope = new URL("./", window.location.href).pathname;
+
     navigator.serviceWorker
       .register(swUrl.pathname, { scope: swScope })
       .then((reg) => {
-        console.log("FitOne service worker registered", reg);
+        window._swRegistration = reg;
+        bindServiceWorkerUpdateLifecycle(reg);
       })
       .catch((err) => {
         console.error("FitOne service worker registration failed", err);
       });
+  });
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (window._swUpdateReady) {
+      window.location.reload();
+    }
   });
 }

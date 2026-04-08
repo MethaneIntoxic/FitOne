@@ -2,6 +2,426 @@
 // Charts and analytics rendering
 
 const ANALYTICS_TDEE_SYNC_MIN_CONFIDENCE = 0.65;
+const ANALYTICS_RANGE_DEFAULT = "14d";
+
+let _analyticsWorker = null;
+let _analyticsWorkerSeq = 0;
+let _analyticsPending = {};
+let _analyticsReportCache = null;
+
+function initAnalyticsWorker() {
+  if (_analyticsWorker || typeof Worker === "undefined") return _analyticsWorker;
+  try {
+    _analyticsWorker = new Worker("./src/workers/analyticsWorker.js");
+    _analyticsWorker.addEventListener("message", function (event) {
+      const data = event && event.data ? event.data : {};
+      const id = Number(data.id) || 0;
+      const pending = _analyticsPending[id];
+      if (!pending) return;
+      delete _analyticsPending[id];
+      pending.resolve(data.payload || null);
+    });
+    _analyticsWorker.addEventListener("error", function () {
+      const pendingIds = Object.keys(_analyticsPending);
+      pendingIds.forEach(function (id) {
+        const pending = _analyticsPending[id];
+        if (!pending) return;
+        delete _analyticsPending[id];
+        pending.reject(new Error("worker-error"));
+      });
+    });
+  } catch {
+    _analyticsWorker = null;
+  }
+  return _analyticsWorker;
+}
+
+function runAnalyticsWorkerTask(task, payload, fallbackFn) {
+  const worker = initAnalyticsWorker();
+  if (!worker) {
+    return Promise.resolve(typeof fallbackFn === "function" ? fallbackFn() : null);
+  }
+
+  return new Promise(function (resolve) {
+    const id = ++_analyticsWorkerSeq;
+    const timer = setTimeout(function () {
+      if (_analyticsPending[id]) {
+        delete _analyticsPending[id];
+      }
+      resolve(typeof fallbackFn === "function" ? fallbackFn() : null);
+    }, 2500);
+
+    _analyticsPending[id] = {
+      resolve: function (result) {
+        clearTimeout(timer);
+        resolve(result);
+      },
+      reject: function () {
+        clearTimeout(timer);
+        resolve(typeof fallbackFn === "function" ? fallbackFn() : null);
+      },
+    };
+
+    try {
+      worker.postMessage({ id: id, task: task, payload: payload || {} });
+    } catch {
+      clearTimeout(timer);
+      delete _analyticsPending[id];
+      resolve(typeof fallbackFn === "function" ? fallbackFn() : null);
+    }
+  });
+}
+
+function parseIsoDateLocal(value) {
+  const raw = String(value || "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return null;
+  const date = new Date(raw + "T00:00:00");
+  if (!Number.isFinite(date.getTime())) return null;
+  return date;
+}
+
+function buildDateRangeDays(startDate, endDate) {
+  const start = parseIsoDateLocal(startDate);
+  const end = parseIsoDateLocal(endDate);
+  if (!start || !end || start > end) return [];
+  const days = [];
+  const cursor = new Date(start.getTime());
+  while (cursor <= end) {
+    days.push(localDateStr(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return days;
+}
+
+function getEarliestLoggedDate() {
+  let earliest = null;
+  [KEYS.food, KEYS.workouts, KEYS.body].forEach(function (key) {
+    loadData(key).forEach(function (row) {
+      const date = String((row && row.date) || "").trim();
+      if (!date) return;
+      if (!earliest || date < earliest) earliest = date;
+    });
+  });
+  return earliest || localDateStr(new Date());
+}
+
+function getAnalyticsDateRange() {
+  const modeEl = $("analyticsDateRange");
+  const mode = modeEl ? String(modeEl.value || ANALYTICS_RANGE_DEFAULT) : ANALYTICS_RANGE_DEFAULT;
+  const now = new Date();
+  const endDate = localDateStr(now);
+
+  if (mode === "custom") {
+    const startVal = $("analyticsStartDate") ? $("analyticsStartDate").value : "";
+    const endVal = $("analyticsEndDate") ? $("analyticsEndDate").value : "";
+    const parsedEnd = parseIsoDateLocal(endVal) || parseIsoDateLocal(endDate);
+    const parsedStart = parseIsoDateLocal(startVal) || parsedEnd;
+    const safeStart = parsedStart <= parsedEnd ? parsedStart : parsedEnd;
+    const safeEnd = parsedEnd >= parsedStart ? parsedEnd : parsedStart;
+    const startStr = localDateStr(safeStart);
+    const endStr = localDateStr(safeEnd);
+    return {
+      mode: mode,
+      startDate: startStr,
+      endDate: endStr,
+      days: buildDateRangeDays(startStr, endStr),
+      label: fmtDate(startStr) + " -> " + fmtDate(endStr),
+    };
+  }
+
+  if (mode === "all") {
+    const startStr = getEarliestLoggedDate();
+    return {
+      mode: mode,
+      startDate: startStr,
+      endDate: endDate,
+      days: buildDateRangeDays(startStr, endDate),
+      label: "All Time",
+    };
+  }
+
+  const map = { "7d": 7, "14d": 14, "30d": 30, "90d": 90 };
+  const dayCount = Math.max(1, Number(map[mode]) || 14);
+  const start = new Date(now.getTime());
+  start.setDate(start.getDate() - (dayCount - 1));
+  const startStr = localDateStr(start);
+  return {
+    mode: mode,
+    startDate: startStr,
+    endDate: endDate,
+    days: buildDateRangeDays(startStr, endDate),
+    label: "Last " + dayCount + " Days",
+  };
+}
+
+function refreshAnalyticsRangeUi() {
+  const modeEl = $("analyticsDateRange");
+  const customRow = $("analyticsCustomRangeRow");
+  const labelEl = $("analyticsRangeLabel");
+  if (customRow && modeEl) {
+    customRow.classList.toggle("hidden", String(modeEl.value || "") !== "custom");
+  }
+
+  const range = getAnalyticsDateRange();
+  if (labelEl) {
+    const dayCount = range.days.length;
+    labelEl.textContent = range.label + " • " + dayCount + " day" + (dayCount === 1 ? "" : "s");
+  }
+}
+
+function bindAnalyticsRangeControls() {
+  const modeEl = $("analyticsDateRange");
+  const startEl = $("analyticsStartDate");
+  const endEl = $("analyticsEndDate");
+  if (!modeEl) return;
+
+  if (!modeEl.dataset.bound) {
+    modeEl.dataset.bound = "1";
+    modeEl.addEventListener("change", function () {
+      refreshAnalyticsRangeUi();
+      refreshAnalytics();
+    });
+  }
+
+  if (startEl && !startEl.dataset.bound) {
+    startEl.dataset.bound = "1";
+    startEl.addEventListener("change", function () {
+      refreshAnalyticsRangeUi();
+      refreshAnalytics();
+    });
+  }
+
+  if (endEl && !endEl.dataset.bound) {
+    endEl.dataset.bound = "1";
+    endEl.addEventListener("change", function () {
+      refreshAnalyticsRangeUi();
+      refreshAnalytics();
+    });
+  }
+
+  if (startEl && !startEl.value) {
+    const seed = new Date();
+    seed.setDate(seed.getDate() - 13);
+    startEl.value = localDateStr(seed);
+  }
+  if (endEl && !endEl.value) {
+    endEl.value = localDateStr(new Date());
+  }
+
+  refreshAnalyticsRangeUi();
+}
+
+function calcRangeReadinessAverage(days) {
+  if (typeof calculateReadinessForDate !== "function") return 0;
+  const values = (days || []).map(function (day) {
+    const result = calculateReadinessForDate(day);
+    return Number(result && result.score) || 0;
+  }).filter(function (v) {
+    return Number.isFinite(v) && v > 0;
+  });
+  if (!values.length) return 0;
+  return values.reduce(function (sum, value) { return sum + value; }, 0) / values.length;
+}
+
+function computeReportCardFallback(payload) {
+  const source = payload || {};
+  const startDate = String(source.startDate || today());
+  const endDate = String(source.endDate || today());
+  const dayCount = Math.max(1, Number(source.dayCount) || 1);
+
+  const food = (source.food || []).filter(function (row) {
+    return row && row.date >= startDate && row.date <= endDate;
+  });
+  const workouts = (source.workouts || []).filter(function (row) {
+    return row && row.date >= startDate && row.date <= endDate;
+  });
+  const body = (source.body || []).filter(function (row) {
+    return row && row.date >= startDate && row.date <= endDate && Number(row.weight) > 0;
+  }).sort(function (a, b) {
+    return String(a.date || "").localeCompare(String(b.date || ""));
+  });
+
+  const calories = food.reduce(function (sum, row) { return sum + (Number(row.calories) || 0); }, 0);
+  const protein = food.reduce(function (sum, row) { return sum + (Number(row.protein) || 0); }, 0);
+  const carbs = food.reduce(function (sum, row) { return sum + (Number(row.carbs) || 0); }, 0);
+  const fat = food.reduce(function (sum, row) { return sum + (Number(row.fat) || 0); }, 0);
+  const workoutMinutes = workouts.reduce(function (sum, row) { return sum + (Number(row.duration) || 0); }, 0);
+  const workoutDays = new Set(workouts.map(function (row) { return row.date; }).filter(Boolean)).size;
+  const proteinGoal = Math.max(1, Number(source.proteinGoal) || 150);
+
+  const proteinByDay = Object.create(null);
+  food.forEach(function (row) {
+    if (!row || !row.date) return;
+    proteinByDay[row.date] = (Number(proteinByDay[row.date]) || 0) + (Number(row.protein) || 0);
+  });
+  const proteinGoalDays = Object.keys(proteinByDay).filter(function (dateKey) {
+    return Number(proteinByDay[dateKey]) >= proteinGoal;
+  }).length;
+
+  const firstWeight = body.length ? Number(body[0].weight) || 0 : 0;
+  const latestWeight = body.length ? Number(body[body.length - 1].weight) || 0 : 0;
+
+  return {
+    startDate: startDate,
+    endDate: endDate,
+    dayCount: dayCount,
+    caloriesTotal: calories,
+    caloriesAvg: calories / dayCount,
+    proteinAvg: protein / dayCount,
+    carbsAvg: carbs / dayCount,
+    fatAvg: fat / dayCount,
+    workoutCount: workouts.length,
+    workoutDays: workoutDays,
+    workoutMinutes: workoutMinutes,
+    proteinGoalDays: proteinGoalDays,
+    proteinGoal: proteinGoal,
+    weightStart: firstWeight,
+    weightLatest: latestWeight,
+    weightDelta: latestWeight && firstWeight ? latestWeight - firstWeight : 0,
+  };
+}
+
+function renderAnalyticsReportCard() {
+  const card = $("analyticsReportCard");
+  if (!card) return;
+
+  const range = getAnalyticsDateRange();
+  const payload = {
+    startDate: range.startDate,
+    endDate: range.endDate,
+    dayCount: Math.max(1, range.days.length),
+    food: loadData(KEYS.food),
+    workouts: loadData(KEYS.workouts),
+    body: loadData(KEYS.body),
+    proteinGoal: Number(settings.proteinGoal) || 150,
+  };
+
+  card.innerHTML = '<div class="card-title">Weekly / Monthly Report Card</div><div class="text-xs" style="color:var(--text2)">Computing report...</div>';
+
+  runAnalyticsWorkerTask("reportCard", payload, function () {
+    return computeReportCardFallback(payload);
+  }).then(function (report) {
+    if (!report) {
+      card.innerHTML = '<div class="card-title">Weekly / Monthly Report Card</div><div class="text-xs" style="color:var(--text2)">Could not compute report data.</div>';
+      return;
+    }
+
+    const readinessAvg = calcRangeReadinessAverage(range.days);
+    const streak = typeof calculateStreak === "function" ? calculateStreak() : 0;
+
+    let prCount = 0;
+    if (typeof loadPRs === "function") {
+      const startMs = Date.parse(range.startDate + "T00:00:00") || 0;
+      const endMs = Date.parse(range.endDate + "T23:59:59") || Date.now();
+      prCount = loadPRs().filter(function (pr) {
+        const ts = Number(pr && pr.timestamp) || Date.parse(String((pr && pr.date) || "") + "T12:00:00") || 0;
+        return ts >= startMs && ts <= endMs;
+      }).length;
+    }
+
+    _analyticsReportCache = {
+      ...report,
+      readinessAvg: readinessAvg,
+      streak: streak,
+      prCount: prCount,
+      label: range.label,
+    };
+
+    const weightLabel = report.weightLatest
+      ? report.weightLatest.toFixed(1) + " " + (settings.weightUnit || "kg")
+      : "No data";
+    const weightDelta = report.weightDelta
+      ? (report.weightDelta > 0 ? "+" : "") + report.weightDelta.toFixed(1) + " " + (settings.weightUnit || "kg")
+      : "0.0 " + (settings.weightUnit || "kg");
+
+    card.innerHTML =
+      '<div class="card-title">Weekly / Monthly Report Card</div>' +
+      '<div class="text-xs" style="color:var(--text2)">' + esc(range.label) + '</div>' +
+      '<div class="analytics-report-grid mt-8">' +
+        '<div class="analytics-report-item"><div class="label">Avg Calories</div><div class="value">' + Math.round(report.caloriesAvg || 0) + '</div></div>' +
+        '<div class="analytics-report-item"><div class="label">Avg Protein</div><div class="value">' + Math.round(report.proteinAvg || 0) + 'g</div></div>' +
+        '<div class="analytics-report-item"><div class="label">Workout Days</div><div class="value">' + Math.round(report.workoutDays || 0) + '</div></div>' +
+        '<div class="analytics-report-item"><div class="label">Workout Minutes</div><div class="value">' + Math.round(report.workoutMinutes || 0) + '</div></div>' +
+        '<div class="analytics-report-item"><div class="label">Weight</div><div class="value">' + esc(weightLabel) + '</div></div>' +
+        '<div class="analytics-report-item"><div class="label">Weight Trend</div><div class="value">' + esc(weightDelta) + '</div></div>' +
+        '<div class="analytics-report-item"><div class="label">PRs</div><div class="value">' + Math.round(prCount) + '</div></div>' +
+        '<div class="analytics-report-item"><div class="label">Readiness Avg</div><div class="value">' + (readinessAvg ? Math.round(readinessAvg) + '%' : 'N/A') + '</div></div>' +
+      '</div>' +
+      '<div class="analytics-report-meta">Streak: ' + Math.round(streak || 0) + ' days • Protein goal days: ' + Math.round(report.proteinGoalDays || 0) + '</div>';
+  });
+}
+
+function saveAnalyticsReportCardImage() {
+  if (!_analyticsReportCache) {
+    showToast("Report card is still loading", "info");
+    return;
+  }
+
+  const report = _analyticsReportCache;
+  const canvas = document.createElement("canvas");
+  canvas.width = 1200;
+  canvas.height = 860;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  grad.addColorStop(0, "#0d1222");
+  grad.addColorStop(1, "#090d17");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = "#9d83ff";
+  ctx.font = "700 22px Space Grotesk, sans-serif";
+  ctx.fillText("FITONE REPORT CARD", 60, 66);
+
+  ctx.fillStyle = "#d7dceb";
+  ctx.font = "500 16px Space Grotesk, sans-serif";
+  ctx.fillText(report.label || "Selected range", 60, 96);
+
+  const cards = [
+    ["Avg Calories", Math.round(report.caloriesAvg || 0)],
+    ["Avg Protein", Math.round(report.proteinAvg || 0) + "g"],
+    ["Workout Days", Math.round(report.workoutDays || 0)],
+    ["Workout Minutes", Math.round(report.workoutMinutes || 0)],
+    ["Weight Delta", (report.weightDelta > 0 ? "+" : "") + (Number(report.weightDelta) || 0).toFixed(1) + " " + (settings.weightUnit || "kg")],
+    ["Readiness Avg", report.readinessAvg ? Math.round(report.readinessAvg) + "%" : "N/A"],
+    ["PRs", Math.round(report.prCount || 0)],
+    ["Streak", Math.round(report.streak || 0) + " days"],
+  ];
+
+  cards.forEach(function (item, idx) {
+    const col = idx % 2;
+    const row = Math.floor(idx / 2);
+    const x = 60 + col * 560;
+    const y = 130 + row * 150;
+    ctx.fillStyle = "rgba(255,255,255,0.06)";
+    ctx.fillRect(x, y, 520, 118);
+
+    ctx.fillStyle = "#9ca4b8";
+    ctx.font = "600 14px Space Grotesk, sans-serif";
+    ctx.fillText(item[0], x + 22, y + 35);
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "700 40px Space Grotesk, sans-serif";
+    ctx.fillText(String(item[1]), x + 22, y + 84);
+  });
+
+  ctx.fillStyle = "#94a0bb";
+  ctx.font = "500 13px Space Grotesk, sans-serif";
+  ctx.fillText("Generated " + new Date().toLocaleString(), 60, canvas.height - 30);
+
+  const link = document.createElement("a");
+  link.href = canvas.toDataURL("image/png");
+  link.download = "fitone-report-" + today() + ".png";
+  link.click();
+}
+
+function bindReportCardActions() {
+  const btn = $("saveAnalyticsReportCardBtn");
+  if (!btn || btn.dataset.bound) return;
+  btn.dataset.bound = "1";
+  btn.addEventListener("click", saveAnalyticsReportCardImage);
+}
 
 
 // ========== REFRESH ==========
@@ -17,6 +437,10 @@ function refreshAnalytics() {
     timeRangeSel.dataset.bound = "true";
     timeRangeSel.addEventListener("change", () => refreshAnalyticsSubTab("analytics-performance"));
   }
+
+  bindAnalyticsRangeControls();
+  bindReportCardActions();
+  renderAnalyticsReportCard();
 }
 
 function refreshAnalyticsSubTab(sub) {
@@ -46,7 +470,8 @@ function drawPerformanceAnalytics() {
 
 // ========== CALORIE CHART ==========
 function drawCalorieChart() {
-  const days = getLast14Days();
+  const range = getAnalyticsDateRange();
+  const days = range.days && range.days.length ? range.days : getLast14Days();
   const food = loadData(KEYS.food);
   const vals = days.map((d) => food.filter((f) => f.date === d).reduce((a, f) => a + (f.calories || 0), 0));
   drawBarChart($("chartCalories"), days.map((d) => d.slice(5)), vals, brandColor("--brand-calories"), settings.calorieGoal);
@@ -187,8 +612,13 @@ function drawMicronutrientTrendChart(days, food) {
 
 // ========== WEIGHT CHART ==========
 function drawWeightChart() {
-  const body = loadData(KEYS.body).filter((b) => b.weight).sort((a, b) => a.date.localeCompare(b.date));
-  const last20 = body.slice(-20);
+  const range = getAnalyticsDateRange();
+  const scoped = loadData(KEYS.body)
+    .filter((b) => b.weight && b.date >= range.startDate && b.date <= range.endDate)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const fallback = loadData(KEYS.body).filter((b) => b.weight).sort((a, b) => a.date.localeCompare(b.date));
+  const source = scoped.length >= 2 ? scoped : fallback;
+  const last20 = source.slice(-20);
   if (last20.length < 2) {
     const canvas = $("chartWeight");
     const dpr = window.devicePixelRatio || 1;
@@ -217,7 +647,8 @@ function drawWeightChart() {
 
 // ========== WORKOUT CHART ==========
 function drawWorkoutChart() {
-  const days = getLast14Days();
+  const range = getAnalyticsDateRange();
+  const days = range.days && range.days.length ? range.days : getLast14Days();
   const workouts = loadData(KEYS.workouts);
   const vals = days.map((d) => workouts.filter((w) => w.date === d).length);
   drawBarChart($("chartWorkouts"), days.map((d) => d.slice(5)), vals, brandColor("--brand-warning"));

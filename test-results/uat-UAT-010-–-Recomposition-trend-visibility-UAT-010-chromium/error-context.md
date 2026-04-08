@@ -1,0 +1,162 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - generic "Profile" [ref=e5] [cursor=pointer]:
+          - generic [ref=e6]: person
+        - heading "FITONE" [level=1] [ref=e7]
+      - generic [ref=e8]:
+        - generic [ref=e9]: Thursday, April 9
+        - button "Notifications" [ref=e10] [cursor=pointer]:
+          - generic [ref=e11]: notifications
+          - generic [ref=e12]: "3"
+    - generic [ref=e13]:
+      - generic [ref=e14]:
+        - button "Food" [ref=e15] [cursor=pointer]
+        - button "Workout" [ref=e16] [cursor=pointer]
+        - button "Body" [ref=e17] [cursor=pointer]
+      - generic [ref=e18]:
+        - generic [ref=e19]: "Shortcuts: Enter = next field/submit. Link rows for supersets/circuits. ArrowUp/Down adjusts values. Swipe set row right = duplicate, left = delete."
+        - generic [ref=e20]:
+          - generic [ref=e21]: ⏱️ Rest Timer
+          - generic [ref=e22]: 1:02
+          - generic [ref=e23]:
+            - button "30s" [ref=e24] [cursor=pointer]
+            - button "1m" [ref=e25] [cursor=pointer]
+            - button "90s" [ref=e26] [cursor=pointer]
+            - button "2m" [ref=e27] [cursor=pointer]
+            - button "Stop" [ref=e28] [cursor=pointer]
+        - generic [ref=e29]:
+          - generic [ref=e30]: Log Workout
+          - generic [ref=e31]:
+            - generic [ref=e32]:
+              - generic [ref=e33]: Workout Name
+              - textbox "e.g., Upper Body" [ref=e34]: Recomp Lift
+            - generic [ref=e35]:
+              - generic [ref=e36]: Date
+              - textbox [ref=e37]: 2026-04-09
+          - generic [ref=e38]:
+            - generic [ref=e39]: Type
+            - combobox [ref=e40]:
+              - option "Strength" [selected]
+              - option "Cardio"
+              - option "Flexibility"
+              - option "Sport"
+              - option "Other"
+          - generic [ref=e41]:
+            - generic [ref=e42]:
+              - generic [ref=e43]: Duration (min)
+              - spinbutton [ref=e44]: "55"
+            - generic [ref=e45]:
+              - generic [ref=e46]: Calories Burned
+              - spinbutton [ref=e47]: "420"
+          - generic [ref=e48]:
+            - generic [ref=e49]:
+              - generic [ref=e50]: Distance (km)
+              - spinbutton [ref=e51]
+            - generic [ref=e52]:
+              - generic [ref=e53]: Avg Pace (min/km)
+              - spinbutton [ref=e54]
+          - generic [ref=e55]:
+            - button "Start GPS" [ref=e56] [cursor=pointer]
+            - button "Stop GPS" [ref=e57] [cursor=pointer]
+            - generic [ref=e58]: GPS idle
+          - generic [ref=e59]:
+            - generic [ref=e60]: Exercises
+            - generic [ref=e61]:
+              - button "Browse" [ref=e62] [cursor=pointer]
+              - button "+ Add" [active] [ref=e63] [cursor=pointer]
+          - generic "Workout exercise rows" [ref=e64]:
+            - generic [ref=e65]:
+              - button "Drag to reorder" [ref=e66]: ↕
+              - textbox "Exercise name" [ref=e68]: Pull Ups
+              - button "Browse exercises" [ref=e69] [cursor=pointer]: LIB
+              - button "Exercise info" [ref=e70] [cursor=pointer]: ℹ️
+              - spinbutton [ref=e72]: "4"
+              - spinbutton [ref=e74]: "6"
+              - spinbutton [ref=e76]: "15"
+              - button "Remove exercise row" [ref=e77] [cursor=pointer]: ✕
+              - generic [ref=e78]: No prior sessions for this movement yet. Log once to unlock progressive suggestions.
+              - generic [ref=e79]:
+                - generic [ref=e80]:
+                  - checkbox "Link with next" [ref=e81]
+                  - generic [ref=e82]: Link with next
+                - combobox [disabled] [ref=e83]:
+                  - option "Superset" [selected]
+                  - option "Circuit"
+                  - option "Giant Set"
+                  - option "Drop Set"
+                  - option "Rest-Pause"
+              - generic [ref=e84]:
+                - generic [ref=e85]: "Beginner mode: advanced targets are hidden"
+                - button "⏱️ Rest" [ref=e86] [cursor=pointer]
+          - generic [ref=e87]:
+            - generic [ref=e88]: Notes
+            - textbox "How did it feel?" [ref=e89]
+          - generic [ref=e90]:
+            - generic [ref=e91]: From Protocol
+            - combobox [ref=e92]:
+              - option "None" [selected]
+          - button "Log Workout" [ref=e93] [cursor=pointer]
+        - generic [ref=e94]:
+          - generic [ref=e96]: Recent Workouts
+          - generic [ref=e97]:
+            - generic: 🔍
+            - textbox "Search workouts..." [ref=e98]
+          - list [ref=e99]:
+            - generic [ref=e100]:
+              - generic [ref=e101]: 🏋️
+              - generic [ref=e102]: Time to move! Let's crush it 💪
+              - button "Log your first workout" [ref=e103] [cursor=pointer]
+  - generic:
+    - generic:
+      - generic: Quick Add
+      - button "Quick add food": 🍎
+    - generic:
+      - generic: Workout
+      - button "Log workout": 🏋️
+    - generic:
+      - generic: Bodyweight
+      - button "Quick add bodyweight": ⚖️
+    - generic:
+      - generic: Water
+      - button "Add water": 💧
+  - button "Quick actions menu":
+    - img
+  - tablist "Main navigation" [ref=e104]:
+    - tab "Dashboard" [ref=e105] [cursor=pointer]:
+      - generic [ref=e106]: dashboard
+      - text: Dashboard
+    - tab "Workouts" [selected] [ref=e107] [cursor=pointer]:
+      - generic [ref=e108]: fitness_center
+      - text: Workouts
+    - tab "Stats" [ref=e109] [cursor=pointer]:
+      - generic [ref=e110]: equalizer
+      - text: Stats
+    - tab "Profile" [ref=e111] [cursor=pointer]:
+      - generic [ref=e112]: person
+      - text: Profile
+  - generic [ref=e113]:
+    - generic [ref=e114]: RECOVERY PHASE
+    - generic [ref=e117]: 1:02
+    - button "SKIP REST ▸▸" [ref=e118] [cursor=pointer]
+    - generic [ref=e119]:
+      - generic [ref=e120]:
+        - generic [ref=e121]: NEXT SET
+        - generic [ref=e122]: SET 1 OF 4
+      - generic [ref=e123]:
+        - generic [ref=e124]: fitness_center
+        - text: Pull Ups
+      - generic [ref=e125]: 🏋️ 15 kg • 6 reps
+      - generic [ref=e126]: Focus on controlled tempo and strong bracing before your next set.
+    - generic [ref=e127]:
+      - generic [ref=e128]:
+        - generic [ref=e129]: — BPM
+        - generic [ref=e130]: HEART RATE
+      - generic [ref=e131]:
+        - generic [ref=e132]: 423 KCAL
+        - generic [ref=e133]: CALORIES
+```
