@@ -321,6 +321,35 @@ function saveData(key, data) {
   }
 }
 
+function emitDataChange(detail) {
+  if (typeof window.notifyDataChanged === "function") {
+    window.notifyDataChanged(detail || {});
+  }
+}
+
+function appendEntityItem(key, item) {
+  const rows = loadData(key);
+  rows.push(item);
+  saveData(key, rows);
+  return rows;
+}
+
+function replaceEntityItems(key, items) {
+  const rows = Array.isArray(items) ? items : [];
+  saveData(key, rows);
+  return rows;
+}
+
+if (typeof window !== "undefined") {
+  window.fitOneDataApi = Object.assign(window.fitOneDataApi || {}, {
+    loadData,
+    saveData,
+    emitDataChange,
+    appendEntityItem,
+    replaceEntityItems,
+  });
+}
+
 function defaultSettings() {
   const nowIso = new Date().toISOString();
   return {

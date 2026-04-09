@@ -15,6 +15,21 @@ function settingVal(id, fallback) {
   return el ? el.value : fallback;
 }
 
+function getSettingsDataApi() {
+  return window.fitOneDataApi || {};
+}
+
+function settingsEmitDataChange(detail) {
+  const api = getSettingsDataApi();
+  if (typeof api.emitDataChange === "function") {
+    api.emitDataChange(detail);
+    return;
+  }
+  if (typeof window.notifyDataChanged === "function") {
+    window.notifyDataChanged(detail || {});
+  }
+}
+
 function setSegmentedActive(containerId, selector, value) {
   const container = $(containerId);
   if (!container) return;
@@ -399,9 +414,7 @@ function applyCompeteGoalProfile(dayProfile, silent) {
   localStorage.setItem(KEYS.settings, JSON.stringify(next));
   loadSettingsUI();
 
-  if (typeof window.notifyDataChanged === "function") {
-    window.notifyDataChanged({ source: "settings", reason: "goalProfile" });
-  }
+  settingsEmitDataChange({ source: "settings", reason: "goalProfile" });
 
   if (!silent) {
     if (targets) {

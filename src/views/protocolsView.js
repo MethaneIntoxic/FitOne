@@ -5,6 +5,42 @@ let _planWeeksTouched = false;
 let _latestGeneratedPlan = null;
 let _plannerWeekOffset = 0;
 
+function getProtocolsDataApi() {
+  return window.fitOneDataApi || {};
+}
+
+function protocolsEmitDataChange(detail) {
+  const api = getProtocolsDataApi();
+  if (typeof api.emitDataChange === "function") {
+    api.emitDataChange(detail);
+    return;
+  }
+  if (typeof window.notifyDataChanged === "function") {
+    window.notifyDataChanged(detail || {});
+  }
+}
+
+function protocolsAppendEntityItem(key, item) {
+  const api = getProtocolsDataApi();
+  if (typeof api.appendEntityItem === "function") {
+    return api.appendEntityItem(key, item);
+  }
+  const rows = loadData(key);
+  rows.push(item);
+  saveData(key, rows);
+  return rows;
+}
+
+function protocolsReplaceEntityItems(key, items) {
+  const api = getProtocolsDataApi();
+  if (typeof api.replaceEntityItems === "function") {
+    return api.replaceEntityItems(key, items);
+  }
+  const rows = Array.isArray(items) ? items : [];
+  saveData(key, rows);
+  return rows;
+}
+
 function plannerWeekStartDate(offsetWeeks) {
   const now = new Date();
   const day = (now.getDay() + 6) % 7; // Monday-based week
@@ -64,11 +100,8 @@ function upsertDayPlan(date, protocolId, notes) {
   });
 
   if (payload.protocolId || payload.notes) rows.push(payload);
-  saveData(KEYS.dayPlans, rows);
-
-  if (typeof window.notifyDataChanged === "function") {
-    window.notifyDataChanged({ source: "planner", reason: "dayPlan" });
-  }
+  protocolsReplaceEntityItems(KEYS.dayPlans, rows);
+  protocolsEmitDataChange({ source: "planner", reason: "dayPlan" });
 }
 
 function renderWeeklyPlannerCard() {
@@ -373,9 +406,7 @@ function generatePeriodizedPlanFromUI(preferredProtocolId) {
   _selectedPlanProtocolId = protocolId;
   renderGeneratedPlanPreview(result.plan);
 
-  if (typeof window.notifyDataChanged === "function") {
-    window.notifyDataChanged({ source: "protocols", reason: "generateTrainingPlan" });
-  }
+  protocolsEmitDataChange({ source: "protocols", reason: "generateTrainingPlan" });
 
   showToast("Plan generated: " + result.plan.totalWeeks + " weeks", "success");
 }
@@ -438,12 +469,10 @@ function importStarterProgram(starterId) {
     duration: Number(starter.duration) || 45,
   });
 
-  saveData(KEYS.protocols, protocols);
+  protocolsReplaceEntityItems(KEYS.protocols, protocols);
   refreshProtocols();
   if (typeof refreshLibrary === "function") refreshLibrary();
-  if (typeof window.notifyDataChanged === "function") {
-    window.notifyDataChanged({ source: "protocols", reason: "importStarterProgram" });
-  }
+  protocolsEmitDataChange({ source: "protocols", reason: "importStarterProgram" });
   showToast("Program imported: " + starter.name, "success");
 }
 
@@ -516,10 +545,14 @@ function showProtocolModal() {
     "</div></div>";
   window._protoExCount = 0;
 
-  $("protoModalOverlay").addEventListener("click", (e) => {
-    if (e.target === $("protoModalOverlay")) closeModal();
-  });
-  $("protoModalClose").addEventListener("click", closeModal);
+  if (typeof bindModalClose === "function") {
+    bindModalClose("protoModalOverlay", "protoModalClose", closeModal);
+  } else {
+    $("protoModalOverlay").addEventListener("click", (e) => {
+      if (e.target === $("protoModalOverlay")) closeModal();
+    });
+    $("protoModalClose").addEventListener("click", closeModal);
+  }
   $("protoAddEx").addEventListener("click", addProtoExercise);
   $("protoSaveBtn").addEventListener("click", saveProtocol);
   renderProtocolBuilderEmptyState();
@@ -674,14 +707,10 @@ function saveProtocol() {
     version: 1,
     baseRoutineId: null,
   };
-  const data = loadData(KEYS.protocols);
-  data.push(proto);
-  saveData(KEYS.protocols, data);
+  protocolsAppendEntityItem(KEYS.protocols, proto);
   closeModal();
   refreshProtocols();
-  if (typeof window.notifyDataChanged === "function") {
-    window.notifyDataChanged({ source: "protocols", reason: "saveProtocol" });
-  }
+  protocolsEmitDataChange({ source: "protocols", reason: "saveProtocol" });
   showToast("Protocol saved! 📋");
 }
 
@@ -692,22 +721,18 @@ function deleteProtocol(id) {
     if (idx < 0) return;
     const removed = protocols[idx];
     const data = protocols.filter((p) => p.id !== id);
-    saveData(KEYS.protocols, data);
+    protocolsReplaceEntityItems(KEYS.protocols, data);
     refreshProtocols();
-    if (typeof window.notifyDataChanged === "function") {
-      window.notifyDataChanged({ source: "protocols", reason: "deleteProtocol" });
-    }
+    protocolsEmitDataChange({ source: "protocols", reason: "deleteProtocol" });
     showUndoToast("Protocol deleted", () => {
       const current = loadData(KEYS.protocols);
       const next = current.slice();
       if (!next.some((p) => p.id === removed.id)) {
         next.splice(Math.max(0, Math.min(idx, next.length)), 0, removed);
       }
-      saveData(KEYS.protocols, next);
+      protocolsReplaceEntityItems(KEYS.protocols, next);
       refreshProtocols();
-      if (typeof window.notifyDataChanged === "function") {
-        window.notifyDataChanged({ source: "protocols", reason: "undoDeleteProtocol" });
-      }
+      protocolsEmitDataChange({ source: "protocols", reason: "undoDeleteProtocol" });
     });
   });
 }

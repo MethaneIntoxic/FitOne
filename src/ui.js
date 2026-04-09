@@ -1076,6 +1076,23 @@ function drawEnergyGauge(score) {
   requestAnimationFrame(animate);
 }
 
+function bindModalClose(overlayId, closeButtonId, onClose) {
+  const overlay = $(overlayId);
+  if (!overlay) return false;
+
+  const closeFn = typeof onClose === "function" ? onClose : closeModal;
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeFn();
+  });
+
+  if (closeButtonId) {
+    const closeBtn = $(closeButtonId);
+    if (closeBtn) closeBtn.addEventListener("click", closeFn);
+  }
+
+  return true;
+}
+
 // ========== CLOSE MODAL ==========
 function closeModal() {
   $("modalContainer").innerHTML = "";

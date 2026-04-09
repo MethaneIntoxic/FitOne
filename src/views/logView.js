@@ -452,7 +452,16 @@ function renderWorkoutSetPreview(workout) {
   return '<div class="workout-set-preview">' + visible + "</div>" + more;
 }
 
+function getLogDataApi() {
+  return window.fitOneDataApi || {};
+}
+
 function notifyDataChangedFromLog(reason) {
+  const api = getLogDataApi();
+  if (typeof api.emitDataChange === "function") {
+    api.emitDataChange({ source: "log", reason: reason || "mutation" });
+    return;
+  }
   if (typeof window.notifyDataChanged === "function") {
     window.notifyDataChanged({ source: "log", reason: reason || "mutation" });
     return;
@@ -1101,20 +1110,23 @@ function openRecipeBuilderModal(recipeId) {
       '</div>' +
     '</div>';
 
-  const overlay = $("recipeBuilderOverlay");
   const modalBody = $("recipeBuilderModal");
-  if (overlay) {
-    overlay.addEventListener("click", function (e) {
-      if (e.target === overlay) closeModal();
-    });
+
+  if (typeof bindModalClose === "function") {
+    bindModalClose("recipeBuilderOverlay", "recipeBuilderClose", closeModal);
+  } else {
+    const overlay = $("recipeBuilderOverlay");
+    if (overlay) {
+      overlay.addEventListener("click", function (e) {
+        if (e.target === overlay) closeModal();
+      });
+    }
+    const closeBtn = $("recipeBuilderClose");
+    if (closeBtn) closeBtn.addEventListener("click", closeModal);
   }
+
   if (modalBody) {
     modalBody.addEventListener("click", function (e) {
-      const closeBtn = e.target.closest("#recipeBuilderClose");
-      if (closeBtn) {
-        closeModal();
-        return;
-      }
       const actionEl = e.target.closest("[data-action]");
       if (actionEl && actionEl.dataset.action === "cancelRecipeBuilder") {
         closeModal();
@@ -1849,13 +1861,17 @@ function logWorkout() {
         '<button class="btn btn-primary btn-block mb-8" id="routineUpdateBaseBtn">Update base routine</button>' +
         '<button class="btn btn-outline btn-block mb-8" id="routineVariantBtn">Save as new variant</button>' +
         '<button class="btn btn-outline btn-block" id="routineUseOnceBtn">Use once</button></div></div>';
-      if ($("routineChangeOverlay")) {
-        $("routineChangeOverlay").addEventListener("click", (e) => {
-          if (e.target === $("routineChangeOverlay")) closeModal();
-        });
-      }
-      if ($("routineChangeCloseBtn")) {
-        $("routineChangeCloseBtn").addEventListener("click", closeModal);
+      if (typeof bindModalClose === "function") {
+        bindModalClose("routineChangeOverlay", "routineChangeCloseBtn", closeModal);
+      } else {
+        if ($("routineChangeOverlay")) {
+          $("routineChangeOverlay").addEventListener("click", (e) => {
+            if (e.target === $("routineChangeOverlay")) closeModal();
+          });
+        }
+        if ($("routineChangeCloseBtn")) {
+          $("routineChangeCloseBtn").addEventListener("click", closeModal);
+        }
       }
       $("routineUpdateBaseBtn").addEventListener("click", () => {
         updateRoutineWithWorkoutChanges(base.id, exercises);
@@ -1900,13 +1916,17 @@ function logWorkout() {
         '<div class="modal-overlay" id="cooldownOverlay"><div class="modal"><div class="modal-title">Cooldown suggestions <button class="modal-close" id="cooldownCloseBtn" aria-label="Close modal">×</button></div><ul class="cooldown-list">' +
         list.map((r) => '<li><label><input type="checkbox" style="width:auto"> ' + esc(r) + "</label></li>").join("") +
         '</ul><button class="btn btn-primary btn-block mt-12" id="cooldownDoneBtn">Mark complete</button></div></div>';
-      if ($("cooldownOverlay")) {
-        $("cooldownOverlay").addEventListener("click", (e) => {
-          if (e.target === $("cooldownOverlay")) closeModal();
-        });
-      }
-      if ($("cooldownCloseBtn")) {
-        $("cooldownCloseBtn").addEventListener("click", closeModal);
+      if (typeof bindModalClose === "function") {
+        bindModalClose("cooldownOverlay", "cooldownCloseBtn", closeModal);
+      } else {
+        if ($("cooldownOverlay")) {
+          $("cooldownOverlay").addEventListener("click", (e) => {
+            if (e.target === $("cooldownOverlay")) closeModal();
+          });
+        }
+        if ($("cooldownCloseBtn")) {
+          $("cooldownCloseBtn").addEventListener("click", closeModal);
+        }
       }
       $("cooldownDoneBtn").addEventListener("click", () => {
         closeModal();
@@ -2521,7 +2541,4 @@ function initLogEvents() {
   }
 }
 
-// Give access to exerciseRowCount for protocols
-function getExerciseRowCount() { return exerciseRowCount; }
-function setExerciseRowCount(val) { exerciseRowCount = val; }
 

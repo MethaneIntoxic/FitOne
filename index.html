@@ -2,12 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="FitOne">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#8B5CF6">
 <title>FitOne</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
@@ -93,15 +92,15 @@
         <a class="view-all-link" id="viewAllRoutines" data-action="viewAllRoutines">VIEW ALL</a>
       </div>
       <div id="nextWorkoutContent">
-        <div class="empty"><div class="empty-icon">🏋️</div><div class="empty-text">Create Your First Routine</div></div>
+        <div class="empty"><div class="empty-icon">馃弸锔?/div><div class="empty-text">Create Your First Routine</div></div>
       </div>
     </div>
     <div class="card activity-feed-entry" data-section="activityFeed">
       <div class="flex-between mb-8">
-        <span class="card-title" style="margin-bottom:0">Activity Feed</span>
+        <span class="card-title u-mb-0">Activity Feed</span>
         <button class="btn btn-outline btn-sm" data-action="openActivityFeed">OPEN</button>
       </div>
-      <div class="text-xs" style="color:var(--text2)">Track workouts, PRs, nutrition, body updates, achievements, and streak milestones in one timeline.</div>
+      <div class="text-xs u-text2">Track workouts, PRs, nutrition, body updates, achievements, and streak milestones in one timeline.</div>
     </div>
     <div class="card" data-section="calories">
       <div class="card-title">Daily Calories</div>
@@ -120,7 +119,7 @@
     </div>
     <div class="card streak-card" id="streakCard" data-section="streak">
       <div class="streak-content">
-        <span class="streak-flame">🔥</span>
+        <span class="streak-flame">馃敟</span>
         <div>
           <div class="streak-number" id="streakNumber">0</div>
           <div class="streak-label" id="streakLabel">day streak</div>
@@ -141,7 +140,7 @@
       <div class="sparkline-container"><canvas id="readinessSparkline" height="50"></canvas></div>
     </div>
     <div class="card" data-section="water">
-      <div class="card-title">💧 Water Intake</div>
+      <div class="card-title">馃挧 Water Intake</div>
       <div class="water-tracker">
         <div class="water-ring-row">
           <canvas width="128" height="128" id="waterRing" class="water-ring-canvas"></canvas>
@@ -159,41 +158,41 @@
     </div>
     <div class="card" data-section="food">
       <div class="card-title">Today's Food</div>
-      <div id="todayFood"><div class="empty"><div class="empty-icon">🍽️</div><div class="empty-text">Ready to fuel your day? 🍎</div><button class="btn btn-primary btn-sm" data-action="goToLog">Log your first meal</button></div></div>
+      <div id="todayFood"><div class="empty"><div class="empty-icon">馃嵔锔?/div><div class="empty-text">Ready to fuel your day? 馃崕</div><button class="btn btn-primary btn-sm" data-action="goToLog">Log your first meal</button></div></div>
     </div>
     <div class="card" data-section="workouts">
       <div class="card-title">Today's Workouts</div>
-      <div id="todayWorkouts"><div class="empty"><div class="empty-icon">🏋️</div><div class="empty-text">Time to move! Let's crush it 💪</div><button class="btn btn-primary btn-sm" data-action="goToLogWorkout">Log a workout</button></div></div>
+      <div id="todayWorkouts"><div class="empty"><div class="empty-icon">馃弸锔?/div><div class="empty-text">Time to move! Let's crush it 馃挭</div><button class="btn btn-primary btn-sm" data-action="goToLogWorkout">Log a workout</button></div></div>
     </div>
     <div class="card" data-section="insights">
       <div class="card-title">Insights</div>
-      <div id="todayInsights"><div class="empty"><div class="empty-icon">💡</div><div class="empty-text">Start logging to unlock personalized insights</div></div></div>
+      <div id="todayInsights"><div class="empty"><div class="empty-icon">馃挕</div><div class="empty-text">Start logging to unlock personalized insights</div></div></div>
     </div>
     <!-- W3.6 Bottom Stat Boxes -->
     <div class="stat-row" id="dashboardBottom" data-section="bottomStats">
-      <div class="stat-box"><div class="val" id="dashAvgHR">—</div><div class="lbl">AVG HEART RATE</div></div>
+      <div class="stat-box"><div class="val" id="dashAvgHR">鈥?/div><div class="lbl">AVG HEART RATE</div></div>
       <div class="stat-box"><div class="val" id="dashCalBurn">0</div><div class="lbl">CALORIE BURN</div></div>
     </div>
     <div class="card" data-section="wellness">
-      <div class="card-title">🧘 Daily Wellness Check-in <span id="wellnessSavedBadge" class="wellness-saved-badge hidden">✓ Saved</span></div>
+      <div class="card-title">馃 Daily Wellness Check-in <span id="wellnessSavedBadge" class="wellness-saved-badge hidden">鉁?Saved</span></div>
       <div class="wellness-sliders">
         <div class="wellness-slider-row">
-          <label>😴 Sleep</label>
-          <input type="range" id="wellnessSleep" min="1" max="5" value="3">
+          <label>馃槾 Sleep</label>
+          <input type="range" id="wellnessSleep" min="1" max="5" value="3" title="wellness Sleep">
           <span class="slider-val" id="sleepVal">3</span>
         </div>
         <div class="wellness-slider-row">
-          <label>💪 Soreness</label>
-          <input type="range" id="wellnessSoreness" min="1" max="5" value="3">
+          <label>馃挭 Soreness</label>
+          <input type="range" id="wellnessSoreness" min="1" max="5" value="3" title="wellness Soreness">
           <span class="slider-val" id="sorenessVal">3</span>
         </div>
         <div class="wellness-slider-row">
-          <label>⚡ Energy</label>
-          <input type="range" id="wellnessEnergy" min="1" max="5" value="3">
+          <label>鈿?Energy</label>
+          <input type="range" id="wellnessEnergy" min="1" max="5" value="3" title="wellness Energy">
           <span class="slider-val" id="energyVal">3</span>
         </div>
       </div>
-      <div class="text-xs wellness-scale-note">1 = Poor → 5 = Excellent (Soreness: 1 = Very sore → 5 = None)</div>
+      <div class="text-xs wellness-scale-note">1 = Poor 鈫?5 = Excellent (Soreness: 1 = Very sore 鈫?5 = None)</div>
       <div class="wellness-btn-row">
         <button class="btn btn-primary btn-sm" data-action="saveWellness">Save Check-in</button>
       </div>
@@ -211,32 +210,32 @@
     <!-- Log Food -->
     <div class="sub-panel active" id="log-food">
       <div class="card" id="favoritesCard">
-        <div class="card-title">⭐ Quick Add Favorites</div>
+        <div class="card-title">猸?Quick Add Favorites</div>
         <div id="favoritesList" class="favorites-grid"></div>
       </div>
       <div class="card" id="mealTemplatesCard">
-        <div class="card-title">🧩 Meal Templates</div>
+        <div class="card-title">馃З Meal Templates</div>
         <div class="stat-row meal-template-controls">
-          <div class="form-group" style="flex:1">
+          <div class="form-group u-flex-1">
             <label>Saved Meal</label>
-            <select id="mealTemplateSelect">
+            <select id="mealTemplateSelect" title="meal Template Select">
               <option value="">Select a saved meal</option>
             </select>
           </div>
           <div class="form-group meal-template-multiplier-wrap">
             <label>Portion</label>
-            <input type="number" id="mealTemplateMultiplier" min="0.25" max="5" step="0.25" value="1">
+            <input type="number" id="mealTemplateMultiplier" min="0.25" max="5" step="0.25" value="1" title="meal Template Multiplier">
           </div>
         </div>
         <div class="meal-template-actions">
           <button class="btn btn-primary btn-sm" data-action="applyMealTemplate">Quick Add Meal</button>
           <button class="btn btn-outline btn-sm" data-action="saveMealTemplate">Save This Meal</button>
         </div>
-        <div class="text-xs mt-8" style="color:var(--text2)" id="mealTemplateMeta">Save meals once and log all items in one tap.</div>
+        <div class="text-xs mt-8 u-text2" id="mealTemplateMeta">Save meals once and log all items in one tap.</div>
       </div>
       <div class="card" id="recipeBuilderCard">
         <div class="flex-between mb-8">
-          <span class="card-title" style="margin-bottom:0">🥣 Recipe Builder</span>
+          <span class="card-title u-mb-0">馃ィ Recipe Builder</span>
           <button class="btn btn-outline btn-sm" data-action="openRecipeBuilder">Build Recipe</button>
         </div>
         <div class="text-xs recipe-builder-meta" id="recipeBuilderMeta">Create home-cooked recipes with per-serving macros and reuse them anytime.</div>
@@ -244,28 +243,28 @@
       </div>
       <div class="card" id="foodFormCard">
         <div class="flex-between mb-8">
-          <span class="card-title" style="margin-bottom:0" id="foodFormTitle">Log Food</span>
+          <span class="card-title u-mb-0" id="foodFormTitle">Log Food</span>
           <button class="btn btn-outline btn-sm hidden" id="foodCancelEdit" data-action="cancelEditFood">Cancel Edit</button>
         </div>
         <div class="form-group">
           <label>Food Name</label>
           <div class="stat-row food-name-actions-row">
-            <input type="text" id="foodName" placeholder="e.g., Chicken breast">
-            <button class="btn btn-outline btn-sm barcode-scan-btn" type="button" data-action="scanBarcode">📷 Scan</button>
-            <button class="btn btn-outline btn-sm hidden" type="button" id="foodSnapEstimateBtn" data-action="snapFoodEstimate">✨ Snap &amp; Estimate</button>
+            <input type="text" id="foodName" placeholder="e.g., Chicken breast" title="food Name">
+            <button class="btn btn-outline btn-sm barcode-scan-btn" type="button" data-action="scanBarcode">馃摲 Scan</button>
+            <button class="btn btn-outline btn-sm hidden" type="button" id="foodSnapEstimateBtn" data-action="snapFoodEstimate">鉁?Snap &amp; Estimate</button>
           </div>
-          <input type="file" id="foodVisionInput" accept="image/*" capture="environment" class="hidden">
+          <input type="file" id="foodVisionInput" accept="image/*" class="hidden" title="food Vision Input">
           <div class="hidden" id="foodVisionResult" aria-live="polite"></div>
           <div class="form-error" id="foodNameError">Please enter a food name</div>
         </div>
         <div class="stat-row">
-          <div class="form-group" style="flex:1">
+          <div class="form-group u-flex-1">
             <label>Date</label>
-            <input type="date" id="foodDate">
+            <input type="date" id="foodDate" title="food Date">
           </div>
-          <div class="form-group" style="flex:1">
+          <div class="form-group u-flex-1">
             <label>Meal</label>
-            <select id="foodMeal">
+            <select id="foodMeal" title="food Meal">
               <option value="breakfast">Breakfast</option>
               <option value="lunch">Lunch</option>
               <option value="dinner">Dinner</option>
@@ -274,57 +273,57 @@
           </div>
         </div>
         <div class="stat-row">
-          <div class="form-group" style="flex:1">
+          <div class="form-group u-flex-1">
             <label>Calories <span class="text-xs" id="autoCalcHint"></span></label>
-            <input type="number" id="foodCalories" placeholder="0" min="0">
-            <div class="text-xs" style="color:var(--text2);margin-top:4px" id="autoCalcGuide">Leave Calories empty to auto-calculate from Protein, Carbs, and Fat.</div>
+            <input type="number" id="foodCalories" placeholder="0" min="0" title="food Calories">
+            <div class="text-xs u-text2 u-mt-4" id="autoCalcGuide">Leave Calories empty to auto-calculate from Protein, Carbs, and Fat.</div>
           </div>
-          <div class="form-group" style="flex:1">
-            <label>Protein (g) <span class="text-xs" style="color:var(--text2)" id="proteinHint"></span></label>
-            <input type="number" id="foodProtein" placeholder="0" min="0">
+          <div class="form-group u-flex-1">
+            <label>Protein (g) <span class="text-xs u-text2" id="proteinHint"></span></label>
+            <input type="number" id="foodProtein" placeholder="0" min="0" title="food Protein">
           </div>
         </div>
         <div class="stat-row">
-          <div class="form-group" style="flex:1">
-            <label>Carbs (g) <span class="text-xs" style="color:var(--text2)" id="carbsHint"></span></label>
-            <input type="number" id="foodCarbs" placeholder="0" min="0">
+          <div class="form-group u-flex-1">
+            <label>Carbs (g) <span class="text-xs u-text2" id="carbsHint"></span></label>
+            <input type="number" id="foodCarbs" placeholder="0" min="0" title="food Carbs">
           </div>
-          <div class="form-group" style="flex:1">
-            <label>Fat (g) <span class="text-xs" style="color:var(--text2)" id="fatHint"></span></label>
-            <input type="number" id="foodFat" placeholder="0" min="0">
+          <div class="form-group u-flex-1">
+            <label>Fat (g) <span class="text-xs u-text2" id="fatHint"></span></label>
+            <input type="number" id="foodFat" placeholder="0" min="0" title="food Fat">
           </div>
         </div>
         <div class="stat-row food-micronutrient-grid">
-          <div class="form-group" style="flex:1">
+          <div class="form-group u-flex-1">
             <label>Fiber (g) <span class="text-xs micronutrient-hint" id="fiberHint"></span></label>
-            <input type="number" id="foodFiber" placeholder="0" min="0" step="0.1">
+            <input type="number" id="foodFiber" placeholder="0" min="0" step="0.1" title="food Fiber">
           </div>
-          <div class="form-group" style="flex:1">
+          <div class="form-group u-flex-1">
             <label>Sugar (g) <span class="text-xs micronutrient-hint" id="sugarHint"></span></label>
-            <input type="number" id="foodSugar" placeholder="0" min="0" step="0.1">
+            <input type="number" id="foodSugar" placeholder="0" min="0" step="0.1" title="food Sugar">
           </div>
-          <div class="form-group" style="flex:1">
+          <div class="form-group u-flex-1">
             <label>Sodium (mg) <span class="text-xs micronutrient-hint" id="sodiumHint"></span></label>
-            <input type="number" id="foodSodium" placeholder="0" min="0" step="1" inputmode="numeric">
+            <input type="number" id="foodSodium" placeholder="0" min="0" step="1" inputmode="numeric" title="food Sodium">
           </div>
         </div>
         <div class="form-group">
           <label>Serving Size</label>
-          <input type="text" id="foodServing" placeholder="e.g., 200g">
+          <input type="text" id="foodServing" placeholder="e.g., 200g" title="food Serving">
         </div>
-        <div class="form-group" style="display:flex;align-items:center;gap:8px">
-          <input type="checkbox" id="foodFavorite" style="width:auto">
-          <label style="margin-bottom:0" for="foodFavorite">Save as favorite</label>
+        <div class="form-group u-flex-center-gap-8">
+          <input type="checkbox" id="foodFavorite" class="u-w-auto" title="food Favorite">
+          <label class="u-mb-0" for="foodFavorite">Save as favorite</label>
         </div>
         <button class="btn btn-primary btn-block" id="foodSubmitBtn" data-action="logFood">Log Food</button>
-        <input type="hidden" id="foodEditId" value="">
+        <input type="hidden" id="foodEditId" value="" title="food Edit Id">
       </div>
       <div class="card">
         <div class="flex-between mb-8">
-          <span class="card-title" style="margin-bottom:0">Recent Food</span>
+          <span class="card-title u-mb-0">Recent Food</span>
           <button class="btn btn-outline btn-sm" data-action="clearTodayFood">Clear Today</button>
         </div>
-        <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" id="searchFood" placeholder="Search food..."></div>
+        <div class="search-wrap"><span class="search-icon">馃攳</span><input type="text" id="searchFood" placeholder="Search food..." title="search Food"></div>
         <div id="recentFood"></div>
       </div>
     </div>
@@ -332,7 +331,7 @@
     <!-- Log Workout -->
     <div class="sub-panel" id="log-workout">
       <div class="card timer-card">
-        <div class="card-title">⏱️ Rest Timer</div>
+        <div class="card-title">鈴憋笍 Rest Timer</div>
         <div class="timer-display" id="timerDisplay">0:00</div>
         <div class="timer-presets">
           <button class="btn btn-outline btn-sm" data-action="startTimer" data-seconds="30">30s</button>
@@ -345,19 +344,19 @@
       <div class="card" id="workoutFormCard">
         <div class="card-title">Log Workout</div>
         <div class="stat-row">
-          <div class="form-group" style="flex:1">
+          <div class="form-group u-flex-1">
             <label>Workout Name</label>
-            <input type="text" id="workoutName" placeholder="e.g., Upper Body">
+            <input type="text" id="workoutName" placeholder="e.g., Upper Body" title="workout Name">
             <div class="form-error" id="workoutNameError">Please enter a workout name</div>
           </div>
-          <div class="form-group" style="flex:1">
+          <div class="form-group u-flex-1">
             <label>Date</label>
-            <input type="date" id="workoutDate">
+            <input type="date" id="workoutDate" title="workout Date">
           </div>
         </div>
         <div class="form-group">
           <label>Type</label>
-          <select id="workoutType">
+          <select id="workoutType" title="workout Type">
             <option value="strength">Strength</option>
             <option value="cardio">Cardio</option>
             <option value="flexibility">Flexibility</option>
@@ -366,34 +365,34 @@
           </select>
         </div>
         <div class="stat-row">
-          <div class="form-group" style="flex:1">
+          <div class="form-group u-flex-1">
             <label>Duration (min)</label>
-            <input type="number" id="workoutDuration" placeholder="0" min="0">
+            <input type="number" id="workoutDuration" placeholder="0" min="0" title="workout Duration">
           </div>
-          <div class="form-group" style="flex:1">
+          <div class="form-group u-flex-1">
             <label>Calories Burned</label>
-            <input type="number" id="workoutCalories" placeholder="0" min="0">
+            <input type="number" id="workoutCalories" placeholder="0" min="0" title="workout Calories">
           </div>
         </div>
         <div class="stat-row cardio-metrics-row">
-          <div class="form-group" style="flex:1">
+          <div class="form-group u-flex-1">
             <label>Distance (km)</label>
-            <input type="number" id="workoutDistanceKm" placeholder="0.0" min="0" step="0.01">
+            <input type="number" id="workoutDistanceKm" placeholder="0.0" min="0" step="0.01" title="workout Distance Km">
           </div>
-          <div class="form-group" style="flex:1">
+          <div class="form-group u-flex-1">
             <label>Avg Pace (min/km)</label>
-            <input type="number" id="workoutPaceMinKm" placeholder="auto" min="0" step="0.01">
+            <input type="number" id="workoutPaceMinKm" placeholder="auto" min="0" step="0.01" title="workout Pace Min Km">
           </div>
         </div>
         <div class="stat-row">
           <button class="btn btn-outline btn-sm" data-action="startGpsTracking" id="startGpsTrackBtn">Start GPS</button>
           <button class="btn btn-outline btn-sm" data-action="stopGpsTracking" id="stopGpsTrackBtn">Stop GPS</button>
-          <div class="text-xs" id="gpsTrackStatus" style="align-self:center;color:var(--text2)">GPS idle</div>
+          <div class="text-xs" id="gpsTrackStatus" class="u-self-center u-text2">GPS idle</div>
         </div>
-        <input type="hidden" id="workoutRouteData" value="[]">
+        <input type="hidden" id="workoutRouteData" value="[]" title="workout Route Data">
 
         <div class="flex-between mb-8 mt-12">
-          <span class="card-title" style="margin-bottom:0">Exercises</span>
+          <span class="card-title u-mb-0">Exercises</span>
           <div class="exercise-header-actions">
             <button class="btn btn-outline btn-sm" data-action="browseExercises">Browse</button>
             <button class="btn btn-outline btn-sm" data-action="addExerciseRow">+ Add</button>
@@ -407,7 +406,7 @@
         </div>
         <div class="form-group">
           <label>From Protocol</label>
-          <select id="workoutProtocol">
+          <select id="workoutProtocol" title="workout Protocol">
             <option value="">None</option>
           </select>
         </div>
@@ -415,9 +414,9 @@
       </div>
       <div class="card">
         <div class="flex-between mb-8">
-          <span class="card-title" style="margin-bottom:0">Recent Workouts</span>
+          <span class="card-title u-mb-0">Recent Workouts</span>
         </div>
-        <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" id="searchWorkout" placeholder="Search workouts..."></div>
+        <div class="search-wrap"><span class="search-icon">馃攳</span><input type="text" id="searchWorkout" placeholder="Search workouts..." title="search Workout"></div>
         <div id="recentWorkouts"></div>
       </div>
     </div>
@@ -428,37 +427,37 @@
         <div class="card-title">Body Measurements</div>
         <div class="form-group">
           <label>Date</label>
-          <input type="date" id="bodyDate">
+          <input type="date" id="bodyDate" title="body Date">
         </div>
         <div class="stat-row">
-          <div class="form-group" style="flex:1">
+          <div class="form-group u-flex-1">
             <label id="bodyWeightLabel">Weight (kg)</label>
-            <input type="number" step="0.1" id="bodyWeight" placeholder="0" min="0">
+            <input type="number" step="0.1" id="bodyWeight" placeholder="0" min="0" title="body Weight">
             <div class="form-error" id="bodyWeightError">Please enter a valid weight</div>
           </div>
-          <div class="form-group" style="flex:1">
+          <div class="form-group u-flex-1">
             <label>Body Fat %</label>
-            <input type="number" step="0.1" id="bodyFat" placeholder="0" min="0" max="100">
+            <input type="number" step="0.1" id="bodyFat" placeholder="0" min="0" max="100" title="body Fat">
           </div>
         </div>
         <div class="stat-row">
-          <div class="form-group" style="flex:1">
+          <div class="form-group u-flex-1">
             <label id="bodyWaistLabel">Waist (cm)</label>
-            <input type="number" step="0.1" id="bodyWaist" placeholder="0" min="0">
+            <input type="number" step="0.1" id="bodyWaist" placeholder="0" min="0" title="body Waist">
           </div>
-          <div class="form-group" style="flex:1">
+          <div class="form-group u-flex-1">
             <label id="bodyChestLabel">Chest (cm)</label>
-            <input type="number" step="0.1" id="bodyChest" placeholder="0" min="0">
+            <input type="number" step="0.1" id="bodyChest" placeholder="0" min="0" title="body Chest">
           </div>
         </div>
         <div class="stat-row">
-          <div class="form-group" style="flex:1">
+          <div class="form-group u-flex-1">
             <label id="bodyArmsLabel">Arms (cm)</label>
-            <input type="number" step="0.1" id="bodyArms" placeholder="0" min="0">
+            <input type="number" step="0.1" id="bodyArms" placeholder="0" min="0" title="body Arms">
           </div>
-          <div class="form-group" style="flex:1">
+          <div class="form-group u-flex-1">
             <label id="bodyLegsLabel">Legs (cm)</label>
-            <input type="number" step="0.1" id="bodyLegs" placeholder="0" min="0">
+            <input type="number" step="0.1" id="bodyLegs" placeholder="0" min="0" title="body Legs">
           </div>
         </div>
         <div class="form-group">
@@ -493,7 +492,7 @@
           <div class="text-xs stats-kicker">PERFORMANCE ANALYTICS</div>
           <h2 class="stats-title">Stats Hub</h2>
         </div>
-        <select id="statsTimeRange" class="stats-time-sel">
+        <select id="statsTimeRange" class="stats-time-sel" title="stats Time Range">
           <option value="3m">3 Months</option>
           <option value="6m">6 Months</option>
           <option value="1y">1 Year</option>
@@ -504,7 +503,7 @@
       <div class="card mb-16 stats-tonnage-card">
         <div class="text-sm stats-muted-label">TOTAL TONNAGE</div>
         <div class="stats-tonnage-row">
-          <span class="stats-tonnage-val" id="statsTonnageVal">— TONS</span>
+          <span class="stats-tonnage-val" id="statsTonnageVal">鈥?TONS</span>
           <span class="stats-tonnage-trend" id="statsTonnageTrend"></span>
         </div>
         <div class="chart-container stats-tonnage-chart"><canvas id="chartTonnage"></canvas></div>
@@ -532,7 +531,7 @@
           <div id="statsConsistencyHeatmap" class="consistency-heatmap stats-heatmap-grid"></div>
         </div>
         <div class="flex-between mt-12 stats-heatmap-legend">
-          <div class="stats-consistency-target" id="statsConsistencyVal">— Target Consistency</div>
+          <div class="stats-consistency-target" id="statsConsistencyVal">鈥?Target Consistency</div>
           <div class="stats-legend-scale">
             LESS 
             <div class="stats-legend-swatches">
@@ -593,7 +592,7 @@
       <div class="card analytics-range-card">
         <div class="flex-between mb-8">
           <div class="card-title">Analytics Range</div>
-          <select id="analyticsDateRange" class="stats-time-sel" aria-label="Analytics date range">
+          <select id="analyticsDateRange" class="stats-time-sel" aria-label="Analytics date range" title="analytics Date Range">
             <option value="7d">Last 7 Days</option>
             <option value="14d" selected>Last 14 Days</option>
             <option value="30d">Last 30 Days</option>
@@ -603,20 +602,20 @@
           </select>
         </div>
         <div class="stat-row analytics-custom-range-row hidden" id="analyticsCustomRangeRow">
-          <div class="form-group" style="flex:1">
+          <div class="form-group u-flex-1">
             <label>Start Date</label>
-            <input type="date" id="analyticsStartDate">
+            <input type="date" id="analyticsStartDate" title="analytics Start Date">
           </div>
-          <div class="form-group" style="flex:1">
+          <div class="form-group u-flex-1">
             <label>End Date</label>
-            <input type="date" id="analyticsEndDate">
+            <input type="date" id="analyticsEndDate" title="analytics End Date">
           </div>
         </div>
         <div class="text-xs" id="analyticsRangeLabel">Showing the last 14 days.</div>
       </div>
       <div class="card analytics-report-card" id="analyticsReportCard">
         <div class="card-title">Weekly / Monthly Report Card</div>
-        <div class="text-xs" style="color:var(--text2)">Loading report data...</div>
+        <div class="text-xs u-text2">Loading report data...</div>
       </div>
       <button class="btn btn-outline btn-block" id="saveAnalyticsReportCardBtn">Save Report as Image</button>
       <div class="card">
@@ -655,7 +654,7 @@
 
     <div class="sub-panel" id="analytics-timing">
       <div class="card">
-        <div class="card-title">🕐 Meal Timeline (Last 7 Days)</div>
+        <div class="card-title">馃晲 Meal Timeline (Last 7 Days)</div>
         <div class="chart-container"><canvas id="chartMealTimeline"></canvas></div>
       </div>
       <div class="card">
@@ -664,14 +663,14 @@
       </div>
       <div class="card">
         <div class="card-title">Meal Timing Insights</div>
-        <div id="mealTimingInsights"><div class="empty"><div class="empty-icon">🕐</div><div class="empty-text">Log meals to see timing analysis</div></div></div>
+        <div id="mealTimingInsights"><div class="empty"><div class="empty-icon">馃晲</div><div class="empty-text">Log meals to see timing analysis</div></div></div>
       </div>
     </div>
 
     <div class="sub-panel" id="analytics-tdee">
       <div class="card" id="tdeeContent">
-        <div class="card-title">🧮 Adaptive TDEE</div>
-        <div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Log food and weight to calculate your real TDEE</div></div>
+        <div class="card-title">馃М Adaptive TDEE</div>
+        <div class="empty"><div class="empty-icon">馃搳</div><div class="empty-text">Log food and weight to calculate your real TDEE</div></div>
       </div>
     </div>
   </div>
@@ -723,7 +722,7 @@
     <div class="sub-panel" id="library-list">
       <!-- W4.2 Search Bar -->
       <div class="search-wrap mb-16">
-        <span class="search-icon">🔍</span>
+        <span class="search-icon">馃攳</span>
         <input type="text" id="searchExercises" placeholder="Search exercise database..." title="Search exercises">
       </div>
 
@@ -753,9 +752,9 @@
   <div class="tab-panel" id="panel-data">
     <div class="card">
       <div class="card-title">Data Studio</div>
-      <p class="text-sm mb-12" style="color:var(--text2)">Export or import FitOne data in stable CSV/JSON schemas, entirely local and offline.</p>
-      <button class="btn btn-primary btn-block" id="exportGlobalJsonBtn">📥 Export Global JSON</button>
-      <button class="btn btn-outline btn-block mt-8" id="exportGlobalCsvBtn">📄 Export All CSV Files</button>
+      <p class="text-sm mb-12 u-text2">Export or import FitOne data in stable CSV/JSON schemas, entirely local and offline.</p>
+      <button class="btn btn-primary btn-block" id="exportGlobalJsonBtn">馃摜 Export Global JSON</button>
+      <button class="btn btn-outline btn-block mt-8" id="exportGlobalCsvBtn">馃搫 Export All CSV Files</button>
     </div>
     <div class="card">
       <div class="card-title">Import (CSV / JSON)</div>
@@ -769,40 +768,40 @@
       </div>
       <div class="form-group">
         <label>Merge Mode</label>
-        <select id="dataImportMode">
+        <select id="dataImportMode" title="data Import Mode">
           <option value="merge">Merge (append new IDs)</option>
           <option value="replace">Replace existing entity data</option>
         </select>
       </div>
-      <input type="file" id="importFile" accept=".json,.csv" style="display:none">
-      <button class="btn btn-outline btn-block" id="importDataBtn">📤 Choose File to Import</button>
-      <input type="file" id="activityImportFile" accept=".csv" style="display:none">
-      <button class="btn btn-outline btn-block mt-8" id="importActivityCsvBtn">🏃 Import Strava/Garmin CSV</button>
+      <input type="file" id="importFile" accept=".json,.csv" class="u-hidden" title="import File">
+      <button class="btn btn-outline btn-block" id="importDataBtn">馃摛 Choose File to Import</button>
+      <input type="file" id="activityImportFile" accept=".csv" class="u-hidden" title="activity Import File">
+      <button class="btn btn-outline btn-block mt-8" id="importActivityCsvBtn">馃弮 Import Strava/Garmin CSV</button>
       <div id="importMappingArea" class="mt-12"></div>
-      <div id="importSummary" class="text-xs mt-8" style="color:var(--text2)"></div>
+      <div id="importSummary" class="text-xs mt-8 u-text2"></div>
     </div>
     <div class="card">
       <div class="card-title">Program Importer (CSV)</div>
-      <p class="text-sm mb-12" style="color:var(--text2)">Expected columns: ProgramName, Week, Day, Exercise, Set, Reps, RPE, Weight.</p>
-      <input type="file" id="programImportFile" accept=".csv" style="display:none">
-      <button class="btn btn-outline btn-block" id="programImportBtn">🧭 Import Program CSV</button>
+      <p class="text-sm mb-12 u-text2">Expected columns: ProgramName, Week, Day, Exercise, Set, Reps, RPE, Weight.</p>
+      <input type="file" id="programImportFile" accept=".csv" class="u-hidden" title="program Import File">
+      <button class="btn btn-outline btn-block" id="programImportBtn">馃Л Import Program CSV</button>
       <div id="programImportPreview" class="mt-8"></div>
     </div>
     <div class="card">
       <div class="card-title">Print Templates (Paper Backup)</div>
-      <button class="btn btn-outline btn-block" id="printWorkoutTemplateBtn">🖨️ Blank Workout Log</button>
-      <button class="btn btn-outline btn-block mt-8" id="printNutritionTemplateBtn">🖨️ Blank Nutrition Diary</button>
+      <button class="btn btn-outline btn-block" id="printWorkoutTemplateBtn">馃枿锔?Blank Workout Log</button>
+      <button class="btn btn-outline btn-block mt-8" id="printNutritionTemplateBtn">馃枿锔?Blank Nutrition Diary</button>
     </div>
     <div class="card">
       <details>
-        <summary class="card-title" style="cursor:pointer">Schema</summary>
+        <summary class="card-title u-cursor-pointer">Schema</summary>
         <div id="schemaDocs" class="text-xs mt-8"></div>
       </details>
     </div>
     <div class="card">
       <div class="card-title">Danger Zone</div>
-      <p class="text-sm mb-12" style="color:var(--text2)">Permanently delete all stored data. This cannot be undone.</p>
-      <button class="btn btn-danger btn-block" id="deleteAllDataBtn">🗑️ Delete All Data</button>
+      <p class="text-sm mb-12 u-text2">Permanently delete all stored data. This cannot be undone.</p>
+      <button class="btn btn-danger btn-block" id="deleteAllDataBtn">馃棏锔?Delete All Data</button>
     </div>
   </div>
 
@@ -816,11 +815,11 @@
           <span class="material-symbols-outlined">person</span>
           <div class="profile-avatar-edit"><span class="material-symbols-outlined profile-avatar-edit-icon">edit</span></div>
         </div>
-        <input type="file" id="avatarFileInput" accept="image/*" style="display:none">
+        <input type="file" id="avatarFileInput" accept="image/*" class="u-hidden" title="avatar File Input">
       </div>
       <div class="form-group">
         <label>DISPLAY NAME</label>
-        <input type="text" id="settingDisplayName" placeholder="Enter your name" autocomplete="off">
+        <input type="text" id="settingDisplayName" placeholder="Enter your name" autocomplete="off" title="setting Display Name">
       </div>
       <div class="form-group">
         <label>KINETIC BIO</label>
@@ -836,7 +835,7 @@
       <div class="toggle-row">
         <span>Obsidian Theme</span>
         <label class="toggle">
-          <input type="checkbox" id="settingTheme" checked>
+          <input type="checkbox" id="settingTheme" checked title="setting Theme">
           <span class="toggle-slider"></span>
         </label>
       </div>
@@ -844,75 +843,75 @@
     <div class="card">
       <div class="card-title">Body Goal</div>
       <div class="goal-selector" id="bodyGoalSelector">
-        <button class="goal-option" data-goal="lose">📉 Lose</button>
-        <button class="goal-option active" data-goal="maintain">⚖️ Maintain</button>
-        <button class="goal-option" data-goal="gain">📈 Gain</button>
-        <button class="goal-option" data-goal="compete">🏆 Compete</button>
+        <button class="goal-option" data-goal="lose">馃搲 Lose</button>
+        <button class="goal-option active" data-goal="maintain">鈿栵笍 Maintain</button>
+        <button class="goal-option" data-goal="gain">馃搱 Gain</button>
+        <button class="goal-option" data-goal="compete">馃弳 Compete</button>
       </div>
       <div class="text-xs goal-note">Used by Adaptive TDEE for personalized recommendations</div>
     </div>
     <div class="card" id="workoutSettingsCard">
       <div class="card-title">Workout Settings</div>
-      <div class="text-xs mb-12" style="color:var(--text2)">OPTIMIZE YOUR TRAINING PRECISION</div>
+      <div class="text-xs mb-12 u-text2">OPTIMIZE YOUR TRAINING PRECISION</div>
 
       <div class="workout-setting-head">
         <div class="section-label">DEFAULT REST TIMERS</div>
         <div class="workout-rest-display" id="settingRestTimeDisplay">90s</div>
       </div>
-      <input type="range" id="settingRestTimeRange" min="30" max="300" step="15" value="90">
+      <input type="range" id="settingRestTimeRange" min="30" max="300" step="15" value="90" title="setting Rest Time Range">
       <div class="workout-rest-ticks"><span>30 SEC</span><span>180 SEC</span><span>300 SEC</span></div>
-      <div class="text-xs mt-8" style="color:var(--text2)">Timers auto-start after each set. You can override this per exercise in workout view.</div>
-      <input type="hidden" id="settingRestTime" value="90">
+      <div class="text-xs mt-8 u-text2">Timers auto-start after each set. You can override this per exercise in workout view.</div>
+      <input type="hidden" id="settingRestTime" value="90" title="setting Rest Time">
 
       <div class="workout-setting-head mt-12">
         <div class="section-label">COMPOUND REST</div>
         <div class="workout-rest-display" id="settingRestCompoundDisplay">150s</div>
       </div>
-      <input type="range" id="settingRestCompoundRange" min="60" max="300" step="15" value="150">
+      <input type="range" id="settingRestCompoundRange" min="60" max="300" step="15" value="150" title="setting Rest Compound Range">
       <div class="workout-rest-ticks"><span>60 SEC</span><span>180 SEC</span><span>300 SEC</span></div>
-      <input type="hidden" id="settingRestCompound" value="150">
+      <input type="hidden" id="settingRestCompound" value="150" title="setting Rest Compound">
 
       <div class="workout-setting-head mt-12">
         <div class="section-label">ISOLATION REST</div>
         <div class="workout-rest-display" id="settingRestIsolationDisplay">75s</div>
       </div>
-      <input type="range" id="settingRestIsolationRange" min="30" max="180" step="15" value="75">
+      <input type="range" id="settingRestIsolationRange" min="30" max="180" step="15" value="75" title="setting Rest Isolation Range">
       <div class="workout-rest-ticks"><span>30 SEC</span><span>90 SEC</span><span>180 SEC</span></div>
-      <input type="hidden" id="settingRestIsolation" value="75">
+      <input type="hidden" id="settingRestIsolation" value="75" title="setting Rest Isolation">
 
       <div class="section-label mt-16">PLATE SYSTEM</div>
       <div class="segmented-control" id="plateSystemSegmented">
         <button type="button" class="segmented-btn" data-plate-system="lbs">45LB</button>
         <button type="button" class="segmented-btn" data-plate-system="kg">20KG</button>
       </div>
-      <div class="text-xs mt-8" id="plateSystemSubtitle" style="color:var(--text2)">Selected: Standard Olympic Cast Iron</div>
-      <input type="hidden" id="settingPlateSystem" value="kg">
+      <div class="text-xs mt-8" id="plateSystemSubtitle" class="u-text2">Selected: Standard Olympic Cast Iron</div>
+      <input type="hidden" id="settingPlateSystem" value="kg" title="setting Plate System">
 
       <div class="toggle-row mt-12">
         <span>Auto-Lock</span>
-        <label class="toggle"><input type="checkbox" id="settingAutoLock"><span class="toggle-slider"></span></label>
+        <label class="toggle"><input type="checkbox" id="settingAutoLock" title="setting Auto Lock"><span class="toggle-slider"></span></label>
       </div>
       <div class="toggle-row mt-8">
         <span>ACTIVE SETS ONLY</span>
-        <label class="toggle"><input type="checkbox" id="settingAutoLockActiveOnly"><span class="toggle-slider"></span></label>
+        <label class="toggle"><input type="checkbox" id="settingAutoLockActiveOnly" title="setting Auto Lock Active Only"><span class="toggle-slider"></span></label>
       </div>
 
       <div class="section-label mt-16">AUTOMATION</div>
       <div class="toggle-row mt-8">
         <span>Auto-Advance Exercises</span>
-        <label class="toggle"><input type="checkbox" id="settingAutoAdvance"><span class="toggle-slider"></span></label>
+        <label class="toggle"><input type="checkbox" id="settingAutoAdvance" title="setting Auto Advance"><span class="toggle-slider"></span></label>
       </div>
 
       <div class="section-label mt-16">VISUALS</div>
       <div class="toggle-row mt-8">
         <span>Dark Mode Focus Mode</span>
-        <label class="toggle"><input type="checkbox" id="settingFocusMode"><span class="toggle-slider"></span></label>
+        <label class="toggle"><input type="checkbox" id="settingFocusMode" title="setting Focus Mode"><span class="toggle-slider"></span></label>
       </div>
 
       <div class="section-label mt-16">AUDIO</div>
       <div class="toggle-row mt-8">
         <span>Voice Countdown</span>
-        <label class="toggle"><input type="checkbox" id="settingVoiceCountdown"><span class="toggle-slider"></span></label>
+        <label class="toggle"><input type="checkbox" id="settingVoiceCountdown" title="setting Voice Countdown"><span class="toggle-slider"></span></label>
       </div>
 
       <div class="workout-settings-actions">
@@ -922,62 +921,62 @@
     </div>
     <div class="card" id="notificationPulseCard">
       <div class="card-title">Notification Pulse</div>
-      <div class="text-xs mb-12" style="color:var(--text2)">Real-time performance alerts</div>
+      <div class="text-xs mb-12 u-text2">Real-time performance alerts</div>
       <div class="toggle-row">
         <span>Push Notifications</span>
-        <label class="toggle"><input type="checkbox" id="settingPushPulse"><span class="toggle-slider"></span></label>
+        <label class="toggle"><input type="checkbox" id="settingPushPulse" title="setting Push Pulse"><span class="toggle-slider"></span></label>
       </div>
       <div class="toggle-row mt-12">
         <span>Email Summaries <span class="tag tag-purple">Coming Soon</span></span>
-        <label class="toggle"><input type="checkbox" id="settingEmailSummaries" disabled><span class="toggle-slider"></span></label>
+        <label class="toggle"><input type="checkbox" id="settingEmailSummaries" disabled title="setting Email Summaries"><span class="toggle-slider"></span></label>
       </div>
     </div>
     <div class="card">
       <div class="card-title">Goals</div>
       <div class="form-group">
         <label>Daily Calorie Goal</label>
-        <input type="number" id="settingCalorieGoal" value="2000">
+        <input type="number" id="settingCalorieGoal" value="2000" title="setting Calorie Goal">
       </div>
       <div class="form-group">
         <label>Daily Protein Goal (g)</label>
-        <input type="number" id="settingProteinGoal" value="150">
+        <input type="number" id="settingProteinGoal" value="150" title="setting Protein Goal">
       </div>
       <div class="form-group">
         <label>Daily Carbs Goal (g)</label>
-        <input type="number" id="settingCarbsGoal" value="250">
+        <input type="number" id="settingCarbsGoal" value="250" title="setting Carbs Goal">
       </div>
       <div class="form-group">
         <label>Daily Fat Goal (g)</label>
-        <input type="number" id="settingFatGoal" value="65">
+        <input type="number" id="settingFatGoal" value="65" title="setting Fat Goal">
       </div>
       <div class="goal-sync-actions">
         <button class="btn btn-outline" id="settingSyncGoalToTDEEBtn">SYNC GOAL TO TDEE</button>
       </div>
-      <div class="text-xs mt-8" id="settingSyncGoalToTDEEStatus" style="color:var(--text2)">Adaptive TDEE sync becomes available once confidence is high enough.</div>
+      <div class="text-xs mt-8" id="settingSyncGoalToTDEEStatus" class="u-text2">Adaptive TDEE sync becomes available once confidence is high enough.</div>
       <div class="form-group hidden" id="competeGoalProfileGroup">
         <label>Compete Day Profile</label>
-        <select id="settingGoalDayProfile">
+        <select id="settingGoalDayProfile" title="setting Goal Day Profile">
           <option value="training">Training Day</option>
           <option value="rest">Rest Day</option>
           <option value="carb-up">Carb-Up</option>
           <option value="peak-week">Peak Week</option>
         </select>
       </div>
-      <div class="text-xs mt-8" id="settingGoalProfileHint" style="color:var(--text2)"></div>
+      <div class="text-xs mt-8" id="settingGoalProfileHint" class="u-text2"></div>
       <div class="form-group">
         <label>Weekly Workout Goal (days)</label>
-        <input type="number" id="settingWorkoutGoal" value="4">
+        <input type="number" id="settingWorkoutGoal" value="4" title="setting Workout Goal">
       </div>
       <div class="form-group">
         <label>Daily Water Goal (ml)</label>
-        <input type="number" id="settingWaterGoal" value="2000">
+        <input type="number" id="settingWaterGoal" value="2000" title="setting Water Goal">
       </div>
     </div>
     <div class="card" id="streakProtectionCard">
       <div class="card-title">Streak Protection</div>
       <div class="form-group">
         <label>Active Day Rule</label>
-        <select id="settingStreakActiveRule">
+        <select id="settingStreakActiveRule" title="setting Streak Active Rule">
           <option value="any-log">Any log (food or workout)</option>
           <option value="workout-only">Workout only</option>
           <option value="food-workout">Food + workout</option>
@@ -985,16 +984,16 @@
       </div>
       <div class="form-group">
         <label>Freeze Passes Per Week</label>
-        <select id="settingStreakFreezePerWeek">
+        <select id="settingStreakFreezePerWeek" title="setting Streak Freeze Per Week">
           <option value="1">1 freeze</option>
           <option value="2">2 freezes</option>
         </select>
       </div>
       <div class="toggle-row mt-8">
         <span>Rest-day protection (wellness/body log counts)</span>
-        <label class="toggle"><input type="checkbox" id="settingStreakRestProtection" checked><span class="toggle-slider"></span></label>
+        <label class="toggle"><input type="checkbox" id="settingStreakRestProtection" checked title="setting Streak Rest Protection"><span class="toggle-slider"></span></label>
       </div>
-      <div class="text-xs mt-8" style="color:var(--text2)">Freeze passes preserve your streak on low-activity days and reset each week.</div>
+      <div class="text-xs mt-8 u-text2">Freeze passes preserve your streak on low-activity days and reset each week.</div>
     </div>
     <div class="card" id="systemCalibrationCard">
       <div class="card-title">Preferred Units</div>
@@ -1002,10 +1001,10 @@
         <button type="button" class="segmented-btn" data-weight-unit="kg">KG</button>
         <button type="button" class="segmented-btn" data-weight-unit="lbs">LB</button>
       </div>
-      <input type="hidden" id="settingWeightUnit" value="kg">
+      <input type="hidden" id="settingWeightUnit" value="kg" title="setting Weight Unit">
       <div class="form-group mt-12">
         <label>Measurement Unit</label>
-        <select id="settingMeasureUnit">
+        <select id="settingMeasureUnit" title="setting Measure Unit">
           <option value="cm">Centimeters (cm)</option>
           <option value="in">Inches (in)</option>
         </select>
@@ -1024,7 +1023,7 @@
     <div class="card" id="settingsSocialCard"></div>
     <div class="card" id="settingsAboutCard"></div>
     <div class="card">
-      <div class="text-xs text-center">FitOne v3.0 • All data stored locally in your browser</div>
+      <div class="text-xs text-center">FitOne v3.0 鈥?All data stored locally in your browser</div>
     </div>
     <div class="card">
       <div class="card-title">Clear All Data</div>
@@ -1036,10 +1035,10 @@
 <!-- FAB Speed Dial -->
 <div class="fab-backdrop" id="fabBackdrop"></div>
 <div class="fab-menu" id="fabMenu">
-  <div class="fab-option"><span class="fab-option-label">Quick Add</span><button class="fab-option-btn" data-fab-action="quick-food" aria-label="Quick add food">🍎</button></div>
-  <div class="fab-option"><span class="fab-option-label">Workout</span><button class="fab-option-btn" data-fab-action="log-workout" aria-label="Log workout">🏋️</button></div>
-  <div class="fab-option"><span class="fab-option-label">Bodyweight</span><button class="fab-option-btn" data-fab-action="quick-bodyweight" aria-label="Quick add bodyweight">⚖️</button></div>
-  <div class="fab-option"><span class="fab-option-label">Water</span><button class="fab-option-btn" data-fab-action="add-water" aria-label="Add water">💧</button></div>
+  <div class="fab-option"><span class="fab-option-label">Quick Add</span><button class="fab-option-btn" data-fab-action="quick-food" aria-label="Quick add food">馃崕</button></div>
+  <div class="fab-option"><span class="fab-option-label">Workout</span><button class="fab-option-btn" data-fab-action="log-workout" aria-label="Log workout">馃弸锔?/button></div>
+  <div class="fab-option"><span class="fab-option-label">Bodyweight</span><button class="fab-option-btn" data-fab-action="quick-bodyweight" aria-label="Quick add bodyweight">鈿栵笍</button></div>
+  <div class="fab-option"><span class="fab-option-label">Water</span><button class="fab-option-btn" data-fab-action="add-water" aria-label="Add water">馃挧</button></div>
 </div>
 <button class="fab" id="fabBtn" aria-label="Quick actions menu">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
@@ -1048,19 +1047,19 @@
 <!-- Tab Bar (Kinetic Obsidian 4-Tab Nav) -->
 <nav class="tab-bar" role="tablist" aria-label="Main navigation">
   <button class="tab-btn active" data-tab="today" role="tab" aria-label="Dashboard" aria-selected="true">
-    <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">dashboard</span>
+    <span class="material-symbols-outlined u-icon-fill-1">dashboard</span>
     Dashboard
   </button>
   <button class="tab-btn" data-tab="log" role="tab" aria-label="Workouts" aria-selected="false">
-    <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">fitness_center</span>
+    <span class="material-symbols-outlined u-icon-fill-1">fitness_center</span>
     Workouts
   </button>
   <button class="tab-btn" data-tab="analytics" role="tab" aria-label="Stats" aria-selected="false">
-    <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">equalizer</span>
+    <span class="material-symbols-outlined u-icon-fill-1">equalizer</span>
     Stats
   </button>
   <button class="tab-btn" data-tab="settings" role="tab" aria-label="Profile" aria-selected="false">
-    <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">person</span>
+    <span class="material-symbols-outlined u-icon-fill-1">person</span>
     Profile
   </button>
 </nav>
@@ -1072,10 +1071,10 @@
     <canvas width="300" height="300" id="timerCircleCanvas"></canvas>
     <div class="timer-circle-text" id="timerCircleText">0:00</div>
   </div>
-  <button class="btn btn-primary btn-block btn-skip-rest" id="skipRestBtn">SKIP REST ▸▸</button>
+  <button class="btn btn-primary btn-block btn-skip-rest" id="skipRestBtn">SKIP REST 鈻糕柛</button>
   <div class="timer-next-set" id="timerNextSet"></div>
   <div class="timer-bottom-stats">
-    <div class="stat-box"><div class="val" id="timerHR">— BPM</div><div class="lbl">HEART RATE</div></div>
+    <div class="stat-box"><div class="val" id="timerHR">鈥?BPM</div><div class="lbl">HEART RATE</div></div>
     <div class="stat-box"><div class="val" id="timerCal">0 KCAL</div><div class="lbl">CALORIES</div></div>
   </div>
 </div>
@@ -1087,7 +1086,7 @@
 <div id="modalContainer"></div>
 <div id="pulseCenterRoot"></div>
 
-<script src="src/dataStore.js?v=20260409d"></script>
+<script src="src/dataStore.js?v=20260410a"></script>
 <script src="src/syncService.js?v=20260409d"></script>
 <script src="src/wearableIntegration.js?v=20260409d"></script>
 <script src="src/foodDatabase.js?v=20260409c"></script>
@@ -1101,22 +1100,22 @@
 <script src="src/shareCard.js?v=20260406k"></script>
 <script src="src/workoutIntelligence.js"></script>
 <script src="src/virtualScroller.js?v=20260409a"></script>
-<script src="src/ui.js?v=20260406c"></script>
+<script src="src/ui.js?v=20260410a"></script>
 <script src="src/onboarding.js?v=20260407c"></script>
 <script src="src/views/todayView.js?v=20260409d"></script>
-<script src="src/views/logView.js?v=20260409d"></script>
+<script src="src/views/logView.js?v=20260410b"></script>
 <script src="src/views/exerciseDetailView.js?v=20260406c"></script>
 <script src="src/views/deepDiveView.js?v=20260406a"></script>
 <script src="src/views/activityFeedView.js?v=20260406a"></script>
 <script src="src/views/workoutDetailView.js?v=20260406a"></script>
 <script src="src/views/pulseCenterView.js?v=20260406a"></script>
-<script src="src/views/settingsView.js?v=20260409d"></script>
+<script src="src/views/settingsView.js?v=20260410b"></script>
 <script src="src/planGenerator.js?v=20260408a"></script>
-<script src="src/views/protocolsView.js?v=20260409d"></script>
-<script src="src/views/analyticsView.js?v=20260409b"></script>
+<script src="src/views/protocolsView.js?v=20260410a"></script>
+<script src="src/views/analyticsView.js?v=20260410b"></script>
 <script src="src/views/exportView.js?v=20260409d"></script>
 <script src="src/views/postWorkoutView.js?v=20260406f"></script>
-<script src="src/views/photosView.js?v=20260407a"></script>
+<script src="src/views/photosView.js?v=20260410a"></script>
 <script type="module" src="src/main.js?v=20260409d"></script>
 </body>
 </html>

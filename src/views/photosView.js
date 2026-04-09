@@ -11,6 +11,42 @@ function formatPhotoTag(tag) {
     .join(' ');
 }
 
+function getPhotosDataApi() {
+  return window.fitOneDataApi || {};
+}
+
+function photosEmitDataChange(detail) {
+  const api = getPhotosDataApi();
+  if (typeof api.emitDataChange === 'function') {
+    api.emitDataChange(detail);
+    return;
+  }
+  if (typeof window.notifyDataChanged === 'function') {
+    window.notifyDataChanged(detail || {});
+  }
+}
+
+function photosAppendEntityItem(key, item) {
+  const api = getPhotosDataApi();
+  if (typeof api.appendEntityItem === 'function') {
+    return api.appendEntityItem(key, item);
+  }
+  const rows = loadData(key);
+  rows.push(item);
+  saveData(key, rows);
+  return rows;
+}
+
+function photosReplaceEntityItems(key, items) {
+  const api = getPhotosDataApi();
+  if (typeof api.replaceEntityItems === 'function') {
+    return api.replaceEntityItems(key, items);
+  }
+  const rows = Array.isArray(items) ? items : [];
+  saveData(key, rows);
+  return rows;
+}
+
 function refreshPhotos() {
   const container = $('photosContainer');
   if (!container) return;
@@ -76,8 +112,12 @@ function showAddPhotoModal() {
       '<button class="btn btn-primary btn-block mt-12" id="photoSaveBtn" disabled>Save Photo</button>' +
     '</div></div>';
 
-  $('photoModalClose').addEventListener('click', closeModal);
-  $('photoModalOverlay').addEventListener('click', e => { if (e.target === $('photoModalOverlay')) closeModal(); });
+  if (typeof bindModalClose === 'function') {
+    bindModalClose('photoModalOverlay', 'photoModalClose', closeModal);
+  } else {
+    $('photoModalClose').addEventListener('click', closeModal);
+    $('photoModalOverlay').addEventListener('click', e => { if (e.target === $('photoModalOverlay')) closeModal(); });
+  }
 
   $('photoUploadArea').addEventListener('click', () => $('photoFileInput').click());
 
@@ -128,13 +168,11 @@ function showAddPhotoModal() {
       uri: uri,
       timestamp: Date.now(),
     };
-    const data = loadData(KEYS.photos);
-    data.push(photo);
-    saveData(KEYS.photos, data);
+    photosAppendEntityItem(KEYS.photos, photo);
     closeModal();
     refreshPhotos();
     showToast('Photo saved! 📸');
-    if (typeof window.notifyDataChanged === 'function') window.notifyDataChanged({ source: 'photos', reason: 'addPhoto' });
+    photosEmitDataChange({ source: 'photos', reason: 'addPhoto' });
   });
 }
 
@@ -167,8 +205,12 @@ function showComparePhotos() {
       '</div>' +
     '</div></div>';
 
-  $('compareClose').addEventListener('click', closeModal);
-  $('compareOverlay').addEventListener('click', e => { if (e.target === $('compareOverlay')) closeModal(); });
+  if (typeof bindModalClose === 'function') {
+    bindModalClose('compareOverlay', 'compareClose', closeModal);
+  } else {
+    $('compareClose').addEventListener('click', closeModal);
+    $('compareOverlay').addEventListener('click', e => { if (e.target === $('compareOverlay')) closeModal(); });
+  }
 
   // Slider interaction
   const container = $('compareContainer');
@@ -223,21 +265,17 @@ function initPhotoEvents() {
       const next = previous.filter(p => p.id !== id);
       if (next.length === previous.length) return;
 
-      saveData(KEYS.photos, next);
+      photosReplaceEntityItems(KEYS.photos, next);
       refreshPhotos();
-      if (typeof window.notifyDataChanged === 'function') {
-        window.notifyDataChanged({ source: 'photos', reason: 'deletePhoto' });
-      }
+      photosEmitDataChange({ source: 'photos', reason: 'deletePhoto' });
 
       if (typeof showUndoToast === 'function') {
         showUndoToast('Photo deleted', () => {
-          saveData(KEYS.photos, previous);
+          photosReplaceEntityItems(KEYS.photos, previous);
           refreshPhotos();
           showToast('Photo restored');
           if (typeof trackUXTelemetry === 'function') trackUXTelemetry('logging.undoCount');
-          if (typeof window.notifyDataChanged === 'function') {
-            window.notifyDataChanged({ source: 'photos', reason: 'undoDeletePhoto' });
-          }
+          photosEmitDataChange({ source: 'photos', reason: 'undoDeletePhoto' });
         });
       } else {
         showToast('Photo deleted');

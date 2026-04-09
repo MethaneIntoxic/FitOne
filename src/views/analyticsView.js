@@ -9,6 +9,18 @@ let _analyticsWorkerSeq = 0;
 let _analyticsPending = {};
 let _analyticsReportCache = null;
 
+function getAnalyticsDataApi() {
+  return window.fitOneDataApi || {};
+}
+
+function analyticsLoadData(key) {
+  const api = getAnalyticsDataApi();
+  if (typeof api.loadData === "function") {
+    return api.loadData(key);
+  }
+  return loadData(key);
+}
+
 function initAnalyticsWorker() {
   if (_analyticsWorker || typeof Worker === "undefined") return _analyticsWorker;
   try {
@@ -96,7 +108,7 @@ function buildDateRangeDays(startDate, endDate) {
 function getEarliestLoggedDate() {
   let earliest = null;
   [KEYS.food, KEYS.workouts, KEYS.body].forEach(function (key) {
-    loadData(key).forEach(function (row) {
+    analyticsLoadData(key).forEach(function (row) {
       const date = String((row && row.date) || "").trim();
       if (!date) return;
       if (!earliest || date < earliest) earliest = date;
@@ -290,9 +302,9 @@ function renderAnalyticsReportCard() {
     startDate: range.startDate,
     endDate: range.endDate,
     dayCount: Math.max(1, range.days.length),
-    food: loadData(KEYS.food),
-    workouts: loadData(KEYS.workouts),
-    body: loadData(KEYS.body),
+    food: analyticsLoadData(KEYS.food),
+    workouts: analyticsLoadData(KEYS.workouts),
+    body: analyticsLoadData(KEYS.body),
     proteinGoal: Number(settings.proteinGoal) || 150,
   };
 
@@ -458,7 +470,7 @@ function drawPerformanceAnalytics() {
   if (timeRange === "6m") daysBack = 180;
   if (timeRange === "1y") daysBack = 365;
 
-  const workouts = loadData(KEYS.workouts);
+  const workouts = analyticsLoadData(KEYS.workouts);
   
   drawPerformanceTonnage(workouts, daysBack);
   drawPerformanceBodyComposition(daysBack);
@@ -472,7 +484,7 @@ function drawPerformanceAnalytics() {
 function drawCalorieChart() {
   const range = getAnalyticsDateRange();
   const days = range.days && range.days.length ? range.days : getLast14Days();
-  const food = loadData(KEYS.food);
+  const food = analyticsLoadData(KEYS.food);
   const vals = days.map((d) => food.filter((f) => f.date === d).reduce((a, f) => a + (f.calories || 0), 0));
   drawBarChart($("chartCalories"), days.map((d) => d.slice(5)), vals, brandColor("--brand-calories"), settings.calorieGoal);
 
@@ -613,10 +625,10 @@ function drawMicronutrientTrendChart(days, food) {
 // ========== WEIGHT CHART ==========
 function drawWeightChart() {
   const range = getAnalyticsDateRange();
-  const scoped = loadData(KEYS.body)
+  const scoped = analyticsLoadData(KEYS.body)
     .filter((b) => b.weight && b.date >= range.startDate && b.date <= range.endDate)
     .sort((a, b) => a.date.localeCompare(b.date));
-  const fallback = loadData(KEYS.body).filter((b) => b.weight).sort((a, b) => a.date.localeCompare(b.date));
+  const fallback = analyticsLoadData(KEYS.body).filter((b) => b.weight).sort((a, b) => a.date.localeCompare(b.date));
   const source = scoped.length >= 2 ? scoped : fallback;
   const last20 = source.slice(-20);
   if (last20.length < 2) {
@@ -649,7 +661,7 @@ function drawWeightChart() {
 function drawWorkoutChart() {
   const range = getAnalyticsDateRange();
   const days = range.days && range.days.length ? range.days : getLast14Days();
-  const workouts = loadData(KEYS.workouts);
+  const workouts = analyticsLoadData(KEYS.workouts);
   const vals = days.map((d) => workouts.filter((w) => w.date === d).length);
   drawBarChart($("chartWorkouts"), days.map((d) => d.slice(5)), vals, brandColor("--brand-warning"));
 
@@ -660,7 +672,7 @@ function drawWorkoutChart() {
   });
   const totalMin = workouts.reduce((a, w) => a + (w.duration || 0), 0);
   const bw = getPrimaryBodyweight();
-  const allSets = loadData(KEYS.strengthSets);
+  const allSets = analyticsLoadData(KEYS.strengthSets);
   let bestEffective = 0;
   workouts.forEach((w) => {
     (w.exercises || []).forEach((ex) => {
@@ -717,7 +729,7 @@ function renderWeeklySummary(days, food) {
   const twPro = thisWeek.map((d) => food.filter((f) => f.date === d).reduce((a, f) => a + (f.protein || 0), 0));
   const twProAvg = twPro.reduce((a, b) => a + b, 0) / 7;
 
-  const workouts = loadData(KEYS.workouts);
+  const workouts = analyticsLoadData(KEYS.workouts);
   const twWorkouts = new Set(workouts.filter((w) => thisWeek.includes(w.date)).map((w) => w.date)).size;
   const lwWorkouts = new Set(workouts.filter((w) => lw7.includes(w.date)).map((w) => w.date)).size;
 
@@ -1109,7 +1121,7 @@ function drawPerformanceConsistency(workouts) {
   
   const endD = new Date();
   const daysHash = {};
-  const foods = loadData(KEYS.food);
+  const foods = analyticsLoadData(KEYS.food);
   workouts.forEach(w => { daysHash[w.date] = (daysHash[w.date]||0) + 1; });
   foods.forEach(f => { daysHash[f.date] = (daysHash[f.date]||0) + 1; });
   
@@ -1382,7 +1394,7 @@ function drawPerformancePRs(daysBack) {
   }
 
   if (!prs.length) {
-    const workouts = loadData(KEYS.workouts);
+    const workouts = analyticsLoadData(KEYS.workouts);
     const maxes = {};
     workouts.forEach(w => {
       (w.exercises || []).forEach(ex => {
@@ -1502,7 +1514,7 @@ function drawPerformanceBodyComposition(daysBack) {
   const rangeEl = $("statsBodyRange");
   if (!canvas || !trendList || !symmetryBox || !rangeEl) return;
 
-  const allBody = loadData(KEYS.body)
+  const allBody = analyticsLoadData(KEYS.body)
     .filter((b) => b && b.date)
     .sort((a, b) => a.date.localeCompare(b.date));
 

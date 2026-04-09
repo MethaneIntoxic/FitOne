@@ -4,6 +4,17 @@
 > **Target users:** Complete beginners → intermediate lifters → advanced athletes → IFBB pro competitors
 > **Philosophy:** Maximum utility. Every feature must serve at least one experience level without alienating others.
 
+## Phase X — API Packaging & Optimization Battle Plan (April 10, 2026)
+
+- [x] **X1 — Add centralized data API wrappers** in `src/dataStore.js` (`emitDataChange`, `appendEntityItem`, `replaceEntityItems`)
+- [x] **X2 — Add reusable modal close binder** in `src/ui.js` (`bindModalClose`)
+- [x] **X3 — Refactor high-duplication views** (`src/views/protocolsView.js`, `src/views/photosView.js`) to consume wrappers and reduce repeated notify/save blocks
+- [x] **X4 — Remove generated test artifacts** from `test-results/`
+- [x] **X5 — Continue dedup pass across remaining views** (settings/log/analytics) using the same wrappers
+- [x] **X6 — Remove high-confidence dead/headless functions** only after indirect/global usage safety checks
+- [x] **X7 — Run full syntax/tests + desktop/mobile smoke pass** to confirm zero regressions (unit + syntax + browser smoke complete)
+- [x] **X8 — Bump cache-busting query versions** in `index.html` for touched scripts after validation
+
 ---
 
 ## Phase 0 — Kinetic Obsidian UI Refactor ✅ COMPLETE
