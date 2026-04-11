@@ -7,7 +7,12 @@
     "build": "vite build",
     "preview": "vite preview --port 4173",
     "test:unit": "vitest run tests/dataStore.unit.test.mjs tests/unit/dataStore.analytics.test.mjs",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "uat:intense": "playwright test tests/uat.spec.ts --config=playwright.config.ts --reporter=list,./tests/TicketReporter.ts",
+    "uat:intense:sharded": "node -e \"const cp=require('node:child_process');const bin=process.platform==='win32'?'playwright.cmd':'playwright';const total=Number(process.env.UAT_SHARDS||3);const single=process.env.UAT_SHARD;const base=['test','tests/uat.spec.ts','--config=playwright.config.ts','--reporter=list,./tests/TicketReporter.ts'];const run=(shard)=>cp.spawnSync(bin,[...base,'--shard='+shard],{stdio:'inherit'});if(single){const r=run(single+'/'+total);process.exit(r.status??1);}for(let i=1;i<=total;i++){const r=run(i+'/'+total);if((r.status??1)!==0){process.exit(r.status??1);}}\"",
+    "uat:backlog": "npm run uat:intense && node -e \"const fs=require('node:fs');const cp=require('node:child_process');const candidates=['scripts/uat/generate-master-backlog.mjs','scripts/uat/generate-backlog.js','scripts/uat/generate-backlog.mjs','scripts/uat/generate_backlog.js','scripts/uat/generate_backlog.mjs','scripts/uat/backlog-generator.js','scripts/uat/backlog-generator.mjs','scripts/uat/generateUatBacklog.js','scripts/uat/generateUatBacklog.mjs'];const target=candidates.find((p)=>fs.existsSync(p));if(!target){console.error('No UAT backlog generator script found under scripts/uat.');process.exit(1);}const r=cp.spawnSync(process.execPath,[target],{stdio:'inherit'});process.exit(r.status??1);\"",
+    "uat:canonicalize": "node scripts/uat/canonicalize-tickets.mjs",
+    "uat:cleanup": "node scripts/uat/canonicalize-tickets.mjs --archive-duplicates"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",

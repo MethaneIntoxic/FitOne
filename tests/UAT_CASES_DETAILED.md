@@ -208,3 +208,65 @@ This catalog defines rigorous UAT coverage for FitOne and maps directly to `test
   3. Check elapsed interaction time.
 - Expected:
   - Navigation sequence completes within budget threshold.
+
+## Extreme Lifecycle Matrix (Domain 1 Source of Truth)
+
+This harness extension adds a persona-lifecycle source of truth covering **20 personas x 4 phases = 80 lifecycle cases**.
+
+### Matrix Artifacts
+- `tests/uat/personas/fit_to_fit_personas.ts`
+- `tests/uat/scenarios/fit_to_fit_lifecycle.ts`
+- `tests/uat/scenarios/fit_to_fit_matrix.ts`
+
+### Matrix Case ID Convention
+- Lifecycle case ID format: `TC{NNN}-{personaId}-{phaseId}`
+- Persona IDs: `P1` through `P20`
+- Lifecycle phases:
+  - `phase1`: Friction-Heavy Onboarding
+  - `phase2`: Honeymoon
+  - `phase3`: Valley of Despair
+  - `phase4`: Optimization & Transformation
+- Example IDs:
+  - `TC001-P1-phase1`
+  - `TC002-P1-phase2`
+  - `TC079-P20-phase3`
+  - `TC080-P20-phase4`
+
+### Persona Registry Index (P1..P20)
+| Persona ID | Name | Primary Focus | Key Risk Flags |
+|---|---|---|---|
+| P1 | Amira | Beginner fat-loss adherence | motivation-volatility, small-screen-only |
+| P2 | Noah | Privacy-first tracking | privacy-sensitive, data-export-dependence |
+| P3 | Leo | Busy professional consistency | time-poor-professional, motivation-volatility |
+| P4 | Kay | Powerlifting progression | performance-anxiety, wearable-desync-risk |
+| P5 | Ravi | Shift-compatible logging | night-shift, schedule-variability |
+| P6 | Mina | Recomposition trend quality | motivation-volatility, data-export-dependence |
+| P7 | Elena | Postpartum recovery routine | postpartum-recovery, caregiver-time-crunch |
+| P8 | Tomas | Senior health improvement | senior-accessibility, chronic-condition |
+| P9 | Jada | Student budget tracking | budget-limited, small-screen-only |
+| P10 | Omar | Rehab + night-shift resilience | night-shift, injury-rehab |
+| P11 | Priya | Return-to-run rehab progression | injury-rehab, performance-anxiety |
+| P12 | Ben | Travel-stable routines | travel-frequent, low-connectivity |
+| P13 | Sofia | Neurodivergent planning support | adhd-planning-friction, motivation-volatility |
+| P14 | Darius | Data audit readiness | data-export-dependence, manual-entry-only |
+| P15 | Hana | Offline-first rural usage | low-connectivity, offline-first |
+| P16 | Mateo | Wearable-heavy recovery optimization | wearable-desync-risk, data-export-dependence |
+| P17 | Chloe | Emotionally safe tracking | ed-sensitive, motivation-volatility |
+| P18 | Victor | Caregiver time-crunch adherence | caregiver-time-crunch, schedule-variability |
+| P19 | Imani | Accessibility-first adaptive tracking | accessibility-needs, injury-rehab |
+| P20 | Quinn | Benchmark and stress-path validation | manual-entry-only, performance-anxiety |
+
+### Lifecycle Crosswalk to Existing UAT-001..UAT-015
+The lifecycle matrix generalizes legacy scenarios across every persona. Legacy IDs are attached to lifecycle cases by phase where functionally applicable.
+
+| Lifecycle Phase | Matrix Selector | Functional Focus | Legacy UAT IDs |
+|---|---|---|---|
+| phase1 | `TC*-*-phase1` | First-run setup, privacy controls, initial body/goal alignment | UAT-001, UAT-002, UAT-003 |
+| phase2 | `TC*-*-phase2` | Daily logging consistency, hydration/macros/food edits, session capture | UAT-004, UAT-005, UAT-006, UAT-007, UAT-009 |
+| phase3 | `TC*-*-phase3` | Disruption handling, routine change stability, offline/recovery resilience | UAT-008, UAT-011, UAT-013 |
+| phase4 | `TC*-*-phase4` | Advanced analytics, export/reporting, performance and optimization checks | UAT-010, UAT-012, UAT-014, UAT-015 |
+
+### Coverage Notes
+- Existing UAT-001..UAT-015 remain valid scenario references.
+- Lifecycle IDs are the canonical matrix IDs for extreme UAT execution waves.
+- When a legacy case maps to multiple lifecycle cases, persona + phase context is treated as the source of truth for expected outcomes.

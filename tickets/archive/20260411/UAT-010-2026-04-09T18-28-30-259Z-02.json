@@ -1,0 +1,92 @@
+{
+  "id": "T-UAT-010-2",
+  "scenarioId": "UAT-010",
+  "scenarioTitle": "Recomposition trend visibility",
+  "persona": "Mina – body recomposition",
+  "category": "Analytics",
+  "mode": "power",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Log food, workouts, and body entries then inspect calorie, workout, and weight analytics views.",
+  "expectedSummary": "Charts and weekly summary cards render with coherent trend context.",
+  "actualResult": "Test timeout of 30000ms exceeded.",
+  "errorMessage": "Test timeout of 30000ms exceeded.",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-17b45-w-slow3g-read-heavy-UAT-010-matrix-mobile-pixel-7-retry1\\test-failed-1.png",
+  "createdAt": "2026-04-09T18:28:30.259Z",
+  "schemaVersion": "2.0",
+  "sourceCaseId": "UAT-010",
+  "personaId": "mina-body-recomposition",
+  "phaseId": "phase4",
+  "type": "BUG",
+  "severity": "high",
+  "priority": "p1",
+  "summary": "BUG: UAT-010 Recomposition trend visibility - Test timeout of 30000ms exceeded.",
+  "reproSteps": [
+    "Create representative nutrition, training, and body measurements.",
+    "Open analytics calories sub-tab and verify summary card.",
+    "Open workout sub-tab and verify stats card.",
+    "Open weight sub-tab and verify chart rendering."
+  ],
+  "expected": "Charts and weekly summary cards render with coherent trend context.",
+  "actual": "Test timeout of 30000ms exceeded.",
+  "evidence": [
+    "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-17b45-w-slow3g-read-heavy-UAT-010-matrix-mobile-pixel-7-retry1\\test-failed-1.png"
+  ],
+  "recommendation": "Fix the failing Analytics flow and add a regression assertion for this scenario.",
+  "acceptanceCriteria": [
+    "Scenario UAT-010 completes without blocking errors.",
+    "Verify: Charts render without runtime errors.",
+    "Verify: Summary cards show non-empty trend values."
+  ],
+  "scoring": {
+    "impactScore": 5,
+    "frequencyScore": 5,
+    "personaVulnerabilityScore": 2,
+    "riskScore": 50
+  },
+  "tags": [
+    "analytics",
+    "weight",
+    "recomposition"
+  ],
+  "triage": {
+    "sourceCaseId": "UAT-010",
+    "personaId": "mina-body-recomposition",
+    "phaseId": "phase4",
+    "type": "BUG",
+    "severity": "high",
+    "priority": "p1",
+    "category": "Analytics",
+    "summary": "BUG: UAT-010 Recomposition trend visibility - Test timeout of 30000ms exceeded.",
+    "reproSteps": [
+      "Create representative nutrition, training, and body measurements.",
+      "Open analytics calories sub-tab and verify summary card.",
+      "Open workout sub-tab and verify stats card.",
+      "Open weight sub-tab and verify chart rendering."
+    ],
+    "expected": "Charts and weekly summary cards render with coherent trend context.",
+    "actual": "Test timeout of 30000ms exceeded.",
+    "evidence": [
+      "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-17b45-w-slow3g-read-heavy-UAT-010-matrix-mobile-pixel-7-retry1\\test-failed-1.png"
+    ],
+    "recommendation": "Fix the failing Analytics flow and add a regression assertion for this scenario.",
+    "acceptanceCriteria": [
+      "Scenario UAT-010 completes without blocking errors.",
+      "Verify: Charts render without runtime errors.",
+      "Verify: Summary cards show non-empty trend values."
+    ],
+    "scoring": {
+      "impactScore": 5,
+      "frequencyScore": 5,
+      "personaVulnerabilityScore": 2,
+      "riskScore": 50
+    },
+    "tags": [
+      "analytics",
+      "weight",
+      "recomposition"
+    ]
+  }
+}

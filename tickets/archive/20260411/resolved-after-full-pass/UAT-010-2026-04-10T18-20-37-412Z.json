@@ -1,0 +1,92 @@
+{
+  "id": "T-UAT-010-1",
+  "scenarioId": "UAT-010",
+  "scenarioTitle": "Recomposition trend visibility",
+  "persona": "Mina – body recomposition",
+  "category": "Analytics",
+  "mode": "power",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Log food, workouts, and body entries then inspect calorie, workout, and weight analytics views.",
+  "expectedSummary": "Charts and weekly summary cards render with coherent trend context.",
+  "actualResult": "Error: expect(locator).toContainText(expected) failed",
+  "errorMessage": "Error: expect(locator).toContainText(expected) failed\n\nLocator: locator('#weeklySummaryCard')\nExpected substring: \"Weekly Summary\"\nReceived string:    \"\"\nTimeout: 7000ms\n\nCall log:\n  - Expect \"toContainText\" with timeout 7000ms\n  - waiting for locator('#weeklySummaryCard')\n    11 × locator resolved to <div class=\"card\" id=\"weeklySummaryCard\"></div>\n       - unexpected value \"\"\n",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-010-–-Recomposition-trend-visibility-UAT-010-chromium-retry1\\test-failed-1.png",
+  "createdAt": "2026-04-10T18:20:37.412Z",
+  "schemaVersion": "2.0",
+  "sourceCaseId": "UAT-010",
+  "personaId": "mina-body-recomposition",
+  "phaseId": "phase4",
+  "type": "BUG",
+  "severity": "medium",
+  "priority": "p2",
+  "summary": "BUG: UAT-010 Recomposition trend visibility - Error: expect(locator).toContainText(expected) failed",
+  "reproSteps": [
+    "Create representative nutrition, training, and body measurements.",
+    "Open analytics calories sub-tab and verify summary card.",
+    "Open workout sub-tab and verify stats card.",
+    "Open weight sub-tab and verify chart rendering."
+  ],
+  "expected": "Charts and weekly summary cards render with coherent trend context.",
+  "actual": "Error: expect(locator).toContainText(expected) failed",
+  "evidence": [
+    "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-010-–-Recomposition-trend-visibility-UAT-010-chromium-retry1\\test-failed-1.png"
+  ],
+  "recommendation": "Fix the failing Analytics flow and add a regression assertion for this scenario.",
+  "acceptanceCriteria": [
+    "Scenario UAT-010 completes without blocking errors.",
+    "Verify: Charts render without runtime errors.",
+    "Verify: Summary cards show non-empty trend values."
+  ],
+  "scoring": {
+    "impactScore": 5,
+    "frequencyScore": 4,
+    "personaVulnerabilityScore": 2,
+    "riskScore": 40
+  },
+  "tags": [
+    "analytics",
+    "weight",
+    "recomposition"
+  ],
+  "triage": {
+    "sourceCaseId": "UAT-010",
+    "personaId": "mina-body-recomposition",
+    "phaseId": "phase4",
+    "type": "BUG",
+    "severity": "medium",
+    "priority": "p2",
+    "category": "Analytics",
+    "summary": "BUG: UAT-010 Recomposition trend visibility - Error: expect(locator).toContainText(expected) failed",
+    "reproSteps": [
+      "Create representative nutrition, training, and body measurements.",
+      "Open analytics calories sub-tab and verify summary card.",
+      "Open workout sub-tab and verify stats card.",
+      "Open weight sub-tab and verify chart rendering."
+    ],
+    "expected": "Charts and weekly summary cards render with coherent trend context.",
+    "actual": "Error: expect(locator).toContainText(expected) failed",
+    "evidence": [
+      "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-010-–-Recomposition-trend-visibility-UAT-010-chromium-retry1\\test-failed-1.png"
+    ],
+    "recommendation": "Fix the failing Analytics flow and add a regression assertion for this scenario.",
+    "acceptanceCriteria": [
+      "Scenario UAT-010 completes without blocking errors.",
+      "Verify: Charts render without runtime errors.",
+      "Verify: Summary cards show non-empty trend values."
+    ],
+    "scoring": {
+      "impactScore": 5,
+      "frequencyScore": 4,
+      "personaVulnerabilityScore": 2,
+      "riskScore": 40
+    },
+    "tags": [
+      "analytics",
+      "weight",
+      "recomposition"
+    ]
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "id": "T-UAT-003-2",
+  "scenarioId": "UAT-003",
+  "scenarioTitle": "First body check-in and goal alignment",
+  "persona": "Amira – new to tracking",
+  "category": "Onboarding",
+  "mode": "beginner",
+  "environment": {
+    "browserName": "chromium",
+    "projectName": "matrix-desktop-chrome",
+    "os": "win32 x64",
+    "runId": "postfix-full-20260411"
+  },
+  "stepsSummary": "Set body goal and log first body measurement with notes.",
+  "expectedSummary": "Body history records the entry and reflects selected units/goals cleanly.",
+  "actualResult": "Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+  "errorMessage": "Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/\nCall log:\n  - navigating to \"http://127.0.0.1:4173/\", waiting until \"load\"\n",
+  "failureFingerprint": "3c971e88c94e2218",
+  "runFingerprintKey": "UAT-003|3c971e88c94e2218|chromium|matrix-desktop-chrome",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-1ad55-03-TC069-P18-phase1-UAT-003-matrix-desktop-chrome\\test-failed-1.png",
+  "createdAt": "2026-04-11T09:08:08.064Z",
+  "schemaVersion": "2.0",
+  "sourceCaseId": "UAT-003",
+  "personaId": "amira-new-to-tracking",
+  "phaseId": "phase1",
+  "type": "BUG",
+  "severity": "critical",
+  "priority": "p0",
+  "summary": "BUG: UAT-003 First body check-in and goal alignment - Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+  "reproSteps": [
+    "Navigate to Settings and select a body goal target.",
+    "Open Log > Body sub-tab.",
+    "Enter weight/body-fat/circumference measurements and notes.",
+    "Submit body entry.",
+    "Validate newly created record in body history section."
+  ],
+  "expected": "Body history records the entry and reflects selected units/goals cleanly.",
+  "actual": "Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+  "evidence": [
+    "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-1ad55-03-TC069-P18-phase1-UAT-003-matrix-desktop-chrome\\test-failed-1.png"
+  ],
+  "recommendation": "Fix the failing Onboarding flow and add a regression assertion for this scenario.",
+  "acceptanceCriteria": [
+    "Scenario UAT-003 completes without blocking errors.",
+    "Verify: Body entry is persisted with entered values.",
+    "Verify: History list reflects new measurement immediately."
+  ],
+  "scoring": {
+    "impactScore": 5,
+    "frequencyScore": 3,
+    "personaVulnerabilityScore": 5,
+    "riskScore": 75
+  },
+  "tags": [
+    "body",
+    "goals",
+    "setup"
+  ],
+  "triage": {
+    "sourceCaseId": "UAT-003",
+    "personaId": "amira-new-to-tracking",
+    "phaseId": "phase1",
+    "type": "BUG",
+    "severity": "critical",
+    "priority": "p0",
+    "category": "Onboarding",
+    "summary": "BUG: UAT-003 First body check-in and goal alignment - Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+    "reproSteps": [
+      "Navigate to Settings and select a body goal target.",
+      "Open Log > Body sub-tab.",
+      "Enter weight/body-fat/circumference measurements and notes.",
+      "Submit body entry.",
+      "Validate newly created record in body history section."
+    ],
+    "expected": "Body history records the entry and reflects selected units/goals cleanly.",
+    "actual": "Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+    "evidence": [
+      "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-1ad55-03-TC069-P18-phase1-UAT-003-matrix-desktop-chrome\\test-failed-1.png"
+    ],
+    "recommendation": "Fix the failing Onboarding flow and add a regression assertion for this scenario.",
+    "acceptanceCriteria": [
+      "Scenario UAT-003 completes without blocking errors.",
+      "Verify: Body entry is persisted with entered values.",
+      "Verify: History list reflects new measurement immediately."
+    ],
+    "scoring": {
+      "impactScore": 5,
+      "frequencyScore": 3,
+      "personaVulnerabilityScore": 5,
+      "riskScore": 75
+    },
+    "tags": [
+      "body",
+      "goals",
+      "setup"
+    ]
+  }
+}

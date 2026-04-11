@@ -1,0 +1,96 @@
+{
+  "id": "T-UAT-006-1",
+  "scenarioId": "UAT-006",
+  "scenarioTitle": "First day of food tracking (Beginner)",
+  "persona": "Amira – new to tracking",
+  "category": "Nutrition",
+  "mode": "beginner",
+  "environment": {
+    "browserName": "chromium",
+    "projectName": "matrix-mobile-pixel-7",
+    "os": "win32 x64",
+    "runId": "postfix-full-20260411"
+  },
+  "stepsSummary": "Log breakfast/lunch/dinner including a custom food and an edited portion.",
+  "expectedSummary": "Per-meal and daily macros update correctly; portion edits are simple; no duplicate/ghost entries.",
+  "actualResult": "Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+  "errorMessage": "Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/\nCall log:\n  - navigating to \"http://127.0.0.1:4173/\", waiting until \"load\"\n",
+  "failureFingerprint": "3c971e88c94e2218",
+  "runFingerprintKey": "UAT-006|3c971e88c94e2218|chromium|matrix-mobile-pixel-7",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-82487-006-TC030-P8-phase2-UAT-006-matrix-mobile-pixel-7\\test-failed-1.png",
+  "createdAt": "2026-04-11T09:07:50.671Z",
+  "schemaVersion": "2.0",
+  "sourceCaseId": "UAT-006",
+  "personaId": "amira-new-to-tracking",
+  "phaseId": "legacy",
+  "type": "BUG",
+  "severity": "critical",
+  "priority": "p0",
+  "summary": "BUG: UAT-006 First day of food tracking (Beginner) - Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+  "reproSteps": [
+    "Log three meals across breakfast/lunch/dinner.",
+    "Open edit action on one existing row.",
+    "Change serving-size text and save update.",
+    "Verify edited value appears once and only once.",
+    "Validate recent list still has expected row count."
+  ],
+  "expected": "Per-meal and daily macros update correctly; portion edits are simple; no duplicate/ghost entries.",
+  "actual": "Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+  "evidence": [
+    "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-82487-006-TC030-P8-phase2-UAT-006-matrix-mobile-pixel-7\\test-failed-1.png"
+  ],
+  "recommendation": "Fix the failing Nutrition flow and add a regression assertion for this scenario.",
+  "acceptanceCriteria": [
+    "Scenario UAT-006 completes without blocking errors.",
+    "Verify: Edited row persists updated serving-size text.",
+    "Verify: No duplicate/ghost rows after edit-save cycle."
+  ],
+  "scoring": {
+    "impactScore": 5,
+    "frequencyScore": 3,
+    "personaVulnerabilityScore": 5,
+    "riskScore": 75
+  },
+  "tags": [
+    "nutrition",
+    "food-log"
+  ],
+  "triage": {
+    "sourceCaseId": "UAT-006",
+    "personaId": "amira-new-to-tracking",
+    "phaseId": "legacy",
+    "type": "BUG",
+    "severity": "critical",
+    "priority": "p0",
+    "category": "Nutrition",
+    "summary": "BUG: UAT-006 First day of food tracking (Beginner) - Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+    "reproSteps": [
+      "Log three meals across breakfast/lunch/dinner.",
+      "Open edit action on one existing row.",
+      "Change serving-size text and save update.",
+      "Verify edited value appears once and only once.",
+      "Validate recent list still has expected row count."
+    ],
+    "expected": "Per-meal and daily macros update correctly; portion edits are simple; no duplicate/ghost entries.",
+    "actual": "Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+    "evidence": [
+      "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-82487-006-TC030-P8-phase2-UAT-006-matrix-mobile-pixel-7\\test-failed-1.png"
+    ],
+    "recommendation": "Fix the failing Nutrition flow and add a regression assertion for this scenario.",
+    "acceptanceCriteria": [
+      "Scenario UAT-006 completes without blocking errors.",
+      "Verify: Edited row persists updated serving-size text.",
+      "Verify: No duplicate/ghost rows after edit-save cycle."
+    ],
+    "scoring": {
+      "impactScore": 5,
+      "frequencyScore": 3,
+      "personaVulnerabilityScore": 5,
+      "riskScore": 75
+    },
+    "tags": [
+      "nutrition",
+      "food-log"
+    ]
+  }
+}

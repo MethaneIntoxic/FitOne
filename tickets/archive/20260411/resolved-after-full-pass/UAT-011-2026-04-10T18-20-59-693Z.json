@@ -1,0 +1,92 @@
+{
+  "id": "T-UAT-011-1",
+  "scenarioId": "UAT-011",
+  "scenarioTitle": "JSON backup and restore",
+  "persona": "Noah – privacy focused",
+  "category": "Export",
+  "mode": "beginner",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Export global JSON then import a JSON payload via Data Studio.",
+  "expectedSummary": "Download is generated and importer commits valid rows with a clear summary.",
+  "actualResult": "Error: expect(locator).toContainText(expected) failed",
+  "errorMessage": "Error: expect(locator).toContainText(expected) failed\n\nLocator: locator('#importSummary')\nExpected substring: \"Imported\"\nReceived string:    \"Import failed. Row 1: missing workout name\"\nTimeout: 7000ms\n\nCall log:\n  - Expect \"toContainText\" with timeout 7000ms\n  - waiting for locator('#importSummary')\n    11 × locator resolved to <div id=\"importSummary\" class=\"text-xs mt-8 u-text2\">Import failed. Row 1: missing workout name</div>\n       - unexpected value \"Import failed. Row 1: missing workout name\"\n",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-011-–-JSON-backup-and-restore-UAT-011-chromium-retry1\\test-failed-1.png",
+  "createdAt": "2026-04-10T18:20:59.693Z",
+  "schemaVersion": "2.0",
+  "sourceCaseId": "UAT-011",
+  "personaId": "noah-privacy-focused",
+  "phaseId": "legacy",
+  "type": "BUG",
+  "severity": "critical",
+  "priority": "p0",
+  "summary": "BUG: UAT-011 JSON backup and restore - Error: expect(locator).toContainText(expected) failed",
+  "reproSteps": [
+    "Open Data tab and trigger global JSON export.",
+    "Verify downloaded filename extension.",
+    "Inject valid JSON import file through hidden input.",
+    "Commit import and validate import summary output."
+  ],
+  "expected": "Download is generated and importer commits valid rows with a clear summary.",
+  "actual": "Error: expect(locator).toContainText(expected) failed",
+  "evidence": [
+    "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-011-–-JSON-backup-and-restore-UAT-011-chromium-retry1\\test-failed-1.png"
+  ],
+  "recommendation": "Fix the failing Export flow and add a regression assertion for this scenario.",
+  "acceptanceCriteria": [
+    "Scenario UAT-011 completes without blocking errors.",
+    "Verify: JSON file is downloadable.",
+    "Verify: Import mapping/commit flow completes successfully."
+  ],
+  "scoring": {
+    "impactScore": 5,
+    "frequencyScore": 4,
+    "personaVulnerabilityScore": 4,
+    "riskScore": 80
+  },
+  "tags": [
+    "backup",
+    "json",
+    "restore"
+  ],
+  "triage": {
+    "sourceCaseId": "UAT-011",
+    "personaId": "noah-privacy-focused",
+    "phaseId": "legacy",
+    "type": "BUG",
+    "severity": "critical",
+    "priority": "p0",
+    "category": "Export",
+    "summary": "BUG: UAT-011 JSON backup and restore - Error: expect(locator).toContainText(expected) failed",
+    "reproSteps": [
+      "Open Data tab and trigger global JSON export.",
+      "Verify downloaded filename extension.",
+      "Inject valid JSON import file through hidden input.",
+      "Commit import and validate import summary output."
+    ],
+    "expected": "Download is generated and importer commits valid rows with a clear summary.",
+    "actual": "Error: expect(locator).toContainText(expected) failed",
+    "evidence": [
+      "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-011-–-JSON-backup-and-restore-UAT-011-chromium-retry1\\test-failed-1.png"
+    ],
+    "recommendation": "Fix the failing Export flow and add a regression assertion for this scenario.",
+    "acceptanceCriteria": [
+      "Scenario UAT-011 completes without blocking errors.",
+      "Verify: JSON file is downloadable.",
+      "Verify: Import mapping/commit flow completes successfully."
+    ],
+    "scoring": {
+      "impactScore": 5,
+      "frequencyScore": 4,
+      "personaVulnerabilityScore": 4,
+      "riskScore": 80
+    },
+    "tags": [
+      "backup",
+      "json",
+      "restore"
+    ]
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "id": "T-UAT-011-3",
+  "scenarioId": "UAT-011",
+  "scenarioTitle": "JSON backup and restore",
+  "persona": "Noah – privacy focused",
+  "category": "Export",
+  "mode": "beginner",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Export global JSON then import a JSON payload via Data Studio.",
+  "expectedSummary": "Download is generated and importer commits valid rows with a clear summary.",
+  "actualResult": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4173/",
+  "errorMessage": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4173/\nCall log:\n  - navigating to \"http://localhost:4173/\", waiting until \"load\"\n",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-82381-ess-spotty-mutation-UAT-011-chromium-retry1\\test-failed-1.png",
+  "createdAt": "2026-04-09T18:38:18.287Z",
+  "schemaVersion": "2.0",
+  "sourceCaseId": "UAT-011",
+  "personaId": "noah-privacy-focused",
+  "phaseId": "legacy",
+  "type": "BUG",
+  "severity": "critical",
+  "priority": "p0",
+  "summary": "BUG: UAT-011 JSON backup and restore - Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4173/",
+  "reproSteps": [
+    "Open Data tab and trigger global JSON export.",
+    "Verify downloaded filename extension.",
+    "Inject valid JSON import file through hidden input.",
+    "Commit import and validate import summary output."
+  ],
+  "expected": "Download is generated and importer commits valid rows with a clear summary.",
+  "actual": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4173/",
+  "evidence": [
+    "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-82381-ess-spotty-mutation-UAT-011-chromium-retry1\\test-failed-1.png"
+  ],
+  "recommendation": "Fix the failing Export flow and add a regression assertion for this scenario.",
+  "acceptanceCriteria": [
+    "Scenario UAT-011 completes without blocking errors.",
+    "Verify: JSON file is downloadable.",
+    "Verify: Import mapping/commit flow completes successfully."
+  ],
+  "scoring": {
+    "impactScore": 5,
+    "frequencyScore": 4,
+    "personaVulnerabilityScore": 4,
+    "riskScore": 80
+  },
+  "tags": [
+    "backup",
+    "json",
+    "restore"
+  ],
+  "triage": {
+    "sourceCaseId": "UAT-011",
+    "personaId": "noah-privacy-focused",
+    "phaseId": "legacy",
+    "type": "BUG",
+    "severity": "critical",
+    "priority": "p0",
+    "category": "Export",
+    "summary": "BUG: UAT-011 JSON backup and restore - Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4173/",
+    "reproSteps": [
+      "Open Data tab and trigger global JSON export.",
+      "Verify downloaded filename extension.",
+      "Inject valid JSON import file through hidden input.",
+      "Commit import and validate import summary output."
+    ],
+    "expected": "Download is generated and importer commits valid rows with a clear summary.",
+    "actual": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4173/",
+    "evidence": [
+      "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-82381-ess-spotty-mutation-UAT-011-chromium-retry1\\test-failed-1.png"
+    ],
+    "recommendation": "Fix the failing Export flow and add a regression assertion for this scenario.",
+    "acceptanceCriteria": [
+      "Scenario UAT-011 completes without blocking errors.",
+      "Verify: JSON file is downloadable.",
+      "Verify: Import mapping/commit flow completes successfully."
+    ],
+    "scoring": {
+      "impactScore": 5,
+      "frequencyScore": 4,
+      "personaVulnerabilityScore": 4,
+      "riskScore": 80
+    },
+    "tags": [
+      "backup",
+      "json",
+      "restore"
+    ]
+  }
+}

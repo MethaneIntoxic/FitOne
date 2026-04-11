@@ -92,7 +92,7 @@
         <a class="view-all-link" id="viewAllRoutines" data-action="viewAllRoutines">VIEW ALL</a>
       </div>
       <div id="nextWorkoutContent">
-        <div class="empty"><div class="empty-icon">馃弸锔?/div><div class="empty-text">Create Your First Routine</div></div>
+        <div class="empty"><div class="empty-icon">Workout</div><div class="empty-text">Create Your First Routine</div></div>
       </div>
     </div>
     <div class="card activity-feed-entry" data-section="activityFeed">
@@ -119,7 +119,7 @@
     </div>
     <div class="card streak-card" id="streakCard" data-section="streak">
       <div class="streak-content">
-        <span class="streak-flame">馃敟</span>
+        <span class="streak-flame">Streak</span>
         <div>
           <div class="streak-number" id="streakNumber">0</div>
           <div class="streak-label" id="streakLabel">day streak</div>
@@ -140,7 +140,7 @@
       <div class="sparkline-container"><canvas id="readinessSparkline" height="50"></canvas></div>
     </div>
     <div class="card" data-section="water">
-      <div class="card-title">馃挧 Water Intake</div>
+      <div class="card-title">Water Intake</div>
       <div class="water-tracker">
         <div class="water-ring-row">
           <canvas width="128" height="128" id="waterRing" class="water-ring-canvas"></canvas>
@@ -158,41 +158,41 @@
     </div>
     <div class="card" data-section="food">
       <div class="card-title">Today's Food</div>
-      <div id="todayFood"><div class="empty"><div class="empty-icon">馃嵔锔?/div><div class="empty-text">Ready to fuel your day? 馃崕</div><button class="btn btn-primary btn-sm" data-action="goToLog">Log your first meal</button></div></div>
+      <div id="todayFood"><div class="empty"><div class="empty-icon">Food</div><div class="empty-text">Ready to fuel your day?</div><button class="btn btn-primary btn-sm" data-action="goToLog">Log your first meal</button></div></div>
     </div>
     <div class="card" data-section="workouts">
       <div class="card-title">Today's Workouts</div>
-      <div id="todayWorkouts"><div class="empty"><div class="empty-icon">馃弸锔?/div><div class="empty-text">Time to move! Let's crush it 馃挭</div><button class="btn btn-primary btn-sm" data-action="goToLogWorkout">Log a workout</button></div></div>
+      <div id="todayWorkouts"><div class="empty"><div class="empty-icon">Workout</div><div class="empty-text">Time to move! Let's crush it</div><button class="btn btn-primary btn-sm" data-action="goToLogWorkout">Log a workout</button></div></div>
     </div>
     <div class="card" data-section="insights">
       <div class="card-title">Insights</div>
-      <div id="todayInsights"><div class="empty"><div class="empty-icon">馃挕</div><div class="empty-text">Start logging to unlock personalized insights</div></div></div>
+      <div id="todayInsights"><div class="empty"><div class="empty-icon">Insights</div><div class="empty-text">Start logging to unlock personalized insights</div></div></div>
     </div>
     <!-- W3.6 Bottom Stat Boxes -->
     <div class="stat-row" id="dashboardBottom" data-section="bottomStats">
-      <div class="stat-box"><div class="val" id="dashAvgHR">鈥?/div><div class="lbl">AVG HEART RATE</div></div>
+      <div class="stat-box"><div class="val" id="dashAvgHR">--</div><div class="lbl">AVG HEART RATE</div></div>
       <div class="stat-box"><div class="val" id="dashCalBurn">0</div><div class="lbl">CALORIE BURN</div></div>
     </div>
     <div class="card" data-section="wellness">
-      <div class="card-title">馃 Daily Wellness Check-in <span id="wellnessSavedBadge" class="wellness-saved-badge hidden">鉁?Saved</span></div>
+      <div class="card-title">Daily Wellness Check-in <span id="wellnessSavedBadge" class="wellness-saved-badge hidden">Saved</span></div>
       <div class="wellness-sliders">
         <div class="wellness-slider-row">
-          <label>馃槾 Sleep</label>
+          <label>Sleep</label>
           <input type="range" id="wellnessSleep" min="1" max="5" value="3" title="wellness Sleep">
           <span class="slider-val" id="sleepVal">3</span>
         </div>
         <div class="wellness-slider-row">
-          <label>馃挭 Soreness</label>
+          <label>Soreness</label>
           <input type="range" id="wellnessSoreness" min="1" max="5" value="3" title="wellness Soreness">
           <span class="slider-val" id="sorenessVal">3</span>
         </div>
         <div class="wellness-slider-row">
-          <label>鈿?Energy</label>
+          <label>Energy</label>
           <input type="range" id="wellnessEnergy" min="1" max="5" value="3" title="wellness Energy">
           <span class="slider-val" id="energyVal">3</span>
         </div>
       </div>
-      <div class="text-xs wellness-scale-note">1 = Poor 鈫?5 = Excellent (Soreness: 1 = Very sore 鈫?5 = None)</div>
+      <div class="text-xs wellness-scale-note">1 = Poor to 5 = Excellent (Soreness: 1 = Very sore, 5 = None)</div>
       <div class="wellness-btn-row">
         <button class="btn btn-primary btn-sm" data-action="saveWellness">Save Check-in</button>
       </div>
@@ -210,11 +210,11 @@
     <!-- Log Food -->
     <div class="sub-panel active" id="log-food">
       <div class="card" id="favoritesCard">
-        <div class="card-title">猸?Quick Add Favorites</div>
+        <div class="card-title">Quick Add Favorites</div>
         <div id="favoritesList" class="favorites-grid"></div>
       </div>
       <div class="card" id="mealTemplatesCard">
-        <div class="card-title">馃З Meal Templates</div>
+        <div class="card-title">Meal Templates</div>
         <div class="stat-row meal-template-controls">
           <div class="form-group u-flex-1">
             <label>Saved Meal</label>
@@ -235,7 +235,7 @@
       </div>
       <div class="card" id="recipeBuilderCard">
         <div class="flex-between mb-8">
-          <span class="card-title u-mb-0">馃ィ Recipe Builder</span>
+          <span class="card-title u-mb-0">Recipe Builder</span>
           <button class="btn btn-outline btn-sm" data-action="openRecipeBuilder">Build Recipe</button>
         </div>
         <div class="text-xs recipe-builder-meta" id="recipeBuilderMeta">Create home-cooked recipes with per-serving macros and reuse them anytime.</div>
@@ -250,8 +250,8 @@
           <label>Food Name</label>
           <div class="stat-row food-name-actions-row">
             <input type="text" id="foodName" placeholder="e.g., Chicken breast" title="food Name">
-            <button class="btn btn-outline btn-sm barcode-scan-btn" type="button" data-action="scanBarcode">馃摲 Scan</button>
-            <button class="btn btn-outline btn-sm hidden" type="button" id="foodSnapEstimateBtn" data-action="snapFoodEstimate">鉁?Snap &amp; Estimate</button>
+            <button class="btn btn-outline btn-sm barcode-scan-btn" type="button" data-action="scanBarcode">Scan</button>
+            <button class="btn btn-outline btn-sm hidden" type="button" id="foodSnapEstimateBtn" data-action="snapFoodEstimate">Snap &amp; Estimate</button>
           </div>
           <input type="file" id="foodVisionInput" accept="image/*" class="hidden" title="food Vision Input">
           <div class="hidden" id="foodVisionResult" aria-live="polite"></div>
@@ -323,7 +323,7 @@
           <span class="card-title u-mb-0">Recent Food</span>
           <button class="btn btn-outline btn-sm" data-action="clearTodayFood">Clear Today</button>
         </div>
-        <div class="search-wrap"><span class="search-icon">馃攳</span><input type="text" id="searchFood" placeholder="Search food..." title="search Food"></div>
+        <div class="search-wrap"><span class="search-icon">Search</span><input type="text" id="searchFood" placeholder="Search food..." title="search Food"></div>
         <div id="recentFood"></div>
       </div>
     </div>
@@ -331,7 +331,7 @@
     <!-- Log Workout -->
     <div class="sub-panel" id="log-workout">
       <div class="card timer-card">
-        <div class="card-title">鈴憋笍 Rest Timer</div>
+        <div class="card-title">Rest Timer</div>
         <div class="timer-display" id="timerDisplay">0:00</div>
         <div class="timer-presets">
           <button class="btn btn-outline btn-sm" data-action="startTimer" data-seconds="30">30s</button>
@@ -416,7 +416,7 @@
         <div class="flex-between mb-8">
           <span class="card-title u-mb-0">Recent Workouts</span>
         </div>
-        <div class="search-wrap"><span class="search-icon">馃攳</span><input type="text" id="searchWorkout" placeholder="Search workouts..." title="search Workout"></div>
+        <div class="search-wrap"><span class="search-icon">Search</span><input type="text" id="searchWorkout" placeholder="Search workouts..." title="search Workout"></div>
         <div id="recentWorkouts"></div>
       </div>
     </div>
@@ -503,7 +503,7 @@
       <div class="card mb-16 stats-tonnage-card">
         <div class="text-sm stats-muted-label">TOTAL TONNAGE</div>
         <div class="stats-tonnage-row">
-          <span class="stats-tonnage-val" id="statsTonnageVal">鈥?TONS</span>
+          <span class="stats-tonnage-val" id="statsTonnageVal">-- TONS</span>
           <span class="stats-tonnage-trend" id="statsTonnageTrend"></span>
         </div>
         <div class="chart-container stats-tonnage-chart"><canvas id="chartTonnage"></canvas></div>
@@ -531,7 +531,7 @@
           <div id="statsConsistencyHeatmap" class="consistency-heatmap stats-heatmap-grid"></div>
         </div>
         <div class="flex-between mt-12 stats-heatmap-legend">
-          <div class="stats-consistency-target" id="statsConsistencyVal">鈥?Target Consistency</div>
+          <div class="stats-consistency-target" id="statsConsistencyVal">-- Target Consistency</div>
           <div class="stats-legend-scale">
             LESS 
             <div class="stats-legend-swatches">
@@ -654,7 +654,7 @@
 
     <div class="sub-panel" id="analytics-timing">
       <div class="card">
-        <div class="card-title">馃晲 Meal Timeline (Last 7 Days)</div>
+        <div class="card-title">Meal Timeline (Last 7 Days)</div>
         <div class="chart-container"><canvas id="chartMealTimeline"></canvas></div>
       </div>
       <div class="card">
@@ -663,14 +663,14 @@
       </div>
       <div class="card">
         <div class="card-title">Meal Timing Insights</div>
-        <div id="mealTimingInsights"><div class="empty"><div class="empty-icon">馃晲</div><div class="empty-text">Log meals to see timing analysis</div></div></div>
+        <div id="mealTimingInsights"><div class="empty"><div class="empty-icon">Meal</div><div class="empty-text">Log meals to see timing analysis</div></div></div>
       </div>
     </div>
 
     <div class="sub-panel" id="analytics-tdee">
       <div class="card" id="tdeeContent">
-        <div class="card-title">馃М Adaptive TDEE</div>
-        <div class="empty"><div class="empty-icon">馃搳</div><div class="empty-text">Log food and weight to calculate your real TDEE</div></div>
+        <div class="card-title">Adaptive TDEE</div>
+        <div class="empty"><div class="empty-icon">TDEE</div><div class="empty-text">Log food and weight to calculate your real TDEE</div></div>
       </div>
     </div>
   </div>
@@ -722,7 +722,7 @@
     <div class="sub-panel" id="library-list">
       <!-- W4.2 Search Bar -->
       <div class="search-wrap mb-16">
-        <span class="search-icon">馃攳</span>
+        <span class="search-icon">Search</span>
         <input type="text" id="searchExercises" placeholder="Search exercise database..." title="Search exercises">
       </div>
 
@@ -753,8 +753,8 @@
     <div class="card">
       <div class="card-title">Data Studio</div>
       <p class="text-sm mb-12 u-text2">Export or import FitOne data in stable CSV/JSON schemas, entirely local and offline.</p>
-      <button class="btn btn-primary btn-block" id="exportGlobalJsonBtn">馃摜 Export Global JSON</button>
-      <button class="btn btn-outline btn-block mt-8" id="exportGlobalCsvBtn">馃搫 Export All CSV Files</button>
+      <button class="btn btn-primary btn-block" id="exportGlobalJsonBtn">Export Global JSON</button>
+      <button class="btn btn-outline btn-block mt-8" id="exportGlobalCsvBtn">Export All CSV Files</button>
     </div>
     <div class="card">
       <div class="card-title">Import (CSV / JSON)</div>
@@ -774,9 +774,9 @@
         </select>
       </div>
       <input type="file" id="importFile" accept=".json,.csv" class="u-hidden" title="import File">
-      <button class="btn btn-outline btn-block" id="importDataBtn">馃摛 Choose File to Import</button>
+      <button class="btn btn-outline btn-block" id="importDataBtn">Choose File to Import</button>
       <input type="file" id="activityImportFile" accept=".csv" class="u-hidden" title="activity Import File">
-      <button class="btn btn-outline btn-block mt-8" id="importActivityCsvBtn">馃弮 Import Strava/Garmin CSV</button>
+      <button class="btn btn-outline btn-block mt-8" id="importActivityCsvBtn">Import Strava/Garmin CSV</button>
       <div id="importMappingArea" class="mt-12"></div>
       <div id="importSummary" class="text-xs mt-8 u-text2"></div>
     </div>
@@ -784,13 +784,13 @@
       <div class="card-title">Program Importer (CSV)</div>
       <p class="text-sm mb-12 u-text2">Expected columns: ProgramName, Week, Day, Exercise, Set, Reps, RPE, Weight.</p>
       <input type="file" id="programImportFile" accept=".csv" class="u-hidden" title="program Import File">
-      <button class="btn btn-outline btn-block" id="programImportBtn">馃Л Import Program CSV</button>
+      <button class="btn btn-outline btn-block" id="programImportBtn">Import Program CSV</button>
       <div id="programImportPreview" class="mt-8"></div>
     </div>
     <div class="card">
       <div class="card-title">Print Templates (Paper Backup)</div>
-      <button class="btn btn-outline btn-block" id="printWorkoutTemplateBtn">馃枿锔?Blank Workout Log</button>
-      <button class="btn btn-outline btn-block mt-8" id="printNutritionTemplateBtn">馃枿锔?Blank Nutrition Diary</button>
+      <button class="btn btn-outline btn-block" id="printWorkoutTemplateBtn">Blank Workout Log</button>
+      <button class="btn btn-outline btn-block mt-8" id="printNutritionTemplateBtn">Blank Nutrition Diary</button>
     </div>
     <div class="card">
       <details>
@@ -801,7 +801,7 @@
     <div class="card">
       <div class="card-title">Danger Zone</div>
       <p class="text-sm mb-12 u-text2">Permanently delete all stored data. This cannot be undone.</p>
-      <button class="btn btn-danger btn-block" id="deleteAllDataBtn">馃棏锔?Delete All Data</button>
+      <button class="btn btn-danger btn-block" id="deleteAllDataBtn">Delete All Data</button>
     </div>
   </div>
 
@@ -843,10 +843,10 @@
     <div class="card">
       <div class="card-title">Body Goal</div>
       <div class="goal-selector" id="bodyGoalSelector">
-        <button class="goal-option" data-goal="lose">馃搲 Lose</button>
-        <button class="goal-option active" data-goal="maintain">鈿栵笍 Maintain</button>
-        <button class="goal-option" data-goal="gain">馃搱 Gain</button>
-        <button class="goal-option" data-goal="compete">馃弳 Compete</button>
+        <button class="goal-option" data-goal="lose">Lose</button>
+        <button class="goal-option active" data-goal="maintain">Maintain</button>
+        <button class="goal-option" data-goal="gain">Gain</button>
+        <button class="goal-option" data-goal="compete">Compete</button>
       </div>
       <div class="text-xs goal-note">Used by Adaptive TDEE for personalized recommendations</div>
     </div>
@@ -1023,7 +1023,7 @@
     <div class="card" id="settingsSocialCard"></div>
     <div class="card" id="settingsAboutCard"></div>
     <div class="card">
-      <div class="text-xs text-center">FitOne v3.0 鈥?All data stored locally in your browser</div>
+      <div class="text-xs text-center">FitOne v3.0 - All data stored locally in your browser</div>
     </div>
     <div class="card">
       <div class="card-title">Clear All Data</div>
@@ -1035,10 +1035,10 @@
 <!-- FAB Speed Dial -->
 <div class="fab-backdrop" id="fabBackdrop"></div>
 <div class="fab-menu" id="fabMenu">
-  <div class="fab-option"><span class="fab-option-label">Quick Add</span><button class="fab-option-btn" data-fab-action="quick-food" aria-label="Quick add food">馃崕</button></div>
-  <div class="fab-option"><span class="fab-option-label">Workout</span><button class="fab-option-btn" data-fab-action="log-workout" aria-label="Log workout">馃弸锔?/button></div>
-  <div class="fab-option"><span class="fab-option-label">Bodyweight</span><button class="fab-option-btn" data-fab-action="quick-bodyweight" aria-label="Quick add bodyweight">鈿栵笍</button></div>
-  <div class="fab-option"><span class="fab-option-label">Water</span><button class="fab-option-btn" data-fab-action="add-water" aria-label="Add water">馃挧</button></div>
+  <div class="fab-option"><span class="fab-option-label">Quick Add</span><button class="fab-option-btn" data-fab-action="quick-food" aria-label="Quick add food">Add</button></div>
+  <div class="fab-option"><span class="fab-option-label">Workout</span><button class="fab-option-btn" data-fab-action="log-workout" aria-label="Log workout">Gym</button></div>
+  <div class="fab-option"><span class="fab-option-label">Bodyweight</span><button class="fab-option-btn" data-fab-action="quick-bodyweight" aria-label="Quick add bodyweight">Body</button></div>
+  <div class="fab-option"><span class="fab-option-label">Water</span><button class="fab-option-btn" data-fab-action="add-water" aria-label="Add water">H2O</button></div>
 </div>
 <button class="fab" id="fabBtn" aria-label="Quick actions menu">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
@@ -1071,10 +1071,10 @@
     <canvas width="300" height="300" id="timerCircleCanvas"></canvas>
     <div class="timer-circle-text" id="timerCircleText">0:00</div>
   </div>
-  <button class="btn btn-primary btn-block btn-skip-rest" id="skipRestBtn">SKIP REST 鈻糕柛</button>
+  <button class="btn btn-primary btn-block btn-skip-rest" id="skipRestBtn">SKIP REST</button>
   <div class="timer-next-set" id="timerNextSet"></div>
   <div class="timer-bottom-stats">
-    <div class="stat-box"><div class="val" id="timerHR">鈥?BPM</div><div class="lbl">HEART RATE</div></div>
+    <div class="stat-box"><div class="val" id="timerHR">-- BPM</div><div class="lbl">HEART RATE</div></div>
     <div class="stat-box"><div class="val" id="timerCal">0 KCAL</div><div class="lbl">CALORIES</div></div>
   </div>
 </div>

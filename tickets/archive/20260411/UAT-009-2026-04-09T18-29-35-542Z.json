@@ -1,0 +1,92 @@
+{
+  "id": "T-UAT-009-1",
+  "scenarioId": "UAT-009",
+  "scenarioTitle": "Time-flexible session logging",
+  "persona": "Ravi – shift worker",
+  "category": "Strength",
+  "mode": "power",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Log a short session quickly from Log tab and verify it appears in Today + Recent.",
+  "expectedSummary": "Session persists with duration/type and updates workout cards immediately.",
+  "actualResult": "Test timeout of 30000ms exceeded.",
+  "errorMessage": "Test timeout of 30000ms exceeded.",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-32fe5-ry-offline-recovery-UAT-009-matrix-mobile-pixel-7-retry1\\test-failed-1.png",
+  "createdAt": "2026-04-09T18:29:35.542Z",
+  "schemaVersion": "2.0",
+  "sourceCaseId": "UAT-009",
+  "personaId": "ravi-shift-worker",
+  "phaseId": "legacy",
+  "type": "BUG",
+  "severity": "high",
+  "priority": "p1",
+  "summary": "BUG: UAT-009 Time-flexible session logging - Test timeout of 30000ms exceeded.",
+  "reproSteps": [
+    "Log a short workout session using minimal required fields.",
+    "Validate workout appears in recent list.",
+    "Navigate to Today and validate workout card includes new session.",
+    "Switch back to Log and confirm session metadata remains unchanged."
+  ],
+  "expected": "Session persists with duration/type and updates workout cards immediately.",
+  "actual": "Test timeout of 30000ms exceeded.",
+  "evidence": [
+    "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-32fe5-ry-offline-recovery-UAT-009-matrix-mobile-pixel-7-retry1\\test-failed-1.png"
+  ],
+  "recommendation": "Fix the failing Strength flow and add a regression assertion for this scenario.",
+  "acceptanceCriteria": [
+    "Scenario UAT-009 completes without blocking errors.",
+    "Verify: Session persists with entered duration and type.",
+    "Verify: Today panel reflects newly logged session quickly."
+  ],
+  "scoring": {
+    "impactScore": 5,
+    "frequencyScore": 5,
+    "personaVulnerabilityScore": 2,
+    "riskScore": 50
+  },
+  "tags": [
+    "workout",
+    "flex-time",
+    "logging"
+  ],
+  "triage": {
+    "sourceCaseId": "UAT-009",
+    "personaId": "ravi-shift-worker",
+    "phaseId": "legacy",
+    "type": "BUG",
+    "severity": "high",
+    "priority": "p1",
+    "category": "Strength",
+    "summary": "BUG: UAT-009 Time-flexible session logging - Test timeout of 30000ms exceeded.",
+    "reproSteps": [
+      "Log a short workout session using minimal required fields.",
+      "Validate workout appears in recent list.",
+      "Navigate to Today and validate workout card includes new session.",
+      "Switch back to Log and confirm session metadata remains unchanged."
+    ],
+    "expected": "Session persists with duration/type and updates workout cards immediately.",
+    "actual": "Test timeout of 30000ms exceeded.",
+    "evidence": [
+      "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-32fe5-ry-offline-recovery-UAT-009-matrix-mobile-pixel-7-retry1\\test-failed-1.png"
+    ],
+    "recommendation": "Fix the failing Strength flow and add a regression assertion for this scenario.",
+    "acceptanceCriteria": [
+      "Scenario UAT-009 completes without blocking errors.",
+      "Verify: Session persists with entered duration and type.",
+      "Verify: Today panel reflects newly logged session quickly."
+    ],
+    "scoring": {
+      "impactScore": 5,
+      "frequencyScore": 5,
+      "personaVulnerabilityScore": 2,
+      "riskScore": 50
+    },
+    "tags": [
+      "workout",
+      "flex-time",
+      "logging"
+    ]
+  }
+}

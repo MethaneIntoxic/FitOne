@@ -1,0 +1,94 @@
+{
+  "id": "T-UAT-007-1",
+  "scenarioId": "UAT-007",
+  "scenarioTitle": "Per-gym PR tracking baseline",
+  "persona": "Kay – powerlifter",
+  "category": "Strength",
+  "mode": "power",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Create gym profile and log a heavy session with exercise sets.",
+  "expectedSummary": "Workout and sets are stored; workout analytics and summaries render without missing values.",
+  "actualResult": "Error: expect(locator).toBeVisible() failed",
+  "errorMessage": "Error: expect(locator).toBeVisible() failed\n\nLocator:  locator('#panel-settings')\nExpected: visible\nReceived: hidden\nTimeout:  7000ms\n\nCall log:\n  - Expect \"toBeVisible\" with timeout 7000ms\n  - waiting for locator('#panel-settings')\n    11 × locator resolved to <div id=\"panel-settings\" class=\"tab-panel profile-panel active\">…</div>\n       - unexpected value \"hidden\"\n",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-007-–-Per-gym-PR-tracking-baseline-UAT-007-chromium-retry1\\test-failed-1.png",
+  "createdAt": "2026-04-10T17:39:00.019Z",
+  "schemaVersion": "2.0",
+  "sourceCaseId": "UAT-007",
+  "personaId": "kay-powerlifter",
+  "phaseId": "legacy",
+  "type": "BUG",
+  "severity": "medium",
+  "priority": "p2",
+  "summary": "BUG: UAT-007 Per-gym PR tracking baseline - Error: expect(locator).toBeVisible() failed",
+  "reproSteps": [
+    "Create a named gym profile in Settings.",
+    "Log a strength workout with multiple exercises/sets.",
+    "Save workout and inspect recent workout list.",
+    "Open analytics workout sub-tab for summary metrics."
+  ],
+  "expected": "Workout and sets are stored; workout analytics and summaries render without missing values.",
+  "actual": "Error: expect(locator).toBeVisible() failed",
+  "evidence": [
+    "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-007-–-Per-gym-PR-tracking-baseline-UAT-007-chromium-retry1\\test-failed-1.png"
+  ],
+  "recommendation": "Fix the failing Strength flow and add a regression assertion for this scenario.",
+  "acceptanceCriteria": [
+    "Scenario UAT-007 completes without blocking errors.",
+    "Verify: Gym profile is persisted and visible.",
+    "Verify: Workout appears in recent list with expected metadata.",
+    "Verify: Workout summary widgets render without NaN/blank values."
+  ],
+  "scoring": {
+    "impactScore": 5,
+    "frequencyScore": 4,
+    "personaVulnerabilityScore": 2,
+    "riskScore": 40
+  },
+  "tags": [
+    "strength",
+    "pr",
+    "gym-profiles"
+  ],
+  "triage": {
+    "sourceCaseId": "UAT-007",
+    "personaId": "kay-powerlifter",
+    "phaseId": "legacy",
+    "type": "BUG",
+    "severity": "medium",
+    "priority": "p2",
+    "category": "Strength",
+    "summary": "BUG: UAT-007 Per-gym PR tracking baseline - Error: expect(locator).toBeVisible() failed",
+    "reproSteps": [
+      "Create a named gym profile in Settings.",
+      "Log a strength workout with multiple exercises/sets.",
+      "Save workout and inspect recent workout list.",
+      "Open analytics workout sub-tab for summary metrics."
+    ],
+    "expected": "Workout and sets are stored; workout analytics and summaries render without missing values.",
+    "actual": "Error: expect(locator).toBeVisible() failed",
+    "evidence": [
+      "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-007-–-Per-gym-PR-tracking-baseline-UAT-007-chromium-retry1\\test-failed-1.png"
+    ],
+    "recommendation": "Fix the failing Strength flow and add a regression assertion for this scenario.",
+    "acceptanceCriteria": [
+      "Scenario UAT-007 completes without blocking errors.",
+      "Verify: Gym profile is persisted and visible.",
+      "Verify: Workout appears in recent list with expected metadata.",
+      "Verify: Workout summary widgets render without NaN/blank values."
+    ],
+    "scoring": {
+      "impactScore": 5,
+      "frequencyScore": 4,
+      "personaVulnerabilityScore": 2,
+      "riskScore": 40
+    },
+    "tags": [
+      "strength",
+      "pr",
+      "gym-profiles"
+    ]
+  }
+}

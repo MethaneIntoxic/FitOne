@@ -1,0 +1,92 @@
+{
+  "id": "T-UAT-011-1",
+  "scenarioId": "UAT-011",
+  "scenarioTitle": "JSON backup and restore",
+  "persona": "Noah – privacy focused",
+  "category": "Export",
+  "mode": "beginner",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Export global JSON then import a JSON payload via Data Studio.",
+  "expectedSummary": "Download is generated and importer commits valid rows with a clear summary.",
+  "actualResult": "Test timeout of 30000ms exceeded.",
+  "errorMessage": "Test timeout of 30000ms exceeded.",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-82381-ess-spotty-mutation-UAT-011-matrix-desktop-chrome-retry1\\test-failed-1.png",
+  "createdAt": "2026-04-09T18:31:35.298Z",
+  "schemaVersion": "2.0",
+  "sourceCaseId": "UAT-011",
+  "personaId": "noah-privacy-focused",
+  "phaseId": "legacy",
+  "type": "BUG",
+  "severity": "critical",
+  "priority": "p0",
+  "summary": "BUG: UAT-011 JSON backup and restore - Test timeout of 30000ms exceeded.",
+  "reproSteps": [
+    "Open Data tab and trigger global JSON export.",
+    "Verify downloaded filename extension.",
+    "Inject valid JSON import file through hidden input.",
+    "Commit import and validate import summary output."
+  ],
+  "expected": "Download is generated and importer commits valid rows with a clear summary.",
+  "actual": "Test timeout of 30000ms exceeded.",
+  "evidence": [
+    "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-82381-ess-spotty-mutation-UAT-011-matrix-desktop-chrome-retry1\\test-failed-1.png"
+  ],
+  "recommendation": "Fix the failing Export flow and add a regression assertion for this scenario.",
+  "acceptanceCriteria": [
+    "Scenario UAT-011 completes without blocking errors.",
+    "Verify: JSON file is downloadable.",
+    "Verify: Import mapping/commit flow completes successfully."
+  ],
+  "scoring": {
+    "impactScore": 5,
+    "frequencyScore": 5,
+    "personaVulnerabilityScore": 4,
+    "riskScore": 100
+  },
+  "tags": [
+    "backup",
+    "json",
+    "restore"
+  ],
+  "triage": {
+    "sourceCaseId": "UAT-011",
+    "personaId": "noah-privacy-focused",
+    "phaseId": "legacy",
+    "type": "BUG",
+    "severity": "critical",
+    "priority": "p0",
+    "category": "Export",
+    "summary": "BUG: UAT-011 JSON backup and restore - Test timeout of 30000ms exceeded.",
+    "reproSteps": [
+      "Open Data tab and trigger global JSON export.",
+      "Verify downloaded filename extension.",
+      "Inject valid JSON import file through hidden input.",
+      "Commit import and validate import summary output."
+    ],
+    "expected": "Download is generated and importer commits valid rows with a clear summary.",
+    "actual": "Test timeout of 30000ms exceeded.",
+    "evidence": [
+      "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-82381-ess-spotty-mutation-UAT-011-matrix-desktop-chrome-retry1\\test-failed-1.png"
+    ],
+    "recommendation": "Fix the failing Export flow and add a regression assertion for this scenario.",
+    "acceptanceCriteria": [
+      "Scenario UAT-011 completes without blocking errors.",
+      "Verify: JSON file is downloadable.",
+      "Verify: Import mapping/commit flow completes successfully."
+    ],
+    "scoring": {
+      "impactScore": 5,
+      "frequencyScore": 5,
+      "personaVulnerabilityScore": 4,
+      "riskScore": 100
+    },
+    "tags": [
+      "backup",
+      "json",
+      "restore"
+    ]
+  }
+}

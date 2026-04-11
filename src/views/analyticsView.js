@@ -711,42 +711,111 @@ function drawWorkoutChart() {
 function renderWeeklySummary(days, food) {
   const card = $("weeklySummaryCard");
   if (!card) return;
-  const thisWeek = days.slice(-7);
-  const lastWeek = [];
-  for (let i = 20; i >= 8; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    lastWeek.push(localDateStr(d));
-  }
-  const lw7 = lastWeek.slice(-7);
 
-  const twCals = thisWeek.map((d) => food.filter((f) => f.date === d).reduce((a, f) => a + (f.calories || 0), 0));
-  const lwCals = lw7.map((d) => food.filter((f) => f.date === d).reduce((a, f) => a + (f.calories || 0), 0));
-  const twAvg = twCals.reduce((a, b) => a + b, 0) / 7;
-  const lwAvg = lwCals.reduce((a, b) => a + b, 0) / 7;
+  const safeDays = Array.isArray(days)
+    ? days.map((d) => String(d || "").trim()).filter((d) => parseIsoDateLocal(d))
+    : [];
+  const rangeEnd = safeDays.length ? safeDays[safeDays.length - 1] : localDateStr(new Date());
+
+  const buildWindow = function (endDate, length) {
+    const parsed = parseIsoDateLocal(endDate) || new Date();
+    const out = [];
+    for (let i = length - 1; i >= 0; i--) {
+      const d = new Date(parsed.getTime());
+      d.setDate(d.getDate() - i);
+      out.push(localDateStr(d));
+    }
+    return out;
+  };
+
+  const thisWeek = safeDays.length >= 7 ? safeDays.slice(-7) : buildWindow(rangeEnd, 7);
+  const thisWeekStart = parseIsoDateLocal(thisWeek[0]) || parseIsoDateLocal(rangeEnd) || new Date();
+  const lastWeekEnd = new Date(thisWeekStart.getTime());
+  lastWeekEnd.setDate(lastWeekEnd.getDate() - 1);
+  const lw7 = buildWindow(localDateStr(lastWeekEnd), 7);
+
+  const foodRows = Array.isArray(food)
+    ? food.filter(function (row) { return row && typeof row === "object"; })
+    : [];
+
+  const foodByDate = Object.create(null);
+  foodRows.forEach(function (row) {
+    const date = String((row && row.date) || "").trim();
+    if (!date) return;
+    const calories = Number(row.calories);
+    const protein = Number(row.protein);
+    if (!foodByDate[date]) {
+      foodByDate[date] = { calories: 0, protein: 0 };
+    }
+    if (Number.isFinite(calories)) foodByDate[date].calories += calories;
+    if (Number.isFinite(protein)) foodByDate[date].protein += protein;
+  });
+
+  const dailyCalories = function (date) {
+    return Number((foodByDate[date] && foodByDate[date].calories) || 0);
+  };
+  const dailyProtein = function (date) {
+    return Number((foodByDate[date] && foodByDate[date].protein) || 0);
+  };
+
+  const twCals = thisWeek.map(dailyCalories);
+  const lwCals = lw7.map(dailyCalories);
+  const twPro = thisWeek.map(dailyProtein);
+
+  const twAvg = twCals.reduce(function (sum, value) { return sum + value; }, 0) / thisWeek.length;
+  const lwAvg = lwCals.reduce(function (sum, value) { return sum + value; }, 0) / lw7.length;
   const calChange = twAvg - lwAvg;
+  const twProAvg = twPro.reduce(function (sum, value) { return sum + value; }, 0) / thisWeek.length;
 
-  const twPro = thisWeek.map((d) => food.filter((f) => f.date === d).reduce((a, f) => a + (f.protein || 0), 0));
-  const twProAvg = twPro.reduce((a, b) => a + b, 0) / 7;
+  const workoutsRaw = analyticsLoadData(KEYS.workouts);
+  const workouts = Array.isArray(workoutsRaw)
+    ? workoutsRaw.filter(function (w) {
+        return w && typeof w === "object" && String((w && w.date) || "").trim();
+      })
+    : [];
 
-  const workouts = analyticsLoadData(KEYS.workouts);
-  const twWorkouts = new Set(workouts.filter((w) => thisWeek.includes(w.date)).map((w) => w.date)).size;
-  const lwWorkouts = new Set(workouts.filter((w) => lw7.includes(w.date)).map((w) => w.date)).size;
+  const twWorkouts = new Set(
+    workouts
+      .filter(function (w) { return thisWeek.includes(String(w.date)); })
+      .map(function (w) { return String(w.date); })
+  ).size;
+  const lwWorkouts = new Set(
+    workouts
+      .filter(function (w) { return lw7.includes(String(w.date)); })
+      .map(function (w) { return String(w.date); })
+  ).size;
 
-  const changeIcon = (v) => (v > 0 ? "↑" : v < 0 ? "↓" : "→");
-  const changeClass = (v, invert) => {
-    if (v === 0) return "change-neutral";
+  const workoutGoal = Math.max(1, Number((settings && settings.workoutGoal) || 4));
+  const hasAnyData =
+    twCals.some(function (v) { return v > 0; }) ||
+    lwCals.some(function (v) { return v > 0; }) ||
+    twPro.some(function (v) { return v > 0; }) ||
+    twWorkouts > 0 ||
+    lwWorkouts > 0;
+
+  const changeIcon = function (v) { return v > 0 ? "↑" : v < 0 ? "↓" : "→"; };
+  const changeClass = function (v, invert) {
+    if (!Number.isFinite(v) || v === 0) return "change-neutral";
     return (invert ? v < 0 : v > 0) ? "change-up" : "change-down";
   };
+
+  const roundedTwAvg = Math.round(Number.isFinite(twAvg) ? twAvg : 0);
+  const roundedTwProAvg = Math.round(Number.isFinite(twProAvg) ? twProAvg : 0);
+  const roundedCalDelta = Math.abs(Math.round(Number.isFinite(calChange) ? calChange : 0));
+  const total7DayCalories = Math.round(twCals.reduce(function (sum, value) { return sum + value; }, 0));
+  const workoutDelta = twWorkouts - lwWorkouts;
 
   card.innerHTML =
     '<div class="card-title">📊 Weekly Summary</div>' +
     '<div class="summary-grid">' +
-    '<div class="summary-item"><div class="val">' + Math.round(twAvg) + '</div><div class="lbl">Avg Calories/Day</div><div class="change ' + changeClass(calChange, false) + '">' + changeIcon(calChange) + " " + Math.abs(Math.round(calChange)) + " vs last week</div></div>" +
-    '<div class="summary-item"><div class="val">' + Math.round(twProAvg) + 'g</div><div class="lbl">Avg Protein/Day</div></div>' +
-    '<div class="summary-item"><div class="val">' + twWorkouts + "/" + settings.workoutGoal + '</div><div class="lbl">Workouts This Week</div><div class="change ' + changeClass(twWorkouts - lwWorkouts, true) + '">' + changeIcon(twWorkouts - lwWorkouts) + " " + Math.abs(twWorkouts - lwWorkouts) + " vs last week</div></div>" +
-    '<div class="summary-item"><div class="val">' + Math.round(twCals.reduce((a, b) => a + b, 0)) + '</div><div class="lbl">Total Calories (7d)</div></div>' +
-    "</div>";
+    '<div class="summary-item"><div class="val">' + roundedTwAvg + '</div><div class="lbl">Avg Calories/Day</div><div class="change ' + changeClass(calChange, false) + '">' + changeIcon(calChange) + " " + roundedCalDelta + " vs last week</div></div>" +
+    '<div class="summary-item"><div class="val">' + roundedTwProAvg + 'g</div><div class="lbl">Avg Protein/Day</div></div>' +
+    '<div class="summary-item"><div class="val">' + twWorkouts + "/" + workoutGoal + '</div><div class="lbl">Workouts This Week</div><div class="change ' + changeClass(workoutDelta, true) + '">' + changeIcon(workoutDelta) + " " + Math.abs(workoutDelta) + " vs last week</div></div>" +
+    '<div class="summary-item"><div class="val">' + total7DayCalories + '</div><div class="lbl">Total Calories (7d)</div></div>' +
+    "</div>" +
+    (hasAnyData
+      ? ""
+      : '<div class="text-xs mt-8" style="color:var(--text2)">No food or workout logs in this window yet. Add entries to unlock week-over-week insights.</div>');
 }
 
 // ========== MEAL TIMING ==========

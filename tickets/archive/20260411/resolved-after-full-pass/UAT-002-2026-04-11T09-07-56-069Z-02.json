@@ -1,0 +1,96 @@
+{
+  "id": "T-UAT-002-2",
+  "scenarioId": "UAT-002",
+  "scenarioTitle": "Privacy-first setup (Local-only strict mode)",
+  "persona": "Noah – privacy focused",
+  "category": "Privacy",
+  "mode": "beginner",
+  "environment": {
+    "browserName": "chromium",
+    "projectName": "matrix-desktop-chrome",
+    "os": "win32 x64",
+    "runId": "postfix-full-20260411"
+  },
+  "stepsSummary": "Open Settings, verify Data & Privacy details, keep Local-only + strict mode enabled.",
+  "expectedSummary": "Privacy copy clearly states on-device storage and local-only mode remains enabled.",
+  "actualResult": "Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+  "errorMessage": "Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/\nCall log:\n  - navigating to \"http://127.0.0.1:4173/\", waiting until \"load\"\n",
+  "failureFingerprint": "3c971e88c94e2218",
+  "runFingerprintKey": "UAT-002|3c971e88c94e2218|chromium|matrix-desktop-chrome",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-b3df5-02-TC065-P17-phase1-UAT-002-matrix-desktop-chrome\\test-failed-1.png",
+  "createdAt": "2026-04-11T09:07:56.069Z",
+  "schemaVersion": "2.0",
+  "sourceCaseId": "UAT-002",
+  "personaId": "noah-privacy-focused",
+  "phaseId": "legacy",
+  "type": "BUG",
+  "severity": "high",
+  "priority": "p1",
+  "summary": "BUG: UAT-002 Privacy-first setup (Local-only strict mode) - Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+  "reproSteps": [
+    "Navigate to Settings panel.",
+    "Enable Local-only mode and Strict mode explicitly.",
+    "Verify both toggles remain checked after settings update.",
+    "Verify privacy copy includes on-device/local-only language."
+  ],
+  "expected": "Privacy copy clearly states on-device storage and local-only mode remains enabled.",
+  "actual": "Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+  "evidence": [
+    "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-b3df5-02-TC065-P17-phase1-UAT-002-matrix-desktop-chrome\\test-failed-1.png"
+  ],
+  "recommendation": "Fix the failing Privacy flow and add a regression assertion for this scenario.",
+  "acceptanceCriteria": [
+    "Scenario UAT-002 completes without blocking errors.",
+    "Verify: Local-only and strict flags persist in UI state.",
+    "Verify: Privacy card communicates storage boundaries clearly."
+  ],
+  "scoring": {
+    "impactScore": 5,
+    "frequencyScore": 3,
+    "personaVulnerabilityScore": 4,
+    "riskScore": 60
+  },
+  "tags": [
+    "privacy",
+    "local-only",
+    "settings"
+  ],
+  "triage": {
+    "sourceCaseId": "UAT-002",
+    "personaId": "noah-privacy-focused",
+    "phaseId": "legacy",
+    "type": "BUG",
+    "severity": "high",
+    "priority": "p1",
+    "category": "Privacy",
+    "summary": "BUG: UAT-002 Privacy-first setup (Local-only strict mode) - Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+    "reproSteps": [
+      "Navigate to Settings panel.",
+      "Enable Local-only mode and Strict mode explicitly.",
+      "Verify both toggles remain checked after settings update.",
+      "Verify privacy copy includes on-device/local-only language."
+    ],
+    "expected": "Privacy copy clearly states on-device storage and local-only mode remains enabled.",
+    "actual": "Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+    "evidence": [
+      "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-b3df5-02-TC065-P17-phase1-UAT-002-matrix-desktop-chrome\\test-failed-1.png"
+    ],
+    "recommendation": "Fix the failing Privacy flow and add a regression assertion for this scenario.",
+    "acceptanceCriteria": [
+      "Scenario UAT-002 completes without blocking errors.",
+      "Verify: Local-only and strict flags persist in UI state.",
+      "Verify: Privacy card communicates storage boundaries clearly."
+    ],
+    "scoring": {
+      "impactScore": 5,
+      "frequencyScore": 3,
+      "personaVulnerabilityScore": 4,
+      "riskScore": 60
+    },
+    "tags": [
+      "privacy",
+      "local-only",
+      "settings"
+    ]
+  }
+}

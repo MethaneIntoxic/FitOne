@@ -1,0 +1,94 @@
+{
+  "id": "T-UAT-005-3",
+  "scenarioId": "UAT-005",
+  "scenarioTitle": "Beginner meal logging with macro auto-calc",
+  "persona": "Amira – new to tracking",
+  "category": "Nutrition",
+  "mode": "beginner",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Log meals with protein/carbs/fat and rely on calorie auto-calc guidance.",
+  "expectedSummary": "Macro-derived calories are applied and recent food list is accurate.",
+  "actualResult": "Test timeout of 30000ms exceeded.",
+  "errorMessage": "Test timeout of 30000ms exceeded.",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-f8c69-ess-spotty-mutation-UAT-005-matrix-desktop-chrome-retry1\\test-failed-1.png",
+  "createdAt": "2026-04-09T18:29:31.166Z",
+  "schemaVersion": "2.0",
+  "sourceCaseId": "UAT-005",
+  "personaId": "amira-new-to-tracking",
+  "phaseId": "legacy",
+  "type": "BUG",
+  "severity": "critical",
+  "priority": "p0",
+  "summary": "BUG: UAT-005 Beginner meal logging with macro auto-calc - Test timeout of 30000ms exceeded.",
+  "reproSteps": [
+    "Navigate to Log > Food.",
+    "For a meal, enter protein/carbs/fat without manual calories.",
+    "Validate calories auto-populate as 4/4/9 macro formula before submit.",
+    "Submit meal and repeat for multiple meals.",
+    "Verify recent-food list count and names."
+  ],
+  "expected": "Macro-derived calories are applied and recent food list is accurate.",
+  "actual": "Test timeout of 30000ms exceeded.",
+  "evidence": [
+    "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-f8c69-ess-spotty-mutation-UAT-005-matrix-desktop-chrome-retry1\\test-failed-1.png"
+  ],
+  "recommendation": "Fix the failing Nutrition flow and add a regression assertion for this scenario.",
+  "acceptanceCriteria": [
+    "Scenario UAT-005 completes without blocking errors.",
+    "Verify: Auto-calculated calories match macro formula.",
+    "Verify: No data loss or duplication in recent list."
+  ],
+  "scoring": {
+    "impactScore": 5,
+    "frequencyScore": 5,
+    "personaVulnerabilityScore": 5,
+    "riskScore": 125
+  },
+  "tags": [
+    "nutrition",
+    "macros",
+    "beginner"
+  ],
+  "triage": {
+    "sourceCaseId": "UAT-005",
+    "personaId": "amira-new-to-tracking",
+    "phaseId": "legacy",
+    "type": "BUG",
+    "severity": "critical",
+    "priority": "p0",
+    "category": "Nutrition",
+    "summary": "BUG: UAT-005 Beginner meal logging with macro auto-calc - Test timeout of 30000ms exceeded.",
+    "reproSteps": [
+      "Navigate to Log > Food.",
+      "For a meal, enter protein/carbs/fat without manual calories.",
+      "Validate calories auto-populate as 4/4/9 macro formula before submit.",
+      "Submit meal and repeat for multiple meals.",
+      "Verify recent-food list count and names."
+    ],
+    "expected": "Macro-derived calories are applied and recent food list is accurate.",
+    "actual": "Test timeout of 30000ms exceeded.",
+    "evidence": [
+      "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-f8c69-ess-spotty-mutation-UAT-005-matrix-desktop-chrome-retry1\\test-failed-1.png"
+    ],
+    "recommendation": "Fix the failing Nutrition flow and add a regression assertion for this scenario.",
+    "acceptanceCriteria": [
+      "Scenario UAT-005 completes without blocking errors.",
+      "Verify: Auto-calculated calories match macro formula.",
+      "Verify: No data loss or duplication in recent list."
+    ],
+    "scoring": {
+      "impactScore": 5,
+      "frequencyScore": 5,
+      "personaVulnerabilityScore": 5,
+      "riskScore": 125
+    },
+    "tags": [
+      "nutrition",
+      "macros",
+      "beginner"
+    ]
+  }
+}

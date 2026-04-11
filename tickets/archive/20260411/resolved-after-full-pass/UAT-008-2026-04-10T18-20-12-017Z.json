@@ -1,0 +1,92 @@
+{
+  "id": "T-UAT-008-1",
+  "scenarioId": "UAT-008",
+  "scenarioTitle": "Routine versioning after workout changes",
+  "persona": "Kay – powerlifter",
+  "category": "Strength",
+  "mode": "power",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Log workout from protocol, modify exercise details, and choose variant/update flow.",
+  "expectedSummary": "Routine-change modal appears and accepts user decision without data corruption.",
+  "actualResult": "Error: expect(locator).toContainText(expected) failed",
+  "errorMessage": "Error: expect(locator).toContainText(expected) failed\n\nLocator: locator('#panel-protocols')\nTimeout: 7000ms\n- Expected substring  -   1\n+ Received string     + 217\n\n- Workout Protocols\n+\n+     \n+       My Protocols\n+       Workout Library\n+     \n+\n+     \n+     \n+       \n+         PERSONAL PROTOCOLS\n+         + New\n+       \n+       \n+         Periodized Plan Generator\n+         Generate multi-week progression from any protocol. Plans save locally and can be regenerated anytime.\n+         \n+           \n+             Protocol\n+             [Starter] HyperStrength V1[Starter] Kinetic Cardio[Starter] Axial Core[Starter] Titan Lower[Starter] Neural Flow[Starter] Starting Strength 3x5[Starter] Push / Pull / Legs[Starter] Upper / Lower 4-Day[Starter] Full Body 3x\n+           \n+           \n+             Experience\n+             \n+               Beginner (Linear)\n+               Intermediate (Undulating)\n+               Advanced (Block)\n+               Competitor (Prep)\n+             \n+           \n+           \n+             Weeks\n+             \n+           \n+           \n+             Generate Plan\n+           \n+         \n+         Generate a plan to preview weekly progression blocks.\n+       \n+       Weekly PlanningApr 6 - Apr 12PreviousThis WeekNextApr 6Rest / Unscheduled[Starter] HyperStrength V1[Starter] Kinetic Cardio[Starter] Axial Core[Starter] Titan Lower[Starter] Neural Flow[Starter] Starting Strength 3x5[Starter] Push / Pull / Legs[Starter] Upper / Lower 4-Day[Starter] Full Body 3xApr 7Rest / Unscheduled[Starter] HyperStrength V1[Starter] Kinetic Cardio[Starter] Axial Core[Starter] Titan Lower[Starter] Neural Flow[Starter] Starting Strength 3x5[Starter] Push / Pull / Legs[Starter] Upper / Lower 4-Day[Starter] Full Body 3xApr 8Rest / Unscheduled[Starter] HyperStrength V1[Starter] Kinetic Cardio[Starter] Axial Core[Starter] Titan Lower[Starter] Neural Flow[Starter] Starting Strength 3x5[Starter] Push / Pull / Legs[Starter] Upper / Lower 4-Day[Starter] Full Body 3xApr 9Rest / Unscheduled[Starter] HyperStrength V1[Starter] Kinetic Cardio[Starter] Axial Core[Starter] Titan Lower[Starter] Neural Flow[Starter] Starting Strength 3x5[Starter] Push / Pull / Legs[Starter] Upper / Lower 4-Day[Starter] Full Body 3xApr 10Rest / Unscheduled[Starter] HyperStrength V1[Starter] Kinetic Cardio[Starter] Axial Core[Starter] Titan Lower[Starter] Neural Flow[Starter] Starting Strength 3x5[Starter] Push / Pull / Legs[Starter] Upper / Lower 4-Day[Starter] Full Body 3xApr 11Rest / Unscheduled[Starter] HyperStrength V1[Starter] Kinetic Cardio[Starter] Axial Core[Starter] Titan Lower[Starter] Neural Flow[Starter] Starting Strength 3x5[Starter] Push / Pull / Legs[Starter] Upper / Lower 4-Day[Starter] Full Body 3xApr 12Rest / Unscheduled[Starter] HyperStrength V1[Starter] Kinetic Cardio[Starter] Axial Core[Starter] Titan Lower[Starter] Neural Flow[Starter] Starting Strength 3x5[Starter] Push / Pull / Legs[Starter] Upper / Lower 4-Day[Starter] Full Body 3x📋No protocols yetCreate your first protocolRecommended ProgramsImport a starter template built for beginner and intermediate progression.Starting Strength 3x5Beginner • 3 days/week • 60 minThree days per week of heavy compound lifts focused on linear progression and movement mastery.Import ProgramPush / Pull / LegsIntermediate • 6 days/week • 70 minClassic six-day split for intermediate lifters, balancing hypertrophy volume and recovery windows.Import ProgramUpper / Lower 4-DayIntermediate • 4 days/week • 65 minFour-day split alternating upper and lower body sessions for strength and hypertrophy progression.Import ProgramFull Body 3xBeginner • 3 days/week • 50 minBeginner-friendly full body plan with manageable volume and clear progression cadence.Import Program\n+     \n+\n+     \n+     \n+       \n+       \n+         馃攳\n+         \n+       \n+\n+       \n+       \n+         \n+           ALL\n+           SAVED\n+           STRENGTH\n+           HIIT\n+           STABILITY\n+           POWER\n+           RECOVERY\n+         \n+       \n+\n+       \n+       \n+     \n+       PREMIUM ROUTINE\n+       HyperStrength V1\n+       \n+         schedule 75 MIN\n+         fitness_center STRENGTH\n+         trending_up Advanced\n+       \n+       START NOW ▶\n+     \n+   \n+\n+       \n+       EXPLORE ROUTINES\n+       \n+     \n+       \n+         fitness_center\n+       \n+       \n+         HyperStrength V1\n+         A high-intensity full body protocol focusing on maximal recruitment and neural drive.\n+         \n+           Advanced\n+           STRENGTH\n+         \n+       \n+       chevron_right\n+     \n+   \n+     \n+       \n+         bolt\n+       \n+       \n+         Kinetic Cardio\n+         High-velocity metabolic conditioning designed to maximize caloric burn and VO2 max.\n+         \n+           Intermediate\n+           HIIT\n+         \n+       \n+       chevron_right\n+     \n+   \n+     \n+       \n+         fitness_center\n+       \n+       \n+         Axial Core\n+         Foundation-level stability protocol focusing on spinal alignment and anti-rotational strength.\n+         \n+           Beginner\n+           STABILITY\n+         \n+       \n+       chevron_right\n+     \n+   \n+     \n+       \n+         fitness_center\n+       \n+       \n+         Titan Lower\n+         Lower extremity dominant power protocol for explosive vertical and posterior chain development.\n+         \n+           Elite\n+           POWER\n+         \n+       \n+       chevron_right\n+     \n+   \n+     \n+       \n+         fitness_center\n+       \n+       \n+         Neural Flow\n+         Active recovery and mobility session to enhance CNS recovery and joint health.\n+         \n+           Any\n+           RECOVERY\n+         \n+       \n+       chevron_right\n+     \n+   \n+     \n+       \n+         fitness_center\n+       \n+       \n+         Starting Strength 3x5\n+         Three days per week of heavy compound lifts focused on linear progression and movement mastery.\n+         \n+           Beginner\n+           STRENGTH\n+         \n+       \n+       chevron_right\n+     \n+   \n+     \n+       \n+         fitness_center\n+       \n+       \n+         Push / Pull / Legs\n+         Classic six-day split for intermediate lifters, balancing hypertrophy volume and recovery windows.\n+         \n+           Intermediate\n+           STRENGTH\n+         \n+       \n+       chevron_right\n+     \n+   \n+     \n+       \n+         fitness_center\n+       \n+       \n+         Upper / Lower 4-Day\n+         Four-day split alternating upper and lower body sessions for strength and hypertrophy progression.\n+         \n+           Intermediate\n+           STRENGTH\n+         \n+       \n+       chevron_right\n+     \n+   \n+     \n+       \n+         fitness_center\n+       \n+       \n+         Full Body 3x\n+         Beginner-friendly full body plan with manageable volume and clear progression cadence.\n+         \n+           Beginner\n+           STRENGTH\n+         \n+       \n+       chevron_right\n+     \n+   \n+     \n+   \n\nCall log:\n  - Expect \"toContainText\" with timeout 7000ms\n  - waiting for locator('#panel-protocols')\n    11 × locator resolved to <div aria-hidden=\"false\" id=\"panel-protocols\" class=\"tab-panel active\">…</div>\n       - unexpected value \"\n    \n      My Protocols\n      Workout Library\n    \n\n    \n    \n      \n        PERSONAL PROTOCOLS\n        + New\n      \n      \n        Periodized Plan Generator\n        Generate multi-week progression from any protocol. Plans save locally and can be regenerated anytime.\n        \n          \n            Protocol\n            [Starter] HyperStrength V1[Starter] Kinetic Cardio[Starter] Axial Core[Starter] Titan Lower[Starter] Neural Flow[Starter] Starting Strength 3x5[Starter] Push / Pull / Legs[Starter] Upper / Lower 4-Day[Starter] Full Body 3x\n          \n          \n            Experience\n            \n              Beginner (Linear)\n              Intermediate (Undulating)\n              Advanced (Block)\n              Competitor (Prep)\n            \n          \n          \n            Weeks\n            \n          \n          \n            Generate Plan\n          \n        \n        Generate a plan to preview weekly progression blocks.\n      \n      Weekly PlanningApr 6 - Apr 12PreviousThis WeekNextApr 6Rest / Unscheduled[Starter] HyperStrength V1[Starter] Kinetic Cardio[Starter] Axial Core[Starter] Titan Lower[Starter] Neural Flow[Starter] Starting Strength 3x5[Starter] Push / Pull / Legs[Starter] Upper / Lower 4-Day[Starter] Full Body 3xApr 7Rest / Unscheduled[Starter] HyperStrength V1[Starter] Kinetic Cardio[Starter] Axial Core[Starter] Titan Lower[Starter] Neural Flow[Starter] Starting Strength 3x5[Starter] Push / Pull / Legs[Starter] Upper / Lower 4-Day[Starter] Full Body 3xApr 8Rest / Unscheduled[Starter] HyperStrength V1[Starter] Kinetic Cardio[Starter] Axial Core[Starter] Titan Lower[Starter] Neural Flow[Starter] Starting Strength 3x5[Starter] Push / Pull / Legs[Starter] Upper / Lower 4-Day[Starter] Full Body 3xApr 9Rest / Unscheduled[Starter] HyperStrength V1[Starter] Kinetic Cardio[Starter] Axial Core[Starter] Titan Lower[Starter] Neural Flow[Starter] Starting Strength 3x5[Starter] Push / Pull / Legs[Starter] Upper / Lower 4-Day[Starter] Full Body 3xApr 10Rest / Unscheduled[Starter] HyperStrength V1[Starter] Kinetic Cardio[Starter] Axial Core[Starter] Titan Lower[Starter] Neural Flow[Starter] Starting Strength 3x5[Starter] Push / Pull / Legs[Starter] Upper / Lower 4-Day[Starter] Full Body 3xApr 11Rest / Unscheduled[Starter] HyperStrength V1[Starter] Kinetic Cardio[Starter] Axial Core[Starter] Titan Lower[Starter] Neural Flow[Starter] Starting Strength 3x5[Starter] Push / Pull / Legs[Starter] Upper / Lower 4-Day[Starter] Full Body 3xApr 12Rest / Unscheduled[Starter] HyperStrength V1[Starter] Kinetic Cardio[Starter] Axial Core[Starter] Titan Lower[Starter] Neural Flow[Starter] Starting Strength 3x5[Starter] Push / Pull / Legs[Starter] Upper / Lower 4-Day[Starter] Full Body 3x📋No protocols yetCreate your first protocolRecommended ProgramsImport a starter template built for beginner and intermediate progression.Starting Strength 3x5Beginner • 3 days/week • 60 minThree days per week of heavy compound lifts focused on linear progression and movement mastery.Import ProgramPush / Pull / LegsIntermediate • 6 days/week • 70 minClassic six-day split for intermediate lifters, balancing hypertrophy volume and recovery windows.Import ProgramUpper / Lower 4-DayIntermediate • 4 days/week • 65 minFour-day split alternating upper and lower body sessions for strength and hypertrophy progression.Import ProgramFull Body 3xBeginner • 3 days/week • 50 minBeginner-friendly full body plan with manageable volume and clear progression cadence.Import Program\n    \n\n    \n    \n      \n      \n        馃攳\n        \n      \n\n      \n      \n        \n          ALL\n          SAVED\n          STRENGTH\n          HIIT\n          STABILITY\n          POWER\n          RECOVERY\n        \n      \n\n      \n      \n    \n      PREMIUM ROUTINE\n      HyperStrength V1\n      \n        schedule 75 MIN\n        fitness_center STRENGTH\n        trending_up Advanced\n      \n      START NOW ▶\n    \n  \n\n      \n      EXPLORE ROUTINES\n      \n    \n      \n        fitness_center\n      \n      \n        HyperStrength V1\n        A high-intensity full body protocol focusing on maximal recruitment and neural drive.\n        \n          Advanced\n          STRENGTH\n        \n      \n      chevron_right\n    \n  \n    \n      \n        bolt\n      \n      \n        Kinetic Cardio\n        High-velocity metabolic conditioning designed to maximize caloric burn and VO2 max.\n        \n          Intermediate\n          HIIT\n        \n      \n      chevron_right\n    \n  \n    \n      \n        fitness_center\n      \n      \n        Axial Core\n        Foundation-level stability protocol focusing on spinal alignment and anti-rotational strength.\n        \n          Beginner\n          STABILITY\n        \n      \n      chevron_right\n    \n  \n    \n      \n        fitness_center\n      \n      \n        Titan Lower\n        Lower extremity dominant power protocol for explosive vertical and posterior chain development.\n        \n          Elite\n          POWER\n        \n      \n      chevron_right\n    \n  \n    \n      \n        fitness_center\n      \n      \n        Neural Flow\n        Active recovery and mobility session to enhance CNS recovery and joint health.\n        \n          Any\n          RECOVERY\n        \n      \n      chevron_right\n    \n  \n    \n      \n        fitness_center\n      \n      \n        Starting Strength 3x5\n        Three days per week of heavy compound lifts focused on linear progression and movement mastery.\n        \n          Beginner\n          STRENGTH\n        \n      \n      chevron_right\n    \n  \n    \n      \n        fitness_center\n      \n      \n        Push / Pull / Legs\n        Classic six-day split for intermediate lifters, balancing hypertrophy volume and recovery windows.\n        \n          Intermediate\n          STRENGTH\n        \n      \n      chevron_right\n    \n  \n    \n      \n        fitness_center\n      \n      \n        Upper / Lower 4-Day\n        Four-day split alternating upper and lower body sessions for strength and hypertrophy progression.\n        \n          Intermediate\n          STRENGTH\n        \n      \n      chevron_right\n    \n  \n    \n      \n        fitness_center\n      \n      \n        Full Body 3x\n        Beginner-friendly full body plan with manageable volume and clear progression cadence.\n        \n          Beginner\n          STRENGTH\n        \n      \n      chevron_right\n    \n  \n    \n  \"\n",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-008-–-Routine-vers-719d6-ter-workout-changes-UAT-008-chromium-retry1\\test-failed-1.png",
+  "createdAt": "2026-04-10T18:20:12.017Z",
+  "schemaVersion": "2.0",
+  "sourceCaseId": "UAT-008",
+  "personaId": "kay-powerlifter",
+  "phaseId": "legacy",
+  "type": "ENHANCE",
+  "severity": "medium",
+  "priority": "p2",
+  "summary": "ENHANCE: UAT-008 Routine versioning after workout changes - Error: expect(locator).toContainText(expected) failed",
+  "reproSteps": [
+    "Open Protocols tab and verify protocol workspace availability.",
+    "Log workout with explicit exercise changes against baseline.",
+    "If routine-change modal appears, validate dismissal/decision controls.",
+    "Ensure app remains interactive post-workflow."
+  ],
+  "expected": "Routine-change modal appears and accepts user decision without data corruption.",
+  "actual": "Error: expect(locator).toContainText(expected) failed",
+  "evidence": [
+    "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-008-–-Routine-vers-719d6-ter-workout-changes-UAT-008-chromium-retry1\\test-failed-1.png"
+  ],
+  "recommendation": "Enhance Strength reliability/performance and verify measurable improvement in repeated runs.",
+  "acceptanceCriteria": [
+    "Scenario UAT-008 completes without blocking errors.",
+    "Verify: Protocol workflow does not deadlock UI.",
+    "Verify: State remains consistent after routine decision flow."
+  ],
+  "scoring": {
+    "impactScore": 5,
+    "frequencyScore": 4,
+    "personaVulnerabilityScore": 2,
+    "riskScore": 40
+  },
+  "tags": [
+    "routine",
+    "versioning",
+    "protocols"
+  ],
+  "triage": {
+    "sourceCaseId": "UAT-008",
+    "personaId": "kay-powerlifter",
+    "phaseId": "legacy",
+    "type": "ENHANCE",
+    "severity": "medium",
+    "priority": "p2",
+    "category": "Strength",
+    "summary": "ENHANCE: UAT-008 Routine versioning after workout changes - Error: expect(locator).toContainText(expected) failed",
+    "reproSteps": [
+      "Open Protocols tab and verify protocol workspace availability.",
+      "Log workout with explicit exercise changes against baseline.",
+      "If routine-change modal appears, validate dismissal/decision controls.",
+      "Ensure app remains interactive post-workflow."
+    ],
+    "expected": "Routine-change modal appears and accepts user decision without data corruption.",
+    "actual": "Error: expect(locator).toContainText(expected) failed",
+    "evidence": [
+      "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-UAT-008-–-Routine-vers-719d6-ter-workout-changes-UAT-008-chromium-retry1\\test-failed-1.png"
+    ],
+    "recommendation": "Enhance Strength reliability/performance and verify measurable improvement in repeated runs.",
+    "acceptanceCriteria": [
+      "Scenario UAT-008 completes without blocking errors.",
+      "Verify: Protocol workflow does not deadlock UI.",
+      "Verify: State remains consistent after routine decision flow."
+    ],
+    "scoring": {
+      "impactScore": 5,
+      "frequencyScore": 4,
+      "personaVulnerabilityScore": 2,
+      "riskScore": 40
+    },
+    "tags": [
+      "routine",
+      "versioning",
+      "protocols"
+    ]
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "id": "T-UAT-015-1",
+  "scenarioId": "UAT-015",
+  "scenarioTitle": "Performance baseline on static SPA",
+  "persona": "QA benchmark runner",
+  "category": "Performance",
+  "mode": "beginner",
+  "environment": {
+    "browserName": "chromium",
+    "projectName": "matrix-desktop-chrome",
+    "os": "win32 x64",
+    "runId": "postfix-full-20260411"
+  },
+  "stepsSummary": "Open app, switch major tabs, and verify UI becomes interactive quickly.",
+  "expectedSummary": "Critical surfaces render in expected time budget and remain responsive.",
+  "actualResult": "Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+  "errorMessage": "Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/\nCall log:\n  - navigating to \"http://127.0.0.1:4173/\", waiting until \"load\"\n",
+  "failureFingerprint": "3c971e88c94e2218",
+  "runFingerprintKey": "UAT-015|3c971e88c94e2218|chromium|matrix-desktop-chrome",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-7148d-15-TC064-P16-phase4-UAT-015-matrix-desktop-chrome\\test-failed-1.png",
+  "createdAt": "2026-04-11T09:07:53.081Z",
+  "schemaVersion": "2.0",
+  "sourceCaseId": "UAT-015",
+  "personaId": "qa-benchmark-runner",
+  "phaseId": "legacy",
+  "type": "ENHANCE",
+  "severity": "medium",
+  "priority": "p2",
+  "summary": "ENHANCE: UAT-015 Performance baseline on static SPA - Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+  "reproSteps": [
+    "Capture start timestamp after shell render.",
+    "Navigate across Log, Analytics, and Settings tabs sequentially.",
+    "Measure elapsed interaction time for critical tab traversal.",
+    "Assert elapsed time remains under budget threshold."
+  ],
+  "expected": "Critical surfaces render in expected time budget and remain responsive.",
+  "actual": "Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+  "evidence": [
+    "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-7148d-15-TC064-P16-phase4-UAT-015-matrix-desktop-chrome\\test-failed-1.png"
+  ],
+  "recommendation": "Enhance Performance reliability/performance and verify measurable improvement in repeated runs.",
+  "acceptanceCriteria": [
+    "Scenario UAT-015 completes without blocking errors.",
+    "Verify: Critical navigation path remains responsive.",
+    "Verify: No blocking script errors during tab traversal."
+  ],
+  "scoring": {
+    "impactScore": 2,
+    "frequencyScore": 3,
+    "personaVulnerabilityScore": 4,
+    "riskScore": 24
+  },
+  "tags": [
+    "performance",
+    "spa",
+    "stability"
+  ],
+  "triage": {
+    "sourceCaseId": "UAT-015",
+    "personaId": "qa-benchmark-runner",
+    "phaseId": "legacy",
+    "type": "ENHANCE",
+    "severity": "medium",
+    "priority": "p2",
+    "category": "Performance",
+    "summary": "ENHANCE: UAT-015 Performance baseline on static SPA - Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+    "reproSteps": [
+      "Capture start timestamp after shell render.",
+      "Navigate across Log, Analytics, and Settings tabs sequentially.",
+      "Measure elapsed interaction time for critical tab traversal.",
+      "Assert elapsed time remains under budget threshold."
+    ],
+    "expected": "Critical surfaces render in expected time budget and remain responsive.",
+    "actual": "Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+    "evidence": [
+      "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-7148d-15-TC064-P16-phase4-UAT-015-matrix-desktop-chrome\\test-failed-1.png"
+    ],
+    "recommendation": "Enhance Performance reliability/performance and verify measurable improvement in repeated runs.",
+    "acceptanceCriteria": [
+      "Scenario UAT-015 completes without blocking errors.",
+      "Verify: Critical navigation path remains responsive.",
+      "Verify: No blocking script errors during tab traversal."
+    ],
+    "scoring": {
+      "impactScore": 2,
+      "frequencyScore": 3,
+      "personaVulnerabilityScore": 4,
+      "riskScore": 24
+    },
+    "tags": [
+      "performance",
+      "spa",
+      "stability"
+    ]
+  }
+}

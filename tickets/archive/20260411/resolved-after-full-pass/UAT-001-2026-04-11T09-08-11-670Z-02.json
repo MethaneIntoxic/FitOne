@@ -1,0 +1,100 @@
+{
+  "id": "T-UAT-001-2",
+  "scenarioId": "UAT-001",
+  "scenarioTitle": "Install & first-run (Beginner, Android PWA)",
+  "persona": "Amira – new to tracking",
+  "category": "Onboarding",
+  "mode": "beginner",
+  "environment": {
+    "browserName": "chromium",
+    "projectName": "matrix-mobile-pixel-7",
+    "os": "win32 x64",
+    "runId": "postfix-full-20260411"
+  },
+  "stepsSummary": "Install FitOne as a PWA on Android, run onboarding in Beginner mode, set basic goals.",
+  "expectedSummary": "PWA installs & launches standalone; onboarding uses simple language and leads clearly to today's log.",
+  "actualResult": "Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+  "errorMessage": "Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/\nCall log:\n  - navigating to \"http://127.0.0.1:4173/\", waiting until \"load\"\n",
+  "failureFingerprint": "3c971e88c94e2218",
+  "runFingerprintKey": "UAT-001|3c971e88c94e2218|chromium|matrix-mobile-pixel-7",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-01ea0-01-TC037-P10-phase1-UAT-001-matrix-mobile-pixel-7\\test-failed-1.png",
+  "createdAt": "2026-04-11T09:08:11.670Z",
+  "schemaVersion": "2.0",
+  "sourceCaseId": "UAT-001",
+  "personaId": "amira-new-to-tracking",
+  "phaseId": "phase1",
+  "type": "BUG",
+  "severity": "critical",
+  "priority": "p0",
+  "summary": "BUG: UAT-001 Install & first-run (Beginner, Android PWA) - Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+  "reproSteps": [
+    "Open app root and verify app shell is rendered.",
+    "Validate manifest link and service-worker capability in browser context.",
+    "Navigate to Settings and enforce Beginner mode onboarding state.",
+    "Persist onboarding mode and reload app.",
+    "Return to Today tab and verify primary logging entry points are visible."
+  ],
+  "expected": "PWA installs & launches standalone; onboarding uses simple language and leads clearly to today's log.",
+  "actual": "Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+  "evidence": [
+    "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-01ea0-01-TC037-P10-phase1-UAT-001-matrix-mobile-pixel-7\\test-failed-1.png"
+  ],
+  "recommendation": "Fix the failing Onboarding flow and add a regression assertion for this scenario.",
+  "acceptanceCriteria": [
+    "Scenario UAT-001 completes without blocking errors.",
+    "Verify: Manifest reference remains valid and discoverable.",
+    "Verify: Beginner mode state is persisted across reload.",
+    "Verify: Today tab remains usable after initial setup flow."
+  ],
+  "scoring": {
+    "impactScore": 5,
+    "frequencyScore": 3,
+    "personaVulnerabilityScore": 5,
+    "riskScore": 75
+  },
+  "tags": [
+    "android",
+    "pwa",
+    "onboarding"
+  ],
+  "triage": {
+    "sourceCaseId": "UAT-001",
+    "personaId": "amira-new-to-tracking",
+    "phaseId": "phase1",
+    "type": "BUG",
+    "severity": "critical",
+    "priority": "p0",
+    "category": "Onboarding",
+    "summary": "BUG: UAT-001 Install & first-run (Beginner, Android PWA) - Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+    "reproSteps": [
+      "Open app root and verify app shell is rendered.",
+      "Validate manifest link and service-worker capability in browser context.",
+      "Navigate to Settings and enforce Beginner mode onboarding state.",
+      "Persist onboarding mode and reload app.",
+      "Return to Today tab and verify primary logging entry points are visible."
+    ],
+    "expected": "PWA installs & launches standalone; onboarding uses simple language and leads clearly to today's log.",
+    "actual": "Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+    "evidence": [
+      "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-01ea0-01-TC037-P10-phase1-UAT-001-matrix-mobile-pixel-7\\test-failed-1.png"
+    ],
+    "recommendation": "Fix the failing Onboarding flow and add a regression assertion for this scenario.",
+    "acceptanceCriteria": [
+      "Scenario UAT-001 completes without blocking errors.",
+      "Verify: Manifest reference remains valid and discoverable.",
+      "Verify: Beginner mode state is persisted across reload.",
+      "Verify: Today tab remains usable after initial setup flow."
+    ],
+    "scoring": {
+      "impactScore": 5,
+      "frequencyScore": 3,
+      "personaVulnerabilityScore": 5,
+      "riskScore": 75
+    },
+    "tags": [
+      "android",
+      "pwa",
+      "onboarding"
+    ]
+  }
+}

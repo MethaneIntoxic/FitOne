@@ -1,0 +1,98 @@
+{
+  "id": "T-UAT-004-1",
+  "scenarioId": "UAT-004",
+  "scenarioTitle": "Hydration quick-add + custom ml",
+  "persona": "Leo – office professional",
+  "category": "Daily Tracking",
+  "mode": "beginner",
+  "environment": {
+    "browserName": "chromium",
+    "projectName": "matrix-desktop-chrome",
+    "os": "win32 x64",
+    "runId": "postfix-full-20260411"
+  },
+  "stepsSummary": "Add water via quick buttons and custom amount, then undo one action.",
+  "expectedSummary": "Water total and percentage update immediately and undo works correctly.",
+  "actualResult": "Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+  "errorMessage": "Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/\nCall log:\n  - navigating to \"http://127.0.0.1:4173/\", waiting until \"load\"\n",
+  "failureFingerprint": "3c971e88c94e2218",
+  "runFingerprintKey": "UAT-004|3c971e88c94e2218|chromium|matrix-desktop-chrome",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-cd959-04-TC062-P16-phase2-UAT-004-matrix-desktop-chrome\\test-failed-1.png",
+  "createdAt": "2026-04-11T09:07:47.135Z",
+  "schemaVersion": "2.0",
+  "sourceCaseId": "UAT-004",
+  "personaId": "leo-office-professional",
+  "phaseId": "legacy",
+  "type": "BUG",
+  "severity": "high",
+  "priority": "p1",
+  "summary": "BUG: UAT-004 Hydration quick-add + custom ml - Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+  "reproSteps": [
+    "Open Today panel and confirm initial water state.",
+    "Apply +250ml and +500ml quick actions.",
+    "Add custom water value and submit.",
+    "Use Undo on last hydration action.",
+    "Verify displayed total and percentage are coherent."
+  ],
+  "expected": "Water total and percentage update immediately and undo works correctly.",
+  "actual": "Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+  "evidence": [
+    "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-cd959-04-TC062-P16-phase2-UAT-004-matrix-desktop-chrome\\test-failed-1.png"
+  ],
+  "recommendation": "Fix the failing Daily Tracking flow and add a regression assertion for this scenario.",
+  "acceptanceCriteria": [
+    "Scenario UAT-004 completes without blocking errors.",
+    "Verify: Hydration values update after each action.",
+    "Verify: Undo reverses the most recent hydration mutation."
+  ],
+  "scoring": {
+    "impactScore": 5,
+    "frequencyScore": 3,
+    "personaVulnerabilityScore": 4,
+    "riskScore": 60
+  },
+  "tags": [
+    "hydration",
+    "today",
+    "quick-actions"
+  ],
+  "triage": {
+    "sourceCaseId": "UAT-004",
+    "personaId": "leo-office-professional",
+    "phaseId": "legacy",
+    "type": "BUG",
+    "severity": "high",
+    "priority": "p1",
+    "category": "Daily Tracking",
+    "summary": "BUG: UAT-004 Hydration quick-add + custom ml - Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+    "reproSteps": [
+      "Open Today panel and confirm initial water state.",
+      "Apply +250ml and +500ml quick actions.",
+      "Add custom water value and submit.",
+      "Use Undo on last hydration action.",
+      "Verify displayed total and percentage are coherent."
+    ],
+    "expected": "Water total and percentage update immediately and undo works correctly.",
+    "actual": "Error: [INFRA:SERVER_UNREACHABLE] Playwright could not reach the FitOne dev server during test setup. baseURL=http://127.0.0.1:4173. Original error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/",
+    "evidence": [
+      "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-cd959-04-TC062-P16-phase2-UAT-004-matrix-desktop-chrome\\test-failed-1.png"
+    ],
+    "recommendation": "Fix the failing Daily Tracking flow and add a regression assertion for this scenario.",
+    "acceptanceCriteria": [
+      "Scenario UAT-004 completes without blocking errors.",
+      "Verify: Hydration values update after each action.",
+      "Verify: Undo reverses the most recent hydration mutation."
+    ],
+    "scoring": {
+      "impactScore": 5,
+      "frequencyScore": 3,
+      "personaVulnerabilityScore": 4,
+      "riskScore": 60
+    },
+    "tags": [
+      "hydration",
+      "today",
+      "quick-actions"
+    ]
+  }
+}

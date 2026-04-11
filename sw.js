@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fitone-v8';
+const CACHE_NAME = 'fitone-v9';
 const ASSETS = [
   './',
   './index.html',

@@ -431,12 +431,87 @@ function renderImportMappingUI(headers, schemaFields) {
       .join("") +
     '<button class="btn btn-primary btn-block" id="commitImportBtn">Commit Import</button>';
   schemaFields.forEach((field) => {
+    const select = area.querySelector('[data-map-target="' + field + '"]');
+    if (!select) return;
+
     const exact = headers.find((h) => h.toLowerCase() === field.toLowerCase());
     if (exact) {
-      const select = area.querySelector('[data-map-target="' + field + '"]');
-      if (select) select.value = exact;
+      select.value = exact;
+      return;
     }
+
+    const aliases = (((IMPORT_FIELD_ALIASES[_pendingImportType] || {})[field]) || []).concat(field);
+    const aliasMatch = getHeaderAliasMatch(headers, aliases);
+    if (aliasMatch) select.value = aliasMatch;
   });
+}
+
+function normalizeImportHeaderKey(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+const IMPORT_FIELD_ALIASES = {
+  workouts: {
+    name: ["workout_name", "workout name", "workoutname", "title", "activity_name", "activity name", "session_name"],
+    date: ["workout_date", "workout date", "activity_date", "activity date", "start_date", "start date", "logged_date", "time", "timestamp"],
+    type: ["workout_type", "workout type", "activity_type", "activity type"],
+    duration_min: ["duration", "duration_minutes", "duration minutes", "moving_time", "moving time", "elapsed_time", "elapsed time", "minutes"],
+    calories_burned: ["calories", "calories burned", "energy", "kcal"],
+    timestamp: ["time", "logged_at", "logged at", "created_at", "created at", "start_time", "start time"],
+  },
+  food_logs: {
+    food_name: ["name", "food", "item", "item_name", "item name"],
+    meal: ["meal_type", "meal type", "meal_name", "meal name"],
+    date: ["logged_date", "logged date", "entry_date", "entry date", "time", "timestamp"],
+    timestamp: ["time", "logged_at", "logged at", "created_at", "created at"],
+  },
+};
+
+function getHeaderAliasMatch(headers, candidates) {
+  const normalizedCandidates = (candidates || []).map((item) => normalizeImportHeaderKey(item));
+  return (headers || []).find((header) => {
+    const key = normalizeImportHeaderKey(header);
+    return normalizedCandidates.includes(key);
+  });
+}
+
+function readImportValueWithAliases(raw, candidates) {
+  if (!raw || typeof raw !== "object") return "";
+  const keys = Object.keys(raw);
+  const lookup = {};
+  keys.forEach((key) => {
+    lookup[normalizeImportHeaderKey(key)] = key;
+  });
+
+  for (let i = 0; i < (candidates || []).length; i++) {
+    const actual = lookup[normalizeImportHeaderKey(candidates[i])];
+    if (!actual) continue;
+    const value = raw[actual];
+    if (value == null) continue;
+    if (typeof value === "string" && !value.trim()) continue;
+    return value;
+  }
+  return "";
+}
+
+function inferMappedFieldValue(entity, field, raw) {
+  const aliases = (((IMPORT_FIELD_ALIASES[entity] || {})[field]) || []).concat(field);
+  return readImportValueWithAliases(raw, aliases);
+}
+
+function coerceImportTimestamp(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  const raw = String(value || "").trim();
+  if (!raw) return Date.now();
+
+  if (/^\d+(\.\d+)?$/.test(raw)) {
+    const numeric = Number(raw);
+    if (Number.isFinite(numeric)) return numeric;
+  }
+
+  const parsed = Date.parse(raw);
+  if (Number.isFinite(parsed)) return parsed;
+  return Date.now();
 }
 
 function transformMappedRows(entity) {
@@ -451,16 +526,41 @@ function transformMappedRows(entity) {
     const out = {};
     schema.forEach((field) => {
       const src = map[field];
-      out[field] = src ? raw[src] : "";
+      let value = src ? raw[src] : "";
+      if (value == null || (typeof value === "string" && !value.trim())) {
+        value = inferMappedFieldValue(entity, field, raw);
+      }
+      out[field] = value;
     });
     if (!out.id) out.id = uid();
-    if (!out.timestamp) out.timestamp = new Date().toISOString();
+    if (!out.timestamp) out.timestamp = coerceImportTimestamp(inferMappedFieldValue(entity, "timestamp", raw));
     return out;
   });
 }
 
 function normalizeEntityRow(entity, row) {
   const out = { ...row };
+
+  if (entity === "workouts") {
+    out.name = String(out.name || inferMappedFieldValue(entity, "name", row) || "").trim();
+    out.date = normalizeActivityDate(out.date || inferMappedFieldValue(entity, "date", row));
+    if (!out.type) out.type = String(inferMappedFieldValue(entity, "type", row) || "strength").trim() || "strength";
+    if (out.duration_min === "" || out.duration_min == null) {
+      out.duration_min = inferMappedFieldValue(entity, "duration_min", row);
+    }
+    if (out.calories_burned === "" || out.calories_burned == null) {
+      out.calories_burned = inferMappedFieldValue(entity, "calories_burned", row);
+    }
+  }
+
+  if (entity === "food_logs") {
+    const canonicalFoodName = String(out.food_name || out.name || inferMappedFieldValue(entity, "food_name", row) || "").trim();
+    out.food_name = canonicalFoodName;
+    out.name = canonicalFoodName;
+    out.meal = String(out.meal || inferMappedFieldValue(entity, "meal", row) || "").trim();
+    out.date = normalizeActivityDate(out.date || inferMappedFieldValue(entity, "date", row) || out.timestamp);
+  }
+
   const numFields = {
     workouts: ["duration_min", "calories_burned"],
     strength_sets: ["set_index", "reps", "weight_kg", "target_reps", "target_weight", "target_rpe", "effective_load"],
@@ -472,10 +572,35 @@ function normalizeEntityRow(entity, row) {
   };
   (numFields[entity] || []).forEach((field) => {
     if (out[field] === "" || out[field] == null) return;
-    out[field] = Number(out[field]);
+    const parsed = Number(out[field]);
+    out[field] = Number.isFinite(parsed) ? parsed : 0;
   });
+
+  if (out.timestamp === "" || out.timestamp == null) {
+    out.timestamp = coerceImportTimestamp(inferMappedFieldValue(entity, "timestamp", row));
+  } else {
+    out.timestamp = coerceImportTimestamp(out.timestamp);
+  }
+
+  if (["workouts", "strength_sets", "measurements", "food_logs", "day_plans"].includes(entity)) {
+    out.date = normalizeActivityDate(out.date || out.timestamp);
+  }
+
+  if (entity === "workouts") {
+    if (!out.name) out.name = "Workout " + out.date;
+    out.duration = Number(out.duration_min) || Number(out.duration) || 0;
+    out.caloriesBurned = Number(out.calories_burned) || Number(out.caloriesBurned) || 0;
+    out.protocolId = out.protocolId || out.protocol_id || null;
+    if (!Array.isArray(out.exercises)) out.exercises = [];
+  }
+
+  if (entity === "food_logs") {
+    if (!out.food_name) out.food_name = "Imported Food";
+    out.name = out.food_name;
+    if (!out.meal) out.meal = "snack";
+  }
+
   if (!out.id) out.id = uid();
-  if (!out.timestamp) out.timestamp = new Date().toISOString();
   return out;
 }
 
@@ -531,10 +656,10 @@ function commitImport(entity, mappedRows) {
   if (entity === "food_logs") {
     const normalized = next.map((f) => ({
       id: f.id,
-      timestamp: Number(f.timestamp) || Date.now(),
-      date: f.date,
-      meal: f.meal,
-      name: f.food_name,
+      timestamp: coerceImportTimestamp(f.timestamp),
+      date: normalizeActivityDate(f.date || f.timestamp),
+      meal: String(f.meal || "snack").trim() || "snack",
+      name: String(f.food_name || f.name || "Imported Food").trim() || "Imported Food",
       serving: f.serving,
       calories: Number(f.calories) || 0,
       protein: Number(f.protein) || 0,

@@ -1,0 +1,92 @@
+{
+  "id": "T-UAT-012-1",
+  "scenarioId": "UAT-012",
+  "scenarioTitle": "CSV export and import mapping",
+  "persona": "Ravi – spreadsheet user",
+  "category": "Export",
+  "mode": "power",
+  "environment": {
+    "browserName": "chromium",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Export CSV files and import a CSV sample through mapping UI.",
+  "expectedSummary": "At least one CSV download is produced and import commit confirms inserted rows.",
+  "actualResult": "Error: expect(received).toBeTruthy()",
+  "errorMessage": "Error: expect(received).toBeTruthy()\n\nReceived: false",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-54a5c-ess-spotty-mutation-UAT-012-matrix-desktop-chrome-retry1\\test-failed-1.png",
+  "createdAt": "2026-04-09T18:54:02.657Z",
+  "schemaVersion": "2.0",
+  "sourceCaseId": "UAT-012",
+  "personaId": "ravi-spreadsheet-user",
+  "phaseId": "legacy",
+  "type": "BUG",
+  "severity": "medium",
+  "priority": "p2",
+  "summary": "BUG: UAT-012 CSV export and import mapping - Error: expect(received).toBeTruthy()",
+  "reproSteps": [
+    "Trigger CSV export from Data Studio and verify download output.",
+    "Upload valid workouts CSV payload.",
+    "Review mapping UI visibility.",
+    "Commit import and verify summary reports imported rows."
+  ],
+  "expected": "At least one CSV download is produced and import commit confirms inserted rows.",
+  "actual": "Error: expect(received).toBeTruthy()",
+  "evidence": [
+    "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-54a5c-ess-spotty-mutation-UAT-012-matrix-desktop-chrome-retry1\\test-failed-1.png"
+  ],
+  "recommendation": "Fix the failing Export flow and add a regression assertion for this scenario.",
+  "acceptanceCriteria": [
+    "Scenario UAT-012 completes without blocking errors.",
+    "Verify: CSV export action emits downloadable file.",
+    "Verify: CSV import commit path inserts valid records."
+  ],
+  "scoring": {
+    "impactScore": 5,
+    "frequencyScore": 4,
+    "personaVulnerabilityScore": 2,
+    "riskScore": 40
+  },
+  "tags": [
+    "csv",
+    "import",
+    "mapping"
+  ],
+  "triage": {
+    "sourceCaseId": "UAT-012",
+    "personaId": "ravi-spreadsheet-user",
+    "phaseId": "legacy",
+    "type": "BUG",
+    "severity": "medium",
+    "priority": "p2",
+    "category": "Export",
+    "summary": "BUG: UAT-012 CSV export and import mapping - Error: expect(received).toBeTruthy()",
+    "reproSteps": [
+      "Trigger CSV export from Data Studio and verify download output.",
+      "Upload valid workouts CSV payload.",
+      "Review mapping UI visibility.",
+      "Commit import and verify summary reports imported rows."
+    ],
+    "expected": "At least one CSV download is produced and import commit confirms inserted rows.",
+    "actual": "Error: expect(received).toBeTruthy()",
+    "evidence": [
+      "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-54a5c-ess-spotty-mutation-UAT-012-matrix-desktop-chrome-retry1\\test-failed-1.png"
+    ],
+    "recommendation": "Fix the failing Export flow and add a regression assertion for this scenario.",
+    "acceptanceCriteria": [
+      "Scenario UAT-012 completes without blocking errors.",
+      "Verify: CSV export action emits downloadable file.",
+      "Verify: CSV import commit path inserts valid records."
+    ],
+    "scoring": {
+      "impactScore": 5,
+      "frequencyScore": 4,
+      "personaVulnerabilityScore": 2,
+      "riskScore": 40
+    },
+    "tags": [
+      "csv",
+      "import",
+      "mapping"
+    ]
+  }
+}
