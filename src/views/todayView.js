@@ -579,7 +579,7 @@ function reorderTodayCards() {
     restoreBtn.addEventListener("click", () => {
       const next = { ...settings, uxLockEnabled: true };
       updateSettings(next);
-      localStorage.setItem(KEYS.settings, JSON.stringify(next));
+      safeSetItem(KEYS.settings, JSON.stringify(next));
       refreshToday();
       showToast("Classic layout restored");
     });
@@ -629,7 +629,11 @@ function checkGoalCelebrations(totals, workouts) {
 
   if (!window._celebratedGoals) window._celebratedGoals = {};
   const todayKey = today();
-  if (!window._celebratedGoals[todayKey]) window._celebratedGoals[todayKey] = [];
+  if (!window._celebratedGoals[todayKey]) {
+    // Keep only today's key; drop stale entries to prevent accumulation
+    window._celebratedGoals = {};
+    window._celebratedGoals[todayKey] = [];
+  }
 
   celebrations.forEach((msg) => {
     if (window._celebratedGoals[todayKey].includes(msg)) return;
@@ -835,7 +839,7 @@ function refreshHeaderAvatar() {
   const el = $("headerAvatar");
   if (!el) return;
   if (settings.avatar) {
-    el.innerHTML = '<img src="' + settings.avatar + '" alt="Avatar" class="header-avatar-img">';
+    el.innerHTML = '<img src="' + escAttr(settings.avatar) + '" alt="Avatar" class="header-avatar-img">';
   } else {
     el.innerHTML = '<span class="material-symbols-outlined">person</span>';
   }

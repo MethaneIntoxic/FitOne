@@ -32,6 +32,13 @@
     container._virtualListBound = true;
 
     const handleMaybeAppend = function () {
+      if (!document.body.contains(container)) {
+        container.removeEventListener("scroll", handleMaybeAppend);
+        window.removeEventListener("scroll", handleMaybeAppend);
+        window.removeEventListener("resize", handleMaybeAppend);
+        container._virtualListBound = false;
+        return;
+      }
       const state = container._virtualListState;
       if (!state) return;
       if (state.renderedCount >= state.items.length) return;

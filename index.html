@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; manifest-src 'self';">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="FitOne">
@@ -17,6 +18,7 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 </head>
 <body>
+<a href="#app" class="skip-link">Skip to main content</a>
 <section class="welcome-screen hidden" id="welcomeScreen" aria-label="Welcome">
   <div class="welcome-hero">
     <div class="welcome-brand-badge">
@@ -583,7 +585,7 @@
         </div>
       </div>
       
-      <button class="btn btn-outline btn-block stats-download-report" onclick="window.print()">DOWNLOAD REPORT</button>
+      <button class="btn btn-outline btn-block stats-download-report" id="statsDownloadReportBtn">DOWNLOAD REPORT</button>
     </div>
 
     <!-- Legacy Sub-panels -->

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fitone-v9';
+const CACHE_NAME = 'fitone-v10';
 const ASSETS = [
   './',
   './index.html',
@@ -7,19 +7,39 @@ const ASSETS = [
   './src/dataStore.js',
   './src/syncService.js',
   './src/wearableIntegration.js',
+  './src/foodDatabase.js',
+  './src/foodVision.js',
+  './src/barcodeScanner.js',
+  './src/exerciseDatabase.js',
   './src/exerciseGuide.js',
+  './src/starterRoutines.js',
+  './src/prTracker.js',
+  './src/achievements.js',
+  './src/shareCard.js',
+  './src/workoutIntelligence.js',
   './src/virtualScroller.js',
   './src/ui.js',
+  './src/onboarding.js',
+  './src/planGenerator.js',
   './src/main.js',
   './src/views/todayView.js',
   './src/views/logView.js',
+  './src/views/exerciseDetailView.js',
+  './src/views/deepDiveView.js',
+  './src/views/activityFeedView.js',
+  './src/views/workoutDetailView.js',
+  './src/views/pulseCenterView.js',
   './src/views/settingsView.js',
   './src/views/protocolsView.js',
   './src/views/analyticsView.js',
   './src/views/exportView.js',
+  './src/views/postWorkoutView.js',
+  './src/views/photosView.js',
   './src/workers/analyticsWorker.js',
   './icons/icon-192.png',
-  './icons/icon-512.png'
+  './icons/icon-512.png',
+  './pwa/manifest.webmanifest',
+  './assets/body-outline.svg'
 ];
 
 self.addEventListener('install', event => {

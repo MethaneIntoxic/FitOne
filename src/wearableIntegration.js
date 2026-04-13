@@ -56,7 +56,7 @@ function connectVendor(vendorId) {
     connectedWearables: Array.from(connected),
   };
   updateSettings(next);
-  localStorage.setItem(KEYS.settings, JSON.stringify(next));
+  safeSetItem(KEYS.settings, JSON.stringify(next));
 
   return { connected: true, vendor: vendor.name, mode: vendor.mode };
 }
@@ -69,7 +69,7 @@ function disconnectVendor(vendorId) {
     connectedWearables: connected,
   };
   updateSettings(next);
-  localStorage.setItem(KEYS.settings, JSON.stringify(next));
+  safeSetItem(KEYS.settings, JSON.stringify(next));
   return { connected: false, vendorId: id };
 }
 

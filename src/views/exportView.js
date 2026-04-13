@@ -221,7 +221,7 @@ function createBackupSnapshot(options) {
     autoBackupLastRunAt: Date.now(),
   };
   updateSettings(next);
-  localStorage.setItem(KEYS.settings, JSON.stringify(next));
+  safeSetItem(KEYS.settings, JSON.stringify(next));
 
   return {
     ok: true,
@@ -875,7 +875,7 @@ function clearAllData() {
           Object.values(KEYS).forEach((k) => localStorage.removeItem(k));
           localStorage.removeItem("ft_onboarding_complete");
           updateSettings(defaultSettings());
-          localStorage.setItem(KEYS.settings, JSON.stringify(settings));
+          safeSetItem(KEYS.settings, JSON.stringify(settings));
           if (_loadSettingsUICallback) _loadSettingsUICallback();
           if (typeof window.notifyDataChanged === "function") {
             window.notifyDataChanged({ source: "data", reason: "clearAllData" });
@@ -892,10 +892,10 @@ function clearAllData() {
             });
 
             updateSettings({ ...backup.settings });
-            localStorage.setItem(KEYS.settings, JSON.stringify(settings));
+            safeSetItem(KEYS.settings, JSON.stringify(settings));
 
             if (backup.onboardingComplete) {
-              localStorage.setItem("ft_onboarding_complete", backup.onboardingComplete);
+              safeSetItem("ft_onboarding_complete", backup.onboardingComplete);
             }
 
             if (_loadSettingsUICallback) _loadSettingsUICallback();

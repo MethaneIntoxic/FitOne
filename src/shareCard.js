@@ -1,6 +1,23 @@
 // ========== SHARE CARD ==========
 // Generate branded workout summary cards as downloadable images
 
+function createShareImageFile(canvas, fileName) {
+  return new Promise(function (resolve) {
+    if (!canvas || typeof canvas.toBlob !== 'function' || typeof File === 'undefined') {
+      resolve(null);
+      return;
+    }
+
+    canvas.toBlob(function (blob) {
+      if (!blob) {
+        resolve(null);
+        return;
+      }
+      resolve(new File([blob], fileName, { type: 'image/png' }));
+    }, 'image/png');
+  });
+}
+
 function generateShareCard(workout) {
   const canvas = document.createElement('canvas');
   const W = 600, H = 800;
@@ -180,6 +197,17 @@ function showShareCardModal(workout, prs) {
   const w = { ...workout, _prs: prs || [] };
   const canvas = generateShareCard(w);
   const dataUrl = canvas.toDataURL('image/png');
+  const totalSets = Array.isArray(w.exercises)
+    ? w.exercises.reduce(function (sum, exercise) {
+        if (Array.isArray(exercise.sets)) return sum + exercise.sets.length;
+        return sum + Math.max(0, Number(exercise.sets) || 0);
+      }, 0)
+    : 0;
+  const previewChips = [
+    (Array.isArray(w.exercises) ? w.exercises.length : 0) + ' exercises',
+    totalSets > 0 ? totalSets + ' total sets' : '',
+    Array.isArray(w._prs) && w._prs.length ? w._prs.length + ' PR' + (w._prs.length > 1 ? 's' : '') : '',
+  ].filter(Boolean);
 
   const mc = $('modalContainer');
   if (!mc) return;
@@ -188,10 +216,13 @@ function showShareCardModal(workout, prs) {
     '<div class="modal-overlay" id="shareOverlay">' +
     '<div class="modal">' +
       '<div class="modal-title">Share Workout <button class="modal-close" id="shareCloseBtn" aria-label="Close">×</button></div>' +
+      '<div class="share-preview-meta">' + previewChips.map(function (chip) {
+        return '<span class="share-preview-chip">' + esc(chip) + '</span>';
+      }).join('') + '</div>' +
       '<div class="share-preview"><img src="' + dataUrl + '" alt="Workout summary" style="width:100%;border-radius:12px"></div>' +
       '<div class="share-action-row mt-12">' +
         '<button class="btn btn-outline" id="shareDownloadBtn">📥 Save</button>' +
-        '<button class="btn btn-primary" id="shareNativeBtn">📤 Instagram</button>' +
+        '<button class="btn btn-primary" id="shareNativeBtn">📤 Share</button>' +
         '<button class="btn btn-outline" id="shareCopyBtn">🔗 Copy</button>' +
       '</div>' +
     '</div></div>';
@@ -210,6 +241,7 @@ function showShareCardModal(workout, prs) {
   const nativeBtn = $('shareNativeBtn');
   if (nativeBtn) {
     nativeBtn.addEventListener('click', async () => {
+      const fileName = 'fitone-workout-' + (workout.date || today()) + '.png';
       const summary = [
         'Workout complete: ' + (workout.name || 'Session'),
         (workout.duration ? 'Duration: ' + workout.duration + ' min' : ''),
@@ -218,10 +250,15 @@ function showShareCardModal(workout, prs) {
 
       try {
         if (navigator.share) {
-          await navigator.share({
+          const payload = {
             title: 'FitOne Workout',
             text: summary,
-          });
+          };
+          const imageFile = await createShareImageFile(canvas, fileName);
+          if (imageFile && (!navigator.canShare || navigator.canShare({ files: [imageFile] }))) {
+            payload.files = [imageFile];
+          }
+          await navigator.share(payload);
           showToast('Shared successfully!');
         } else {
           showToast('Native share not available on this device', 'info');

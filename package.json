@@ -1,5 +1,9 @@
 {
   "name": "fitone",
+  "version": "1.0.0",
+  "description": "FitOne — offline-first PWA fitness tracker with workout logging, nutrition tracking, and analytics",
+  "keywords": ["fitness", "pwa", "workout", "nutrition", "tracker"],
+  "homepage": "https://github.com/user/fitone#readme",
   "private": true,
   "scripts": {
     "dev": "serve . -l 4173",

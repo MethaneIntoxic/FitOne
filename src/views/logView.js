@@ -5,6 +5,9 @@
 let exerciseRowCount = 0;
 let _recentFoodQuery = "";
 let _recentWorkoutQuery = "";
+let _allFood = [];
+let _allWorkouts = [];
+let _allBody = [];
 const MICRONUTRIENT_DAILY_TARGETS = {
   fiber: 30,
   sugar: 50,
@@ -2252,12 +2255,12 @@ function finishTimer() {
 // ========== SEARCH / FILTER ==========
 function filterRecentFood() {
   _recentFoodQuery = (($("searchFood") && $("searchFood").value) || "").toLowerCase().trim();
-  renderRecentFoodList(window._allFood || []);
+  renderRecentFoodList(_allFood || []);
 }
 
 function filterRecentWorkouts() {
   _recentWorkoutQuery = (($("searchWorkout") && $("searchWorkout").value) || "").toLowerCase().trim();
-  renderRecentWorkoutList(window._allWorkouts || []);
+  renderRecentWorkoutList(_allWorkouts || []);
 }
 
 function buildRecentFoodItemHtml(f) {
@@ -2359,9 +2362,9 @@ function refreshLog() {
   const allFood = loadData(KEYS.food).sort((a, b) => b.timestamp - a.timestamp);
   const allWorkouts = loadData(KEYS.workouts).sort((a, b) => b.timestamp - a.timestamp);
   const allBody = loadData(KEYS.body).sort((a, b) => b.timestamp - a.timestamp);
-  window._allFood = allFood;
-  window._allWorkouts = allWorkouts;
-  window._allBody = allBody;
+  _allFood = allFood;
+  _allWorkouts = allWorkouts;
+  _allBody = allBody;
 
   renderRecentFoodList(allFood);
   renderRecentWorkoutList(allWorkouts);

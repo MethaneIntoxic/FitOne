@@ -122,7 +122,7 @@ function applySyncPayload(payload, mode) {
       ? { ...defaultSettings(), ...payload.settings }
       : { ...loadSettings(), ...payload.settings };
     updateSettings(mergedSettings);
-    localStorage.setItem(KEYS.settings, JSON.stringify(mergedSettings));
+    safeSetItem(KEYS.settings, JSON.stringify(mergedSettings));
   }
 
   if (typeof window.notifyDataChanged === "function") {

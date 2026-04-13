@@ -1,0 +1,98 @@
+{
+  "id": "T-UAT-007-3",
+  "scenarioId": "UAT-007",
+  "scenarioTitle": "Per-gym PR tracking baseline",
+  "persona": "Kay – powerlifter",
+  "category": "Strength",
+  "mode": "power",
+  "environment": {
+    "browserName": "chromium",
+    "projectName": "matrix-desktop-chrome",
+    "os": "win32 x64",
+    "runId": "2026-04-13-ship-gate"
+  },
+  "stepsSummary": "Create gym profile and log a heavy session with exercise sets.",
+  "expectedSummary": "Workout and sets are stored; workout analytics and summaries render without missing values.",
+  "actualResult": "TimeoutError: page.waitForFunction: Timeout 7000ms exceeded.",
+  "errorMessage": "TimeoutError: page.waitForFunction: Timeout 7000ms exceeded.",
+  "failureFingerprint": "c1a753bc2a961bc3",
+  "runFingerprintKey": "UAT-007|c1a753bc2a961bc3|chromium|matrix-desktop-chrome",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-33b6e-ly-TC054-P14-phase2-UAT-007-matrix-desktop-chrome-retry1\\test-failed-1.png",
+  "createdAt": "2026-04-13T15:53:30.435Z",
+  "schemaVersion": "2.0",
+  "sourceCaseId": "UAT-007",
+  "personaId": "kay-powerlifter",
+  "phaseId": "legacy",
+  "type": "BUG",
+  "severity": "medium",
+  "priority": "p2",
+  "summary": "BUG: UAT-007 Per-gym PR tracking baseline - TimeoutError: page.waitForFunction: Timeout 7000ms exceeded.",
+  "reproSteps": [
+    "Create a named gym profile in Settings.",
+    "Log a strength workout with multiple exercises/sets.",
+    "Save workout and inspect recent workout list.",
+    "Open analytics workout sub-tab for summary metrics."
+  ],
+  "expected": "Workout and sets are stored; workout analytics and summaries render without missing values.",
+  "actual": "TimeoutError: page.waitForFunction: Timeout 7000ms exceeded.",
+  "evidence": [
+    "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-33b6e-ly-TC054-P14-phase2-UAT-007-matrix-desktop-chrome-retry1\\test-failed-1.png"
+  ],
+  "recommendation": "Fix the failing Strength flow and add a regression assertion for this scenario.",
+  "acceptanceCriteria": [
+    "Scenario UAT-007 completes without blocking errors.",
+    "Verify: Gym profile is persisted and visible.",
+    "Verify: Workout appears in recent list with expected metadata.",
+    "Verify: Workout summary widgets render without NaN/blank values."
+  ],
+  "scoring": {
+    "impactScore": 5,
+    "frequencyScore": 4,
+    "personaVulnerabilityScore": 2,
+    "riskScore": 40
+  },
+  "tags": [
+    "strength",
+    "pr",
+    "gym-profiles"
+  ],
+  "triage": {
+    "sourceCaseId": "UAT-007",
+    "personaId": "kay-powerlifter",
+    "phaseId": "legacy",
+    "type": "BUG",
+    "severity": "medium",
+    "priority": "p2",
+    "category": "Strength",
+    "summary": "BUG: UAT-007 Per-gym PR tracking baseline - TimeoutError: page.waitForFunction: Timeout 7000ms exceeded.",
+    "reproSteps": [
+      "Create a named gym profile in Settings.",
+      "Log a strength workout with multiple exercises/sets.",
+      "Save workout and inspect recent workout list.",
+      "Open analytics workout sub-tab for summary metrics."
+    ],
+    "expected": "Workout and sets are stored; workout analytics and summaries render without missing values.",
+    "actual": "TimeoutError: page.waitForFunction: Timeout 7000ms exceeded.",
+    "evidence": [
+      "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-33b6e-ly-TC054-P14-phase2-UAT-007-matrix-desktop-chrome-retry1\\test-failed-1.png"
+    ],
+    "recommendation": "Fix the failing Strength flow and add a regression assertion for this scenario.",
+    "acceptanceCriteria": [
+      "Scenario UAT-007 completes without blocking errors.",
+      "Verify: Gym profile is persisted and visible.",
+      "Verify: Workout appears in recent list with expected metadata.",
+      "Verify: Workout summary widgets render without NaN/blank values."
+    ],
+    "scoring": {
+      "impactScore": 5,
+      "frequencyScore": 4,
+      "personaVulnerabilityScore": 2,
+      "riskScore": 40
+    },
+    "tags": [
+      "strength",
+      "pr",
+      "gym-profiles"
+    ]
+  }
+}

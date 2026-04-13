@@ -345,10 +345,29 @@ function renderAnalyticsReportCard() {
     const weightDelta = report.weightDelta
       ? (report.weightDelta > 0 ? "+" : "") + report.weightDelta.toFixed(1) + " " + (settings.weightUnit || "kg")
       : "0.0 " + (settings.weightUnit || "kg");
+    const readinessLabel = readinessAvg ? Math.round(readinessAvg) + "%" : "N/A";
+    const highlightMeta = report.proteinGoalDays + " protein goal days";
 
     card.innerHTML =
       '<div class="card-title">Weekly / Monthly Report Card</div>' +
       '<div class="text-xs" style="color:var(--text2)">' + esc(range.label) + '</div>' +
+      '<div class="analytics-report-highlights mt-8">' +
+        '<div class="analytics-report-highlight is-pr">' +
+          '<div class="eyebrow">Performance</div>' +
+          '<div class="value">' + Math.round(prCount) + '</div>' +
+          '<div class="label">PRs captured in this window</div>' +
+        '</div>' +
+        '<div class="analytics-report-highlight is-streak">' +
+          '<div class="eyebrow">Consistency</div>' +
+          '<div class="value">' + Math.round(streak || 0) + '</div>' +
+          '<div class="label">Current streak • ' + Math.round(report.workoutDays || 0) + ' workout days</div>' +
+        '</div>' +
+        '<div class="analytics-report-highlight is-ready">' +
+          '<div class="eyebrow">Recovery</div>' +
+          '<div class="value">' + readinessLabel + '</div>' +
+          '<div class="label">Readiness avg • ' + Math.round(report.proteinGoalDays || 0) + ' fuel days</div>' +
+        '</div>' +
+      '</div>' +
       '<div class="analytics-report-grid mt-8">' +
         '<div class="analytics-report-item"><div class="label">Avg Calories</div><div class="value">' + Math.round(report.caloriesAvg || 0) + '</div></div>' +
         '<div class="analytics-report-item"><div class="label">Avg Protein</div><div class="value">' + Math.round(report.proteinAvg || 0) + 'g</div></div>' +
@@ -357,9 +376,11 @@ function renderAnalyticsReportCard() {
         '<div class="analytics-report-item"><div class="label">Weight</div><div class="value">' + esc(weightLabel) + '</div></div>' +
         '<div class="analytics-report-item"><div class="label">Weight Trend</div><div class="value">' + esc(weightDelta) + '</div></div>' +
         '<div class="analytics-report-item"><div class="label">PRs</div><div class="value">' + Math.round(prCount) + '</div></div>' +
-        '<div class="analytics-report-item"><div class="label">Readiness Avg</div><div class="value">' + (readinessAvg ? Math.round(readinessAvg) + '%' : 'N/A') + '</div></div>' +
+        '<div class="analytics-report-item"><div class="label">Readiness Avg</div><div class="value">' + readinessLabel + '</div></div>' +
       '</div>' +
-      '<div class="analytics-report-meta">Streak: ' + Math.round(streak || 0) + ' days • Protein goal days: ' + Math.round(report.proteinGoalDays || 0) + '</div>';
+      '<div class="analytics-report-meta">Streak: ' + Math.round(streak || 0) + ' days • ' + highlightMeta + '</div>';
+  }).catch(function () {
+    card.innerHTML = '<div class="card-title">Weekly / Monthly Report Card</div><div class="text-xs" style="color:var(--text2)">Report computation failed.</div>';
   });
 }
 
@@ -453,6 +474,12 @@ function refreshAnalytics() {
   bindAnalyticsRangeControls();
   bindReportCardActions();
   renderAnalyticsReportCard();
+
+  const dlBtn = $("statsDownloadReportBtn");
+  if (dlBtn && !dlBtn.dataset.bound) {
+    dlBtn.dataset.bound = "true";
+    dlBtn.addEventListener("click", function () { window.print(); });
+  }
 }
 
 function refreshAnalyticsSubTab(sub) {

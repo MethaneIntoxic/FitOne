@@ -285,7 +285,7 @@
       '</div>' +
       '</div>' +
       '<div class="deep-dive-chart-sub">Analyzing explosive power and mechanical consistency across the last ' + (state.range === "1y" ? 365 : state.range === "6m" ? 180 : 90) + ' days...</div>' +
-      '<div class="deep-dive-canvas-wrap"><canvas id="deepDiveChartCanvas"></canvas></div>' +
+      '<div class="deep-dive-canvas-wrap"><canvas id="deepDiveChartCanvas"></canvas><div class="deep-dive-chart-fallback hidden" id="deepDiveChartFallback">Trend visualization is unavailable on this device right now. The stat cards below are still live.</div></div>' +
       '<div class="deep-dive-legend">' +
       datasets.map(function (ds) {
         const on = state.series[ds.key] !== false;
@@ -324,7 +324,12 @@
 
   function drawCurrentDeepDiveChart(state) {
     const canvas = $("deepDiveChartCanvas");
-    if (!canvas || typeof drawMultiLineChart !== "function") return;
+    const fallback = $("deepDiveChartFallback");
+    if (!canvas) return;
+    if (typeof drawMultiLineChart !== "function") {
+      if (fallback) fallback.classList.remove("hidden");
+      return;
+    }
 
     const labels = state.sessions.map(function (s) { return fmtCompactDate(s.date); });
     const unit = (settings && settings.weightUnit || "kg").toUpperCase();
@@ -355,7 +360,12 @@
       },
     ];
 
-    drawMultiLineChart(canvas, labels, datasets);
+    try {
+      if (fallback) fallback.classList.add("hidden");
+      drawMultiLineChart(canvas, labels, datasets);
+    } catch {
+      if (fallback) fallback.classList.remove("hidden");
+    }
   }
 
   function bindDeepDiveHandlers(state) {

@@ -25,26 +25,60 @@
     return months + "mo ago";
   }
 
+  function renderStatPill(value) {
+    return '<span class="activity-feed-pill">' + esc(value || "") + '</span>';
+  }
+
+  function renderFeedSummary(items) {
+    if (!items.length) return "";
+    const workouts = items.filter(function (item) { return item.type === "workout"; }).length;
+    const prs = items.filter(function (item) { return item.type === "pr"; }).length;
+    const milestones = items.filter(function (item) {
+      return item.type === "achievement" || item.type === "streak";
+    }).length;
+    const latest = items[0];
+
+    return (
+      '<section class="activity-feed-hero">' +
+      '<div class="activity-feed-hero-kicker">Latest pulse ' + esc(timeAgo(toTs(latest))) + '</div>' +
+      '<div class="activity-feed-hero-title">Momentum across training, recovery, and milestones.</div>' +
+      '<div class="activity-feed-hero-stats">' +
+      '<div class="activity-feed-hero-stat"><span class="value">' + workouts + '</span><span class="label">Sessions</span></div>' +
+      '<div class="activity-feed-hero-stat"><span class="value">' + prs + '</span><span class="label">PRs</span></div>' +
+      '<div class="activity-feed-hero-stat"><span class="value">' + milestones + '</span><span class="label">Milestones</span></div>' +
+      '</div>' +
+      '</section>'
+    );
+  }
+
   function renderActivityCard(item) {
     const type = String(item.type || "other");
+    const tone = String(item.tone || "neutral").replace(/[^a-z0-9-]/gi, "").toLowerCase();
     const title = esc(item.title || "Activity");
     const context = esc(item.context || "FitOne");
     const subtitle = esc(item.subtitle || "");
     const badge = item.badge ? '<span class="activity-feed-badge">' + esc(item.badge) + "</span>" : "";
     const hot = item.hot ? '<span class="activity-feed-hot">🔥 Personal Best!</span>' : "";
+    const stats = Array.isArray(item.kpis) && item.kpis.length
+      ? '<div class="activity-feed-stats">' + item.kpis.map(renderStatPill).join("") + '</div>'
+      : "";
+    const action = item.actionLabel
+      ? '<div class="activity-feed-action-hint">' + esc(item.actionLabel) + ' <span aria-hidden="true">→</span></div>'
+      : "";
 
     return (
-      '<button class="activity-feed-card" data-af-type="' + esc(type) + '" data-af-id="' + esc(String(item.id || "")) + '" data-af-exercise="' + esc(item.exercise || "") + '">' +
+      '<button class="activity-feed-card is-' + tone + '" data-af-type="' + esc(type) + '" data-af-id="' + esc(String(item.id || "")) + '" data-af-exercise="' + esc(item.exercise || "") + '">' +
       '<div class="activity-feed-card-top">' +
       '<div class="activity-feed-icon">' + esc(item.icon || "•") + '</div>' +
       '<div class="activity-feed-meta">' +
-      '<div class="activity-feed-title">' + title + '</div>' +
+      '<div class="activity-feed-title-row"><div class="activity-feed-title">' + title + '</div>' + badge + '</div>' +
       '<div class="activity-feed-sub">' + esc(timeAgo(toTs(item))) + ' • ' + context + '</div>' +
       '</div>' +
-      badge +
       '</div>' +
       '<div class="activity-feed-copy">' + subtitle + '</div>' +
+      stats +
       hot +
+      action +
       '</button>'
     );
   }
@@ -53,7 +87,7 @@
     if (!items.length) {
       return '<div class="deep-dive-empty">No activity yet. Log workouts, nutrition, and body metrics to build your timeline.</div>';
     }
-    return '<div class="activity-feed-list">' + items.map(renderActivityCard).join("") + "</div>";
+    return renderFeedSummary(items) + '<div class="activity-feed-list">' + items.map(renderActivityCard).join("") + "</div>";
   }
 
   function navigateToSubTab(tabId, subTabSelector, subPanelId) {

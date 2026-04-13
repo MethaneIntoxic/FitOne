@@ -21,7 +21,7 @@ function getLastSeenNotificationTs() {
 }
 
 function setLastSeenNotificationTs(ts) {
-  localStorage.setItem(NOTIFICATIONS_LAST_SEEN_KEY, String(Number(ts) || Date.now()));
+  safeSetItem(NOTIFICATIONS_LAST_SEEN_KEY, String(Number(ts) || Date.now()));
 }
 
 function getNotificationItems() {

@@ -6,8 +6,8 @@ function shouldShowOnboarding() {
 }
 
 function completeOnboarding() {
-  localStorage.setItem("ft_onboarding_complete", "1");
-  localStorage.setItem("ft_onboarding_done", "1");
+  safeSetItem("ft_onboarding_complete", "1");
+  safeSetItem("ft_onboarding_done", "1");
 }
 
 function showOnboardingWizard() {
@@ -271,7 +271,7 @@ function showOnboardingWizard() {
     };
 
     updateSettings(next);
-    localStorage.setItem(KEYS.settings, JSON.stringify(next));
+    safeSetItem(KEYS.settings, JSON.stringify(next));
 
     if (data.weight && parseFloat(data.weight) > 0) {
       const bodyData = loadData(KEYS.body);

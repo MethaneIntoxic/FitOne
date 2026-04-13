@@ -1,0 +1,95 @@
+{
+  "id": "T-UAT-014-1",
+  "scenarioId": "UAT-014",
+  "scenarioTitle": "Assisted pull-ups with effective load",
+  "persona": "Kay – powerlifter",
+  "category": "Strength",
+  "mode": "power",
+  "environment": {
+    "browserName": "chromium",
+    "projectName": "matrix-desktop-chrome",
+    "os": "win32 x64"
+  },
+  "stepsSummary": "Log assisted pull-ups with decreasing assistance; check PR and trend graphs.",
+  "expectedSummary": "Effective load (bodyweight minus assist) increases over time; PRs reflect this; no bogus spikes.",
+  "actualResult": "TimeoutError: page.waitForFunction: Timeout 7000ms exceeded.",
+  "errorMessage": "TimeoutError: page.waitForFunction: Timeout 7000ms exceeded.",
+  "failureFingerprint": "c1a753bc2a961bc3",
+  "runFingerprintKey": "UAT-014|c1a753bc2a961bc3|chromium|matrix-desktop-chrome",
+  "screenshotPath": "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-cf68d-nly-TC012-P3-phase4-UAT-014-matrix-desktop-chrome-retry1\\test-failed-1.png",
+  "createdAt": "2026-04-13T15:59:59.145Z",
+  "schemaVersion": "2.0",
+  "sourceCaseId": "UAT-014",
+  "personaId": "kay-powerlifter",
+  "phaseId": "legacy",
+  "type": "BUG",
+  "severity": "medium",
+  "priority": "p2",
+  "summary": "BUG: UAT-014 Assisted pull-ups with effective load - TimeoutError: page.waitForFunction: Timeout 7000ms exceeded.",
+  "reproSteps": [
+    "Log assisted pull-up workout using advanced assisted toggle.",
+    "Save workout and navigate to workout analytics.",
+    "Verify effective-load summary text appears in stats card.",
+    "Verify assisted session name remains visible in recent workouts."
+  ],
+  "expected": "Effective load (bodyweight minus assist) increases over time; PRs reflect this; no bogus spikes.",
+  "actual": "TimeoutError: page.waitForFunction: Timeout 7000ms exceeded.",
+  "evidence": [
+    "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-cf68d-nly-TC012-P3-phase4-UAT-014-matrix-desktop-chrome-retry1\\test-failed-1.png"
+  ],
+  "recommendation": "Fix the failing Strength flow and add a regression assertion for this scenario.",
+  "acceptanceCriteria": [
+    "Scenario UAT-014 completes without blocking errors.",
+    "Verify: Assisted exercise state is accepted by workout logger.",
+    "Verify: Analytics renders effective-load metric field."
+  ],
+  "scoring": {
+    "impactScore": 5,
+    "frequencyScore": 4,
+    "personaVulnerabilityScore": 2,
+    "riskScore": 40
+  },
+  "tags": [
+    "strength",
+    "assisted",
+    "effective-load"
+  ],
+  "triage": {
+    "sourceCaseId": "UAT-014",
+    "personaId": "kay-powerlifter",
+    "phaseId": "legacy",
+    "type": "BUG",
+    "severity": "medium",
+    "priority": "p2",
+    "category": "Strength",
+    "summary": "BUG: UAT-014 Assisted pull-ups with effective load - TimeoutError: page.waitForFunction: Timeout 7000ms exceeded.",
+    "reproSteps": [
+      "Log assisted pull-up workout using advanced assisted toggle.",
+      "Save workout and navigate to workout analytics.",
+      "Verify effective-load summary text appears in stats card.",
+      "Verify assisted session name remains visible in recent workouts."
+    ],
+    "expected": "Effective load (bodyweight minus assist) increases over time; PRs reflect this; no bogus spikes.",
+    "actual": "TimeoutError: page.waitForFunction: Timeout 7000ms exceeded.",
+    "evidence": [
+      "C:\\Users\\admin\\Desktop\\random projs\\FitOne\\test-results\\uat-Domain-2-lifecycle-mat-cf68d-nly-TC012-P3-phase4-UAT-014-matrix-desktop-chrome-retry1\\test-failed-1.png"
+    ],
+    "recommendation": "Fix the failing Strength flow and add a regression assertion for this scenario.",
+    "acceptanceCriteria": [
+      "Scenario UAT-014 completes without blocking errors.",
+      "Verify: Assisted exercise state is accepted by workout logger.",
+      "Verify: Analytics renders effective-load metric field."
+    ],
+    "scoring": {
+      "impactScore": 5,
+      "frequencyScore": 4,
+      "personaVulnerabilityScore": 2,
+      "riskScore": 40
+    },
+    "tags": [
+      "strength",
+      "assisted",
+      "effective-load"
+    ]
+  }
+}

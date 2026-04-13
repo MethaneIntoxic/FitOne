@@ -60,6 +60,19 @@ function escAttr(str) {
     .replace(/>/g, "&gt;");
 }
 
+// ========== SAFE STORAGE HELPER ==========
+function safeSetItem(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (e) {
+    if (typeof showToast === "function") {
+      showToast("Storage full! Clear old data.", "error");
+    }
+    return false;
+  }
+}
+
 // ========== STORAGE KEYS ==========
 const KEYS = {
   food: "ft_food",
@@ -348,6 +361,8 @@ if (typeof window !== "undefined") {
     appendEntityItem,
     replaceEntityItems,
   });
+  window.loadData = loadData;
+  window.KEYS = KEYS;
 }
 
 function defaultSettings() {
@@ -712,6 +727,8 @@ function estimateLocalStorageSize() {
 function getRecentActivity(limit) {
   const maxItems = Number(limit) > 0 ? Number(limit) : 60;
   const timeline = [];
+  const weightUnit = String(settings.weightUnit || "kg").toUpperCase();
+  const proteinGoal = Math.max(0, Number(settings.proteinGoal) || 0);
 
   const workouts = loadData(KEYS.workouts);
   workouts.forEach((w) => {
@@ -731,6 +748,13 @@ function getRecentActivity(limit) {
       title: (w.name || "Workout") + " completed",
       subtitle: exCount + " exercises • " + (w.duration || 0) + " min • " + Math.round(volume).toLocaleString() + " kg",
       context: "FitOne",
+      tone: "workout",
+      kpis: [
+        exCount + " exercises",
+        (w.duration || 0) + " min",
+        Math.round(volume).toLocaleString() + " kg",
+      ],
+      actionLabel: "Open workout",
       date: w.date,
       timestamp: Number(w.timestamp) || 0,
       ts: Number(w.timestamp) || new Date((w.date || today()) + "T00:00:00").getTime(),
@@ -758,6 +782,13 @@ function getRecentActivity(limit) {
       title: "Nutrition logged",
       subtitle: Math.round(entry.calories) + " kcal • " + Math.round(entry.protein) + "g protein • " + entry.count + " entries",
       context: "FitOne",
+      tone: entry.protein >= proteinGoal && proteinGoal > 0 ? "fuel" : "food",
+      kpis: [
+        Math.round(entry.protein) + "g protein",
+        Math.round(entry.calories) + " kcal",
+        entry.count + " logs",
+      ],
+      actionLabel: "Open nutrition log",
       date: d,
       timestamp: entry.ts,
       ts: entry.ts || new Date(d + "T12:00:00").getTime(),
@@ -772,8 +803,11 @@ function getRecentActivity(limit) {
       type: "body",
       icon: "📏",
       title: "Body metrics updated",
-      subtitle: Number.isFinite(wt) ? (wt + " " + String(settings.weightUnit || "kg").toUpperCase()) : "Measurement logged",
+      subtitle: Number.isFinite(wt) ? (wt + " " + weightUnit) : "Measurement logged",
       context: "FitOne",
+      tone: "body",
+      kpis: Number.isFinite(wt) ? [wt + " " + weightUnit, "Recovery logged"] : ["Measurement logged"],
+      actionLabel: "Open body log",
       date: b.date,
       timestamp: Number(b.timestamp) || 0,
       ts: Number(b.timestamp) || new Date((b.date || today()) + "T12:00:00").getTime(),
@@ -787,7 +821,7 @@ function getRecentActivity(limit) {
     try { prList = JSON.parse(localStorage.getItem("ft_personal_records")) || []; } catch { prList = []; }
   }
   prList.forEach((pr) => {
-    const unit = pr.type === "reps" ? "reps" : String(settings.weightUnit || "kg").toUpperCase();
+    const unit = pr.type === "reps" ? "reps" : weightUnit;
     timeline.push({
       id: pr.id || uid(),
       type: "pr",
@@ -797,6 +831,12 @@ function getRecentActivity(limit) {
       context: "FitOne",
       badge: "ELITE PERFORMANCE",
       hot: true,
+      tone: "hot",
+      kpis: [
+        (pr.value || "--") + " " + unit,
+        String(pr.type || "weight").toUpperCase(),
+      ],
+      actionLabel: "Open deep dive",
       exercise: pr.exercise || "",
       date: pr.date,
       timestamp: Number(pr.timestamp) || 0,
@@ -817,6 +857,9 @@ function getRecentActivity(limit) {
         title: "Achievement unlocked",
         subtitle: def && def.name ? def.name : id,
         context: "FitOne",
+        tone: "achievement",
+        kpis: ["Milestone", "Profile reward"],
+        actionLabel: "Open profile",
         date: meta.date || today(),
         timestamp: Number(meta.unlockedAt) || 0,
         ts: Number(meta.unlockedAt) || new Date((meta.date || today()) + "T12:00:00").getTime(),
@@ -833,6 +876,9 @@ function getRecentActivity(limit) {
       title: "Streak milestone",
       subtitle: streak + " days active in a row",
       context: "FitOne",
+      tone: "streak",
+      kpis: [streak + " day run", "Momentum protected"],
+      actionLabel: "Open profile",
       date: today(),
       timestamp: Date.now() - 60 * 1000,
       ts: Date.now() - 60 * 1000,
@@ -1175,7 +1221,8 @@ function calculateStreak() {
   function weekKey(dateObj) {
     const start = new Date(dateObj);
     start.setHours(12, 0, 0, 0);
-    start.setDate(start.getDate() - start.getDay());
+    const day = start.getDay();
+    start.setDate(start.getDate() - (day === 0 ? 6 : day - 1));
     return localDateStr(start);
   }
 

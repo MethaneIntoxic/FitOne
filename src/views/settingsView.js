@@ -301,7 +301,7 @@ function handleAvatarUpload(file) {
   reader.onload = function () {
     const next = { ...settings, avatar: String(reader.result || "") };
     updateSettings(next);
-    localStorage.setItem(KEYS.settings, JSON.stringify(next));
+    safeSetItem(KEYS.settings, JSON.stringify(next));
     renderProfileAvatar();
     showToast("Avatar updated");
   };
@@ -411,7 +411,7 @@ function applyCompeteGoalProfile(dayProfile, silent) {
   }
 
   updateSettings(next);
-  localStorage.setItem(KEYS.settings, JSON.stringify(next));
+  safeSetItem(KEYS.settings, JSON.stringify(next));
   loadSettingsUI();
 
   settingsEmitDataChange({ source: "settings", reason: "goalProfile" });
@@ -612,7 +612,7 @@ function syncGoalsToTDEE() {
       goalMacroProfiles: targets.profiles,
     };
     updateSettings(next);
-    localStorage.setItem(KEYS.settings, JSON.stringify(next));
+    safeSetItem(KEYS.settings, JSON.stringify(next));
   }
 
   saveSettingsFromUI();
@@ -715,7 +715,7 @@ function saveSettingsFromUI() {
     }
   }
   updateSettings(next);
-  localStorage.setItem(KEYS.settings, JSON.stringify(next));
+  safeSetItem(KEYS.settings, JSON.stringify(next));
   applyThemeAndAccent(next);
   updateBodyLabels();
   renderAdvancedSettings();
@@ -770,6 +770,10 @@ function requestPushPermissionIfNeeded() {
     }
     saveSettingsFromUI();
     showToast("Push notifications enabled");
+  }).catch(() => {
+    pushToggle.checked = false;
+    saveSettingsFromUI();
+    showToast("Could not request notification permission", "error");
   });
 }
 
@@ -819,6 +823,9 @@ function renderAdvancedSettings() {
         if (!reg) el.textContent = "Not registered";
         else if (reg.active) el.textContent = "Registered and active";
         else el.textContent = "Registered (inactive)";
+      }).catch(() => {
+        const el = $("swStatusText");
+        if (el) el.textContent = "Error checking status";
       });
     } else if ($("swStatusText")) {
       $("swStatusText").textContent = "Unsupported";
@@ -1115,7 +1122,7 @@ function bindDynamicSettingsEvents(panel) {
       gyms.add(name);
       const next = { ...settings, gyms: Array.from(gyms) };
       updateSettings(next);
-      localStorage.setItem(KEYS.settings, JSON.stringify(next));
+      safeSetItem(KEYS.settings, JSON.stringify(next));
       input.value = "";
       renderAdvancedSettings();
       showToast("Gym profile added");
@@ -1126,7 +1133,7 @@ function bindDynamicSettingsEvents(panel) {
       const gym = btn.getAttribute("data-remove-gym") || "";
       const next = { ...settings, gyms: (settings.gyms || []).filter((g) => g !== gym) };
       updateSettings(next);
-      localStorage.setItem(KEYS.settings, JSON.stringify(next));
+      safeSetItem(KEYS.settings, JSON.stringify(next));
       renderAdvancedSettings();
       showToast("Gym profile removed");
     });
@@ -1140,7 +1147,7 @@ function bindDynamicSettingsEvents(panel) {
         if (result && result.ok) {
           const next = { ...settings, autoBackupLastRunAt: Date.now() };
           updateSettings(next);
-          localStorage.setItem(KEYS.settings, JSON.stringify(next));
+          safeSetItem(KEYS.settings, JSON.stringify(next));
           renderAdvancedSettings();
           showToast("Backup snapshot created", "success");
         } else {
@@ -1253,7 +1260,7 @@ function bindDynamicSettingsEvents(panel) {
         ts: Date.now(),
         source: "settings",
         user: settings.displayName || "Athlete",
-      }).then(() => showToast("Webhook test queued", "success"));
+      }).then(() => showToast("Webhook test queued", "success")).catch(() => showToast("Webhook test failed", "error"));
     });
   }
 
@@ -1276,7 +1283,7 @@ function bindDynamicSettingsEvents(panel) {
       }
       const next = { ...settings, goalMacroProfiles: profiles };
       updateSettings(next);
-      localStorage.setItem(KEYS.settings, JSON.stringify(next));
+      safeSetItem(KEYS.settings, JSON.stringify(next));
       loadSettingsUI();
       showToast("Macro profiles saved", "success");
     });
@@ -1288,7 +1295,7 @@ function bindDynamicSettingsEvents(panel) {
       if (Object.keys(profiles).length) {
         const merged = { ...settings, goalMacroProfiles: profiles };
         updateSettings(merged);
-        localStorage.setItem(KEYS.settings, JSON.stringify(merged));
+        safeSetItem(KEYS.settings, JSON.stringify(merged));
       }
       const profile = btn.getAttribute("data-apply-goal-profile") || "training";
       applyCompeteGoalProfile(profile);
