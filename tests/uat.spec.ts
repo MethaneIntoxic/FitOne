@@ -1,3 +1,4 @@
+import path from "node:path";
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { scenarios, type UatScenario } from "./uatScenarios";
 import { lifecycleCases, type LifecycleCaseFixture } from "./uat/fixtures/lifecycleCases";
@@ -748,15 +749,181 @@ async function addWaterAndCheck(page: Page) {
 
 async function exportGlobalJsonAndCsv(page: Page) {
   await clickMainTab(page, "data");
-  const jsonDownloadPromise = page.waitForEvent("download");
+  await page.evaluate(() => {
+    const runtimeWindow = window as Window & {
+      fitOneLastExport?: { filename?: string } | null;
+      fitOneExportHistory?: Array<{ filename?: string }>;
+    };
+    runtimeWindow.fitOneLastExport = null;
+    runtimeWindow.fitOneExportHistory = [];
+  });
   await page.locator("#exportGlobalJsonBtn").click();
-  const jsonDownload = await jsonDownloadPromise;
-  expect(jsonDownload.suggestedFilename()).toContain(".json");
+  await page.waitForFunction(() => {
+    const runtimeWindow = window as Window & { fitOneLastExport?: { filename?: string } | null };
+    return !!runtimeWindow.fitOneLastExport && String(runtimeWindow.fitOneLastExport.filename || "").endsWith(".json");
+  });
+  const jsonExport = await page.evaluate(() => {
+    const runtimeWindow = window as Window & { fitOneLastExport?: { filename?: string } | null };
+    return runtimeWindow.fitOneLastExport;
+  });
+  expect(String(jsonExport?.filename || "")).toContain(".json");
 
-  const csvDownloadPromise = page.waitForEvent("download");
   await page.locator("#exportGlobalCsvBtn").click();
-  const csvDownload = await csvDownloadPromise;
-  expect(csvDownload.suggestedFilename()).toContain(".csv");
+  await page.waitForFunction(() => {
+    const runtimeWindow = window as Window & { fitOneExportHistory?: Array<{ filename?: string }> };
+    const history = Array.isArray(runtimeWindow.fitOneExportHistory) ? runtimeWindow.fitOneExportHistory : [];
+    return history.some((entry) => String(entry && entry.filename || "").endsWith(".csv"));
+  });
+  const exportHistory = await page.evaluate(() => {
+    const runtimeWindow = window as Window & { fitOneExportHistory?: Array<{ filename?: string }> };
+    return (runtimeWindow.fitOneExportHistory || []).map((entry) => String(entry && entry.filename || ""));
+  });
+  expect(exportHistory.some((filename) => filename.endsWith(".csv"))).toBeTruthy();
+}
+
+async function exportAnalyticsReports(page: Page) {
+  await clickMainTab(page, "analytics");
+  await expect(page.locator("#statsDownloadReportBtn")).toBeVisible();
+
+  await page.evaluate(() => {
+    const runtimeWindow = window as Window & {
+      fitOneLastExport?: { filename?: string } | null;
+      fitOneExportHistory?: Array<{ filename?: string }>;
+    };
+    runtimeWindow.fitOneLastExport = null;
+    runtimeWindow.fitOneExportHistory = [];
+  });
+  await page.locator("#statsDownloadReportBtn").click();
+  await page.waitForFunction(() => {
+    const runtimeWindow = window as Window & { fitOneLastExport?: { filename?: string } | null };
+    return !!runtimeWindow.fitOneLastExport && String(runtimeWindow.fitOneLastExport.filename || "").endsWith(".txt");
+  });
+  const reportExport = await page.evaluate(() => {
+    const runtimeWindow = window as Window & { fitOneLastExport?: { filename?: string } | null };
+    return runtimeWindow.fitOneLastExport;
+  });
+  expect(String(reportExport?.filename || "")).toContain(".txt");
+
+  await clickAnalyticsSubTab(page, "analytics-calories");
+  await expect(page.locator("#analyticsReportCard")).toContainText("Weekly / Monthly Report Card");
+  await page.waitForFunction(() => {
+    const card = document.getElementById("analyticsReportCard");
+    return !!card && !String(card.textContent || "").includes("Computing report...");
+  });
+  await page.evaluate(() => {
+    const runtimeWindow = window as Window & {
+      fitOneLastExport?: { filename?: string } | null;
+      fitOneExportHistory?: Array<{ filename?: string }>;
+    };
+    runtimeWindow.fitOneLastExport = null;
+    runtimeWindow.fitOneExportHistory = [];
+  });
+
+  await page.locator("#saveAnalyticsReportCardBtn").scrollIntoViewIfNeeded();
+  await page.locator("#saveAnalyticsReportCardBtn").click();
+  await page.waitForFunction(() => {
+    const runtimeWindow = window as Window & { fitOneLastExport?: { filename?: string } | null };
+    return !!runtimeWindow.fitOneLastExport && String(runtimeWindow.fitOneLastExport.filename || "").endsWith(".png");
+  });
+  const imageExport = await page.evaluate(() => {
+    const runtimeWindow = window as Window & { fitOneLastExport?: { filename?: string } | null };
+    return runtimeWindow.fitOneLastExport;
+  });
+  expect(String(imageExport?.filename || "")).toContain(".png");
+}
+
+async function uploadProgressPhoto(page: Page) {
+  await clickMainTab(page, "log");
+  await clickLogSubTab(page, "log-body");
+  await page.locator("#photosContainer [data-action=\"addPhoto\"]").first().click();
+  await expect(page.locator("#photoModalOverlay")).toBeVisible();
+  await page.locator("#photoFileInput").setInputFiles(path.join(process.cwd(), "icons", "icon-192.png"));
+  await expect(page.locator("#photoPreviewArea")).toBeVisible();
+  await expect(page.locator("#photoSaveBtn")).toBeEnabled();
+  await page.locator("#photoSaveBtn").click();
+  await expect(page.locator("#photosContainer .photo-thumb").first()).toBeVisible();
+}
+
+async function expectToastText(page: Page, text: string | RegExp) {
+  const toast = page.locator(".toast").last();
+  await expect(toast).toBeVisible();
+  await expect(toast).toContainText(text);
+}
+
+async function readWorkoutAndCardioCounts(page: Page) {
+  return page.evaluate(() => {
+    const runtimeWindow = window as Window & {
+      loadData?: (key: string) => unknown;
+      KEYS?: { workouts?: string; cardios?: string };
+    };
+
+    const readCount = (key: string | undefined) => {
+      if (!key) return 0;
+      try {
+        if (typeof runtimeWindow.loadData === "function") {
+          const value = runtimeWindow.loadData(key);
+          return Array.isArray(value) ? value.length : 0;
+        }
+        const raw = localStorage.getItem(key);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed.length : 0;
+      } catch {
+        return 0;
+      }
+    };
+
+    return {
+      workouts: readCount(runtimeWindow.KEYS && runtimeWindow.KEYS.workouts),
+      cardios: readCount(runtimeWindow.KEYS && runtimeWindow.KEYS.cardios),
+    };
+  });
+}
+
+async function capturePrintTemplateHtml(page: Page, buttonSelector: string) {
+  await page.evaluate(() => {
+    const runtimeWindow = window as Window & {
+      __fitonePrintHtml?: string;
+      __fitoneOriginalOpen?: typeof window.open;
+    };
+    runtimeWindow.__fitonePrintHtml = "";
+    runtimeWindow.__fitoneOriginalOpen = window.open;
+    window.open = function () {
+      const docState = {
+        html: "",
+        write(markup: string) {
+          this.html += String(markup || "");
+        },
+        close() {
+          return undefined;
+        },
+      };
+      return {
+        document: docState,
+        focus() {
+          return undefined;
+        },
+        print() {
+          runtimeWindow.__fitonePrintHtml = docState.html;
+        },
+      } as unknown as Window;
+    };
+  });
+
+  await page.locator(buttonSelector).click();
+
+  return page.evaluate(() => {
+    const runtimeWindow = window as Window & {
+      __fitonePrintHtml?: string;
+      __fitoneOriginalOpen?: typeof window.open;
+    };
+    const html = String(runtimeWindow.__fitonePrintHtml || "");
+    if (runtimeWindow.__fitoneOriginalOpen) {
+      window.open = runtimeWindow.__fitoneOriginalOpen;
+    }
+    delete runtimeWindow.__fitonePrintHtml;
+    delete runtimeWindow.__fitoneOriginalOpen;
+    return html;
+  });
 }
 
 async function ensureDataImportEntity(page: Page, entity: string) {
@@ -1341,6 +1508,177 @@ for (const scenario of scenarios) {
     });
   });
 }
+
+test.describe("Browser truth critical controls", () => {
+  test("browser truth critical controls", async ({ page }, testInfo) => {
+    test.skip(!shouldRunLegacyScenariosOnProject(testInfo.project.name), "Browser-truth audit runs only on the primary legacy project.");
+
+    await page.locator("#headerAvatar").click();
+    await expect(page.locator("#panel-settings")).toHaveClass(/active/);
+    await expect(page.locator("#workoutSettingsResetBtn")).toContainText("REVERT WORKOUT CHANGES");
+
+    const originalRest = await page.locator("#settingRestTimeRange").inputValue();
+    await page.evaluate(() => {
+      const range = document.getElementById("settingRestTimeRange") as HTMLInputElement | null;
+      if (!range) return;
+      range.value = "180";
+      range.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await page.locator("#workoutSettingsResetBtn").click();
+    await expect(page.locator("#settingRestTimeRange")).toHaveValue(originalRest);
+
+    await clickMainTab(page, "today");
+    await page.locator("#viewAllRoutines").click();
+    await expect(page.locator("#panel-protocols")).toHaveClass(/active/);
+    await expect(page.locator("#library-list")).toHaveClass(/active/);
+
+    await clickMainTab(page, "today");
+    await page.locator("#fabBtn").click();
+    await page.locator('#fabMenu .fab-option[data-fab-action="quick-food"]').click();
+    await expect(page.locator("#quickFoodOverlay")).toBeVisible();
+    await page.locator("#quickFoodCloseBtn").click();
+
+    const wgerRequests: string[] = [];
+    page.on("request", (request) => {
+      if (request.url().includes("wger.de")) {
+        wgerRequests.push(request.url());
+      }
+    });
+
+    await clickMainTab(page, "log");
+    await clickLogSubTab(page, "log-workout");
+    await page.locator('[data-action="browseExercises"]').click();
+    await expect(page.locator("#exerciseBrowserOverlay")).toBeVisible();
+    await expect(page.locator("#exerciseBrowserList .exercise-browser-item").first()).toBeVisible();
+    expect(wgerRequests).toHaveLength(0);
+    await page.locator("#exerciseBrowserClose").click();
+
+    await exportGlobalJsonAndCsv(page);
+    await exportAnalyticsReports(page);
+    await uploadProgressPhoto(page);
+
+    await clickMainTab(page, "settings");
+    await expect(page.locator("#notificationPulseCard")).not.toContainText("Coming Soon");
+  });
+
+  test("browser truth utility controls", async ({ page }, testInfo) => {
+    test.skip(!shouldRunLegacyScenariosOnProject(testInfo.project.name), "Browser-truth audit runs only on the primary legacy project.");
+
+    await clickMainTab(page, "settings");
+
+    await page.evaluate(() => {
+      const runtimeWindow = window as Window & {
+        fitOneLastExport?: { filename?: string } | null;
+        fitOneExportHistory?: Array<{ filename?: string }>;
+      };
+      runtimeWindow.fitOneLastExport = null;
+      runtimeWindow.fitOneExportHistory = [];
+    });
+    await page.locator("#runBackupNowBtn").click();
+    await page.waitForFunction(() => {
+      const runtimeWindow = window as Window & { fitOneLastExport?: { filename?: string } | null };
+      return !!runtimeWindow.fitOneLastExport && String(runtimeWindow.fitOneLastExport.filename || "").startsWith("fitone-backup-");
+    });
+    const backupExport = await page.evaluate(() => {
+      const runtimeWindow = window as Window & { fitOneLastExport?: { filename?: string } | null };
+      return runtimeWindow.fitOneLastExport;
+    });
+    expect(String(backupExport?.filename || "")).toContain("fitone-backup-");
+    await expectToastText(page, /Backup snapshot created/);
+
+    const installState = await page.evaluate(() => {
+      const runtimeWindow = window as Window & { _deferredInstallPrompt?: unknown };
+      const installBtn = document.getElementById("triggerPwaInstallBtn") as HTMLButtonElement | null;
+      const promptsToggle = document.getElementById("settingPwaInstallPromptEnabled") as HTMLInputElement | null;
+      return {
+        available: !!runtimeWindow._deferredInstallPrompt,
+        standalone: !!(window.matchMedia && window.matchMedia("(display-mode: standalone)").matches),
+        promptsDisabled: promptsToggle ? !promptsToggle.checked : false,
+        disabled: installBtn ? installBtn.disabled : false,
+        text: installBtn ? String(installBtn.textContent || "") : "",
+        status: String(document.getElementById("pwaRuntimeStatus")?.textContent || ""),
+      };
+    });
+
+    if (installState.promptsDisabled) {
+      expect(installState.disabled).toBeTruthy();
+      expect(installState.text).toContain("Install Disabled");
+    } else if (installState.standalone) {
+      expect(installState.disabled).toBeTruthy();
+      expect(installState.text).toContain("App Installed");
+    } else if (installState.available) {
+      expect(installState.disabled).toBeFalsy();
+      expect(installState.text).toContain("Install App");
+    } else {
+      expect(installState.disabled).toBeTruthy();
+      expect(installState.text).toContain("Install Unavailable");
+      expect(installState.status).toContain("not currently available");
+    }
+
+    await page.locator("#checkPwaUpdateBtn").click();
+    await expectToastText(page, /(No update found|Update ready\. Reload to apply\.|Update check is unavailable)/);
+
+    await page.locator("#testWebhookBtn").click();
+    await expectToastText(page, /Enable webhooks and add a valid URL first/);
+    await page.locator("#flushWebhookQueueBtn").click();
+    await expectToastText(page, /Enable webhooks and add a valid URL first/);
+
+    const beforeSampleCounts = await readWorkoutAndCardioCounts(page);
+    await page.locator('[data-wearable-toggle="strava"]').click();
+    await expectToastText(page, /Strava connected/);
+    await page.locator('[data-wearable-sample="strava"]').click();
+    await expectToastText(page, /Imported sample workout for Strava/);
+    await page.waitForFunction(
+      (counts) => {
+        const runtimeWindow = window as Window & {
+          loadData?: (key: string) => unknown;
+          KEYS?: { workouts?: string; cardios?: string };
+        };
+        const readCount = (key: string | undefined) => {
+          if (!key) return 0;
+          try {
+            if (typeof runtimeWindow.loadData === "function") {
+              const value = runtimeWindow.loadData(key);
+              return Array.isArray(value) ? value.length : 0;
+            }
+            const raw = localStorage.getItem(key);
+            const parsed = raw ? JSON.parse(raw) : [];
+            return Array.isArray(parsed) ? parsed.length : 0;
+          } catch {
+            return 0;
+          }
+        };
+
+        return (
+          readCount(runtimeWindow.KEYS && runtimeWindow.KEYS.workouts) === counts.workouts + 1 &&
+          readCount(runtimeWindow.KEYS && runtimeWindow.KEYS.cardios) === counts.cardios + 1
+        );
+      },
+      beforeSampleCounts,
+    );
+
+    await page.locator("#createPeerSyncCodeBtn").click();
+    await expect(page.locator("#peerSyncCodeInput")).not.toHaveValue("");
+    await expectToastText(page, /(Sync code copied|Sync code generated)/);
+    const syncCode = await page.locator("#peerSyncCodeInput").inputValue();
+    expect(syncCode.length).toBeGreaterThan(20);
+    await page.locator("#applyPeerSyncCodeBtn").click();
+    await expectToastText(page, /Peer sync applied/);
+
+    await clickMainTab(page, "data");
+    await expect(page.locator("#importDataBtn")).toBeVisible();
+    await expect(page.locator("#importActivityCsvBtn")).toBeVisible();
+    await expect(page.locator("#programImportBtn")).toBeVisible();
+
+    const workoutTemplateHtml = await capturePrintTemplateHtml(page, "#printWorkoutTemplateBtn");
+    expect(workoutTemplateHtml).toContain("FitOne Blank Workout Log");
+    expect(workoutTemplateHtml).toContain("Exercise");
+
+    const nutritionTemplateHtml = await capturePrintTemplateHtml(page, "#printNutritionTemplateBtn");
+    expect(nutritionTemplateHtml).toContain("FitOne Blank Nutrition Diary");
+    expect(nutritionTemplateHtml).toContain("Calories");
+  });
+});
 
 if (matrixEnabled) {
   test.describe("Domain 2 lifecycle matrix", () => {

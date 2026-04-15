@@ -1352,17 +1352,26 @@ function deleteFood(id) {
   const data = loadData(KEYS.food);
   const item = data.find((f) => f.id === id);
   if (!item) return;
-  if (item.timestamp && Date.now() - item.timestamp < 2 * 60 * 1000) trackUXTelemetry("logging.deletedEntryImmediately");
-  const filtered = data.filter((f) => f.id !== id);
-  saveData(KEYS.food, filtered);
-  notifyDataChangedFromLog("deleteFood");
-  showUndoToast("Food deleted", () => {
-    trackUXTelemetry("logging.undoCount");
-    const current = loadData(KEYS.food);
-    current.push(item);
-    saveData(KEYS.food, current);
-    notifyDataChangedFromLog("undoDeleteFood");
-  });
+  const removeFood = () => {
+    if (item.timestamp && Date.now() - item.timestamp < 2 * 60 * 1000) trackUXTelemetry("logging.deletedEntryImmediately");
+    const filtered = data.filter((f) => f.id !== id);
+    saveData(KEYS.food, filtered);
+    notifyDataChangedFromLog("deleteFood");
+    showUndoToast((item.name || "Food") + " deleted", () => {
+      trackUXTelemetry("logging.undoCount");
+      const current = loadData(KEYS.food);
+      current.push(item);
+      saveData(KEYS.food, current);
+      notifyDataChangedFromLog("undoDeleteFood");
+    });
+  };
+
+  if (typeof showConfirmModal === "function") {
+    showConfirmModal("Delete Food Entry", "🗑️", 'Remove "' + String(item.name || "this food entry") + '"? You can still undo it right after.', removeFood);
+    return;
+  }
+
+  removeFood();
 }
 
 function editFood(id) {
@@ -1944,17 +1953,26 @@ function deleteWorkout(id) {
   const data = loadData(KEYS.workouts);
   const item = data.find((w) => w.id === id);
   if (!item) return;
-  if (item.timestamp && Date.now() - item.timestamp < 2 * 60 * 1000) trackUXTelemetry("logging.deletedEntryImmediately");
-  const filtered = data.filter((w) => w.id !== id);
-  saveData(KEYS.workouts, filtered);
-  notifyDataChangedFromLog("deleteWorkout");
-  showUndoToast("Workout deleted", () => {
-    trackUXTelemetry("logging.undoCount");
-    const current = loadData(KEYS.workouts);
-    current.push(item);
-    saveData(KEYS.workouts, current);
-    notifyDataChangedFromLog("undoDeleteWorkout");
-  });
+  const removeWorkout = () => {
+    if (item.timestamp && Date.now() - item.timestamp < 2 * 60 * 1000) trackUXTelemetry("logging.deletedEntryImmediately");
+    const filtered = data.filter((w) => w.id !== id);
+    saveData(KEYS.workouts, filtered);
+    notifyDataChangedFromLog("deleteWorkout");
+    showUndoToast((item.name || "Workout") + " deleted", () => {
+      trackUXTelemetry("logging.undoCount");
+      const current = loadData(KEYS.workouts);
+      current.push(item);
+      saveData(KEYS.workouts, current);
+      notifyDataChangedFromLog("undoDeleteWorkout");
+    });
+  };
+
+  if (typeof showConfirmModal === "function") {
+    showConfirmModal("Delete Workout", "🗑️", 'Remove "' + String(item.name || "this workout") + '"? You can still undo it right after.', removeWorkout);
+    return;
+  }
+
+  removeWorkout();
 }
 
 // ========== LOG BODY ==========
@@ -2289,7 +2307,7 @@ function renderRecentFoodList(allFood) {
   const container = $("recentFood");
   if (!container) return;
 
-  const emptyHtml = '<div class="empty"><div class="empty-icon">🍽️</div><div class="empty-text">Ready to fuel your day? 🍎</div><button class="btn btn-primary btn-sm" data-action="focusFood">Log your first meal</button></div>';
+  const emptyHtml = '<div class="empty"><div class="empty-icon">🍽️</div><div class="empty-text">Ready to fuel your day? Fill the food form above to log your first meal.</div></div>';
   if (!visible.length) {
     container.innerHTML = q
       ? '<div class="empty"><div class="empty-icon">🔎</div><div class="empty-text">No food entries match your search.</div></div>'
@@ -2314,7 +2332,7 @@ function renderRecentWorkoutList(allWorkouts) {
   const container = $("recentWorkouts");
   if (!container) return;
 
-  const emptyHtml = '<div class="empty"><div class="empty-icon">🏋️</div><div class="empty-text">Time to move! Let\'s crush it 💪</div><button class="btn btn-primary btn-sm" data-action="focusWorkout">Log your first workout</button></div>';
+  const emptyHtml = '<div class="empty"><div class="empty-icon">🏋️</div><div class="empty-text">Time to move. Use the workout form above to log your first session.</div></div>';
   if (!visible.length) {
     container.innerHTML = q
       ? '<div class="empty"><div class="empty-icon">🔎</div><div class="empty-text">No workout entries match your search.</div></div>'
@@ -2335,7 +2353,7 @@ function renderBodyHistoryList(allBody) {
   const container = $("bodyHistory");
   if (!container) return;
 
-  const emptyHtml = '<div class="empty"><div class="empty-icon">📏</div><div class="empty-text">Track your progress — log your first measurement</div><button class="btn btn-primary btn-sm" data-action="focusBody">Get started</button></div>';
+  const emptyHtml = '<div class="empty"><div class="empty-icon">📏</div><div class="empty-text">Track your progress by adding your first measurement above.</div></div>';
   if (!source.length) {
     container.innerHTML = emptyHtml;
     return;

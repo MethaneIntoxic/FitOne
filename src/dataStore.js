@@ -2381,8 +2381,8 @@ async function flushWebhookQueue() {
 
 function emitWebhookEvent(eventName, payload) {
   if (!shouldEmitWebhookEvent(eventName)) {
-    return Promise.resolve({ queued: false, pending: loadWebhookQueue().length });
+    return Promise.resolve({ queued: false, sent: 0, pending: loadWebhookQueue().length, skipped: true });
   }
   enqueueWebhookEvent(eventName, payload || {});
-  return flushWebhookQueue();
+  return flushWebhookQueue().then((result) => ({ queued: true, ...result }));
 }

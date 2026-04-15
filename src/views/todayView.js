@@ -565,15 +565,17 @@ function reorderTodayCards() {
   const panel = $("panel-today");
   if (!panel) return;
   let banner = $("uxLockBanner");
-  if (!banner) {
-    banner = document.createElement("div");
-    banner.id = "uxLockBanner";
-    banner.className = "mini-banner";
-    panel.insertBefore(banner, panel.firstChild);
+  if (settings.uxLockEnabled) {
+    if (banner) banner.remove();
+  } else {
+    if (!banner) {
+      banner = document.createElement("div");
+      banner.id = "uxLockBanner";
+      banner.className = "mini-banner";
+      panel.insertBefore(banner, panel.firstChild);
+    }
+    banner.innerHTML = 'New layout preview enabled. <button class="btn btn-outline btn-sm" id="restoreClassicLayoutBtn">Use classic layout</button>';
   }
-  banner.innerHTML = settings.uxLockEnabled
-    ? "Classic layout locked. New layout available → Try & switch (coming soon)."
-    : 'New layout preview enabled. <button class="btn btn-outline btn-sm" id="restoreClassicLayoutBtn">Use classic layout</button>';
   const restoreBtn = $("restoreClassicLayoutBtn");
   if (restoreBtn) {
     restoreBtn.addEventListener("click", () => {
@@ -1031,7 +1033,10 @@ function initTodayEvents() {
       else if (action === "saveWellness") saveWellness();
       // W3 Dashboard v2 actions
       else if (action === "igniteSession" && _goToLogWorkout) _goToLogWorkout();
-      else if (action === "viewAllRoutines") activateMainTab("protocols");
+      else if (action === "viewAllRoutines") {
+        if (typeof window.goToWorkoutLibrary === "function") window.goToWorkoutLibrary();
+        else activateMainTab("protocols");
+      }
       else if (action === "startProtocol" && _goToLogWorkout) _goToLogWorkout();
       else if (action === "openActivityFeed" && typeof showActivityFeedModal === "function") showActivityFeedModal();
       return;

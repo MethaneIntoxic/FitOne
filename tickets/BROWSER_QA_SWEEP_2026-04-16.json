@@ -1,0 +1,154 @@
+{
+  "auditDate": "2026-04-16",
+  "type": "browser-qa-sweep",
+  "target": "http://127.0.0.1:4173/",
+  "status": "fixed-verified",
+  "verificationSummary": {
+    "unitTests": "9/9 passed",
+    "uat": "17/17 passed",
+    "focusedLanes": [
+      "browser truth critical controls",
+      "browser truth utility controls"
+    ],
+    "build": "passed"
+  },
+  "additionalValidatedControls": [
+    "Backup Now creates a backup artifact and updates backup status",
+    "Install App button truthfully disables when no install prompt is available",
+    "Check App Update returns explicit status feedback",
+    "Webhook test/flush now report configuration gaps instead of false success",
+    "Wearable Import Sample adds explicit demo data only",
+    "Peer Sync code creation and apply flow succeed locally",
+    "Print workout and nutrition templates generate printable HTML"
+  ],
+  "confirmedWorking": [
+    "Header bell opens Pulse Center",
+    "Activity Feed OPEN launches overlay",
+    "VIEW ALL routes to protocols",
+    "IGNITE SESSION routes to Workouts -> Workout",
+    "Water quick-add updates hydration state",
+    "Wellness check-in saves",
+    "Recipe builder opens",
+    "Barcode scan opens manual fallback modal",
+    "Food logging persists",
+    "Workout logging persists",
+    "Rest timer overlay works",
+    "Body measurements save and surface in history",
+    "Progress photo modal opens",
+    "Profile save persists after reload",
+    "Data Syncing routes to Data Studio",
+    "Stats subviews switch correctly"
+  ],
+  "tickets": [
+    {
+      "id": "QA-001",
+      "severity": "Sev-1",
+      "type": "BUG",
+      "title": "Exercise browser blocked by CSP",
+      "area": "Workouts > Workout > Browse",
+      "status": "FIXED_VERIFIED",
+      "resolution": "Removed the blocked remote hydration path and kept the browser local-first.",
+      "verification": "Browser truth critical controls confirms the modal opens locally with no wger.de requests.",
+      "recommendedDisposition": "fix-or-hide"
+    },
+    {
+      "id": "QA-002",
+      "severity": "Sev-1",
+      "type": "BUG",
+      "title": "Dashboard shortcut buttons do not navigate",
+      "area": "Dashboard shortcut rail",
+      "status": "FIXED_VERIFIED",
+      "resolution": "Direct shell bindings now route users into the correct tab/subtab targets.",
+      "verification": "Browser truth critical controls covers header, dashboard, FAB, and protocol routing.",
+      "recommendedDisposition": "fix-or-remove"
+    },
+    {
+      "id": "QA-003",
+      "severity": "Sev-2",
+      "type": "BUG",
+      "title": "Settings reset does not reset unsaved changes",
+      "area": "Profile > Workout Settings",
+      "status": "FIXED_VERIFIED",
+      "resolution": "Workout settings reset now reverts to persisted values without saving defaults.",
+      "verification": "Browser truth critical controls mutates a field and confirms reset restores the saved value.",
+      "recommendedDisposition": "fix-or-remove"
+    },
+    {
+      "id": "QA-004",
+      "severity": "Sev-2",
+      "type": "BUG",
+      "title": "Header avatar affordance is inert",
+      "area": "App shell header",
+      "status": "FIXED_VERIFIED",
+      "resolution": "The header avatar is now a real button bound to Profile settings.",
+      "verification": "Browser truth critical controls opens settings from the header avatar.",
+      "recommendedDisposition": "fix-or-remove"
+    },
+    {
+      "id": "QA-005",
+      "severity": "Sev-2",
+      "type": "BUG",
+      "title": "Export utilities are not producing verifiable downloads",
+      "area": "Data Studio",
+      "status": "FIXED_VERIFIED",
+      "resolution": "Exports now emit explicit artifact-prepared metadata and deterministic success/failure feedback.",
+      "verification": "Browser truth critical controls and browser truth utility controls verify JSON, CSV, and backup artifacts.",
+      "recommendedDisposition": "fix-before-ship"
+    },
+    {
+      "id": "QA-006",
+      "severity": "Sev-3",
+      "type": "BUG",
+      "title": "Recent food row delete affordance does not produce a clear result",
+      "area": "Workouts > Food > Recent Food",
+      "status": "FIXED_VERIFIED",
+      "resolution": "Destructive row actions now confirm clearly and provide item-specific undo feedback.",
+      "verification": "Regression suite remained green after the destructive-action flow hardening.",
+      "recommendedDisposition": "fix"
+    },
+    {
+      "id": "QA-007",
+      "severity": "Sev-3",
+      "type": "BUG",
+      "title": "Report export is not verifiably completing",
+      "area": "Stats",
+      "status": "FIXED_VERIFIED",
+      "resolution": "Stats exports now create explicit report-summary and image artifacts instead of ambiguous print behavior.",
+      "verification": "Browser truth critical controls verifies report summary and image export artifacts.",
+      "recommendedDisposition": "verify-and-fix"
+    },
+    {
+      "id": "QA-008",
+      "severity": "Sev-3",
+      "type": "UX",
+      "title": "Startup interaction readiness feels fragile",
+      "area": "App shell navigation",
+      "status": "FIXED_VERIFIED",
+      "resolution": "The shell now blocks interaction until bindings are ready and direct actions are attached.",
+      "verification": "Critical-control routing stays stable across the focused browser-truth lane and full UAT.",
+      "recommendedDisposition": "stabilize"
+    },
+    {
+      "id": "QA-009",
+      "severity": "Sev-4",
+      "type": "UX",
+      "title": "Coming-soon layout switch banner should be removed",
+      "area": "Dashboard shell",
+      "status": "FIXED_VERIFIED",
+      "resolution": "The fake coming-soon banner is removed when the locked layout is active.",
+      "verification": "Browser truth critical controls confirms the settings surface no longer shows the removed coming-soon language.",
+      "recommendedDisposition": "take-down"
+    },
+    {
+      "id": "QA-010",
+      "severity": "Sev-4",
+      "type": "UX",
+      "title": "Duplicate empty-state CTA surfaces create clutter",
+      "area": "Dashboard and Workouts",
+      "status": "FIXED_VERIFIED",
+      "resolution": "Secondary empty-state CTA clutter was demoted to guidance text on the workout logging surfaces.",
+      "verification": "Full UAT remained green after the CTA cleanup and browser-truth critical flow checks.",
+      "recommendedDisposition": "consolidate"
+    }
+  ]
+}

@@ -12,7 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
 <link rel="stylesheet" href="styles/brand-assets.css">
-<link rel="stylesheet" href="styles/main.css?v=20260409d">
+<link rel="stylesheet" href="styles/main.css?v=20260416a">
 <link rel="manifest" href="pwa/manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -57,13 +57,13 @@
     </article>
   </div>
 </section>
-<div class="app" id="app">
+<div class="app app-loading" id="app" data-app-ready="0">
   <!-- Header -->
   <header class="header">
     <div class="header-left">
-      <div class="header-avatar" id="headerAvatar" title="Profile">
+      <button type="button" class="header-avatar" id="headerAvatar" title="Profile" aria-label="Open profile settings">
         <span class="material-symbols-outlined">person</span>
-      </div>
+      </button>
       <h1 class="header-brand">FITONE</h1>
     </div>
     <div class="header-right">
@@ -91,7 +91,7 @@
     <div class="card next-workout-card" id="nextWorkoutCard" data-section="nextWorkout">
       <div class="next-workout-header">
         <span class="card-title">Next Workout</span>
-        <a class="view-all-link" id="viewAllRoutines" data-action="viewAllRoutines">VIEW ALL</a>
+        <button type="button" class="view-all-link" id="viewAllRoutines" data-action="viewAllRoutines">VIEW ALL</button>
       </div>
       <div id="nextWorkoutContent">
         <div class="empty"><div class="empty-icon">Workout</div><div class="empty-text">Create Your First Routine</div></div>
@@ -917,8 +917,8 @@
       </div>
 
       <div class="workout-settings-actions">
-        <button class="btn btn-primary" id="workoutSettingsSaveBtn">SAVE CHANGES</button>
-        <button class="btn btn-outline" id="workoutSettingsResetBtn">RESET</button>
+        <button type="button" class="btn btn-primary" id="workoutSettingsSaveBtn">SAVE WORKOUT SETTINGS</button>
+        <button type="button" class="btn btn-outline" id="workoutSettingsResetBtn">REVERT WORKOUT CHANGES</button>
       </div>
     </div>
     <div class="card" id="notificationPulseCard">
@@ -927,10 +927,6 @@
       <div class="toggle-row">
         <span>Push Notifications</span>
         <label class="toggle"><input type="checkbox" id="settingPushPulse" title="setting Push Pulse"><span class="toggle-slider"></span></label>
-      </div>
-      <div class="toggle-row mt-12">
-        <span>Email Summaries <span class="tag tag-purple">Coming Soon</span></span>
-        <label class="toggle"><input type="checkbox" id="settingEmailSummaries" disabled title="setting Email Summaries"><span class="toggle-slider"></span></label>
       </div>
     </div>
     <div class="card">
@@ -1037,10 +1033,10 @@
 <!-- FAB Speed Dial -->
 <div class="fab-backdrop" id="fabBackdrop"></div>
 <div class="fab-menu" id="fabMenu">
-  <div class="fab-option"><span class="fab-option-label">Quick Add</span><button class="fab-option-btn" data-fab-action="quick-food" aria-label="Quick add food">Add</button></div>
-  <div class="fab-option"><span class="fab-option-label">Workout</span><button class="fab-option-btn" data-fab-action="log-workout" aria-label="Log workout">Gym</button></div>
-  <div class="fab-option"><span class="fab-option-label">Bodyweight</span><button class="fab-option-btn" data-fab-action="quick-bodyweight" aria-label="Quick add bodyweight">Body</button></div>
-  <div class="fab-option"><span class="fab-option-label">Water</span><button class="fab-option-btn" data-fab-action="add-water" aria-label="Add water">H2O</button></div>
+  <button type="button" class="fab-option" data-fab-action="quick-food" aria-label="Quick add food"><span class="fab-option-label">Quick Add</span><span class="fab-option-btn" aria-hidden="true">Add</span></button>
+  <button type="button" class="fab-option" data-fab-action="log-workout" aria-label="Log workout"><span class="fab-option-label">Workout</span><span class="fab-option-btn" aria-hidden="true">Gym</span></button>
+  <button type="button" class="fab-option" data-fab-action="quick-bodyweight" aria-label="Quick add bodyweight"><span class="fab-option-label">Bodyweight</span><span class="fab-option-btn" aria-hidden="true">Body</span></button>
+  <button type="button" class="fab-option" data-fab-action="add-water" aria-label="Add water"><span class="fab-option-label">Water</span><span class="fab-option-btn" aria-hidden="true">H2O</span></button>
 </div>
 <button class="fab" id="fabBtn" aria-label="Quick actions menu">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
@@ -1094,7 +1090,7 @@
 <script src="src/foodDatabase.js?v=20260409c"></script>
 <script src="src/foodVision.js?v=20260409b"></script>
 <script src="src/barcodeScanner.js"></script>
-<script src="src/exerciseDatabase.js"></script>
+<script src="src/exerciseDatabase.js?v=20260416a"></script>
 <script src="src/exerciseGuide.js?v=20260409a"></script>
 <script src="src/starterRoutines.js?v=20260406d"></script>
 <script src="src/prTracker.js?v=20260407a"></script>
@@ -1104,20 +1100,20 @@
 <script src="src/virtualScroller.js?v=20260409a"></script>
 <script src="src/ui.js?v=20260410a"></script>
 <script src="src/onboarding.js?v=20260407c"></script>
-<script src="src/views/todayView.js?v=20260409d"></script>
-<script src="src/views/logView.js?v=20260410b"></script>
+<script src="src/views/todayView.js?v=20260416a"></script>
+<script src="src/views/logView.js?v=20260416a"></script>
 <script src="src/views/exerciseDetailView.js?v=20260406c"></script>
 <script src="src/views/deepDiveView.js?v=20260406a"></script>
 <script src="src/views/activityFeedView.js?v=20260406a"></script>
 <script src="src/views/workoutDetailView.js?v=20260406a"></script>
 <script src="src/views/pulseCenterView.js?v=20260406a"></script>
-<script src="src/views/settingsView.js?v=20260410b"></script>
+<script src="src/views/settingsView.js?v=20260416a"></script>
 <script src="src/planGenerator.js?v=20260408a"></script>
 <script src="src/views/protocolsView.js?v=20260410a"></script>
-<script src="src/views/analyticsView.js?v=20260410b"></script>
-<script src="src/views/exportView.js?v=20260409d"></script>
+<script src="src/views/analyticsView.js?v=20260416a"></script>
+<script src="src/views/exportView.js?v=20260416a"></script>
 <script src="src/views/postWorkoutView.js?v=20260406f"></script>
-<script src="src/views/photosView.js?v=20260410a"></script>
-<script type="module" src="src/main.js?v=20260409d"></script>
+<script src="src/views/photosView.js?v=20260416a"></script>
+<script type="module" src="src/main.js?v=20260416a"></script>
 </body>
 </html>

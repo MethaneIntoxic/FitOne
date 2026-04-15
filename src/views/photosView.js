@@ -124,7 +124,21 @@ function showAddPhotoModal() {
   $('photoFileInput').addEventListener('change', e => {
     const file = e.target.files[0];
     if (!file) return;
+    if (!/^image\//.test(file.type || '')) {
+      showToast('Please choose an image file', 'warning');
+      e.target.value = '';
+      return;
+    }
+    if (Number(file.size || 0) > 10 * 1024 * 1024) {
+      showToast('Photo is too large. Choose an image under 10 MB.', 'warning');
+      e.target.value = '';
+      return;
+    }
     const reader = new FileReader();
+    reader.onerror = () => {
+      showToast('Could not read this photo', 'error');
+      e.target.value = '';
+    };
     reader.onload = ev => {
       // Compress image
       const img = new Image();
@@ -137,12 +151,22 @@ function showAddPhotoModal() {
           else { w = Math.round(w * maxDim / h); h = maxDim; }
         }
         canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          showToast('Photo preview is unavailable on this device', 'error');
+          e.target.value = '';
+          return;
+        }
+        ctx.drawImage(img, 0, 0, w, h);
         const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
         $('photoPreviewImg').src = dataUrl;
         $('photoPreviewArea').classList.remove('hidden');
         $('photoUploadArea').classList.add('hidden');
         $('photoSaveBtn').disabled = false;
+      };
+      img.onerror = () => {
+        showToast('Could not process this image', 'error');
+        e.target.value = '';
       };
       img.src = ev.target.result;
     };

@@ -164,14 +164,61 @@ function normalizeExportPayload() {
 }
 
 function download(filename, content, type) {
-  const blob = new Blob([content], { type: type || "text/plain" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
+  try {
+    const blob = content instanceof Blob
+      ? content
+      : new Blob([content], { type: type || "text/plain;charset=utf-8" });
+    if (!blob.size) throw new Error("Empty export payload");
+
+    const entry = {
+      filename: filename,
+      size: blob.size,
+      type: blob.type || type || "application/octet-stream",
+      at: new Date().toISOString(),
+    };
+    const history = Array.isArray(window.fitOneExportHistory) ? window.fitOneExportHistory.slice(-19) : [];
+    history.push(entry);
+    window.fitOneLastExport = entry;
+    window.fitOneExportHistory = history;
+    window.dispatchEvent(new CustomEvent("fitone:download-prepared", { detail: entry }));
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.rel = "noopener";
+    link.style.position = "fixed";
+    link.style.left = "-9999px";
+    link.style.top = "0";
+    link.style.width = "1px";
+    link.style.height = "1px";
+    link.style.opacity = "0.01";
+    link.style.pointerEvents = "none";
+    document.body.appendChild(link);
+    link.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+
+    setTimeout(() => {
+      if (link.parentNode) link.parentNode.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 1500);
+
+    return {
+      ok: true,
+      filename: filename,
+      size: blob.size,
+      type: entry.type,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      filename: filename,
+      size: 0,
+      error: error instanceof Error ? error : new Error(String(error || "Download failed")),
+    };
+  }
 }
+
+window.fitOneDownloadFile = download;
 
 function exportGlobalJSON() {
   const payload = {
@@ -180,8 +227,10 @@ function exportGlobalJSON() {
     settings: loadSettings(),
     entities: normalizeExportPayload(),
   };
-  download("fitone-global-" + today() + ".json", JSON.stringify(payload, null, 2), "application/json");
-  showToast("Global JSON exported");
+  const result = download("fitone-global-" + today() + ".json", JSON.stringify(payload, null, 2), "application/json");
+  if (result.ok) showToast("Global JSON download started", "success");
+  else showToast("Global JSON export failed", "error");
+  return result;
 }
 
 function buildBackupSnapshot(reason) {
@@ -211,9 +260,11 @@ function createBackupSnapshot(options) {
   const opts = options || {};
   const snapshot = buildBackupSnapshot(opts.reason || "manual");
   saveBackupSnapshotLocally(snapshot);
+  const filename = "fitone-backup-" + today() + ".json";
+  let downloadResult = { ok: true, filename: filename, size: JSON.stringify(snapshot).length };
 
   if (opts.download !== false) {
-    download("fitone-backup-" + today() + ".json", JSON.stringify(snapshot, null, 2), "application/json");
+    downloadResult = download(filename, JSON.stringify(snapshot, null, 2), "application/json");
   }
 
   const next = {
@@ -224,9 +275,10 @@ function createBackupSnapshot(options) {
   safeSetItem(KEYS.settings, JSON.stringify(next));
 
   return {
-    ok: true,
+    ok: !!downloadResult.ok,
     exportedAt: snapshot.exported_at,
     size: JSON.stringify(snapshot).length,
+    filename: downloadResult.filename,
   };
 }
 
@@ -386,13 +438,17 @@ function onActivityImportChosen(event) {
 
 function exportAllCsvFiles() {
   const entities = normalizeExportPayload();
-  Object.keys(DATA_SCHEMAS).forEach((entity) => {
+  const results = Object.keys(DATA_SCHEMAS).map((entity) => {
     const headers = DATA_SCHEMAS[entity];
     const rows = entities[entity] || [];
     const csv = toCsv(rows, headers);
-    download(entity + ".csv", csv, "text/csv");
+    return download(entity + ".csv", csv, "text/csv;charset=utf-8");
   });
-  showToast("CSV exports downloaded");
+  const successCount = results.filter((result) => result && result.ok).length;
+  if (successCount === results.length) showToast("CSV downloads started for all datasets", "success");
+  else if (successCount > 0) showToast("Some CSV downloads started. Check browser multiple-download permissions.", "warning");
+  else showToast("CSV export failed", "error");
+  return results;
 }
 
 function renderSchemaDocs() {

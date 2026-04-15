@@ -337,6 +337,7 @@ function renderAnalyticsReportCard() {
       streak: streak,
       prCount: prCount,
       label: range.label,
+      generatedAt: new Date().toISOString(),
     };
 
     const weightLabel = report.weightLatest
@@ -384,10 +385,107 @@ function renderAnalyticsReportCard() {
   });
 }
 
-function saveAnalyticsReportCardImage() {
+function analyticsDownloadFile(filename, content, type) {
+  if (typeof window.fitOneDownloadFile === "function") {
+    return window.fitOneDownloadFile(filename, content, type);
+  }
+
+  try {
+    const blob = content instanceof Blob
+      ? content
+      : new Blob([content], { type: type || "text/plain;charset=utf-8" });
+    const entry = {
+      filename: filename,
+      size: blob.size,
+      type: blob.type || type || "application/octet-stream",
+      at: new Date().toISOString(),
+    };
+    const history = Array.isArray(window.fitOneExportHistory) ? window.fitOneExportHistory.slice(-19) : [];
+    history.push(entry);
+    window.fitOneLastExport = entry;
+    window.fitOneExportHistory = history;
+    window.dispatchEvent(new CustomEvent("fitone:download-prepared", { detail: entry }));
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.style.position = "fixed";
+    link.style.left = "-9999px";
+    link.style.top = "0";
+    link.style.width = "1px";
+    link.style.height = "1px";
+    link.style.opacity = "0.01";
+    link.style.pointerEvents = "none";
+    document.body.appendChild(link);
+    link.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+    setTimeout(function () {
+      if (link.parentNode) link.parentNode.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 1500);
+    return { ok: true, filename: filename, size: blob.size };
+  } catch (error) {
+    return {
+      ok: false,
+      filename: filename,
+      error: error instanceof Error ? error : new Error(String(error || "Download failed")),
+    };
+  }
+}
+
+function buildAnalyticsReportSummary(report) {
+  const lines = [
+    "FITONE REPORT CARD",
+    "Range: " + String(report.label || "Selected range"),
+    "Generated: " + String(report.generatedAt || new Date().toISOString()),
+    "",
+    "Performance",
+    "- PRs: " + Math.round(Number(report.prCount) || 0),
+    "- Workout days: " + Math.round(Number(report.workoutDays) || 0),
+    "- Workout minutes: " + Math.round(Number(report.workoutMinutes) || 0),
+    "",
+    "Nutrition",
+    "- Average calories: " + Math.round(Number(report.caloriesAvg) || 0),
+    "- Average protein: " + Math.round(Number(report.proteinAvg) || 0) + "g",
+    "- Protein goal days: " + Math.round(Number(report.proteinGoalDays) || 0),
+    "",
+    "Recovery",
+    "- Readiness average: " + (report.readinessAvg ? Math.round(report.readinessAvg) + "%" : "N/A"),
+    "- Current streak: " + Math.round(Number(report.streak) || 0) + " days",
+    "",
+    "Body",
+    "- Starting weight: " + (Number.isFinite(Number(report.weightStart)) ? Number(report.weightStart).toFixed(1) + " " + (settings.weightUnit || "kg") : "No data"),
+    "- Latest weight: " + (Number.isFinite(Number(report.weightLatest)) ? Number(report.weightLatest).toFixed(1) + " " + (settings.weightUnit || "kg") : "No data"),
+    "- Weight delta: " + ((Number(report.weightDelta) > 0 ? "+" : "") + (Number(report.weightDelta) || 0).toFixed(1) + " " + (settings.weightUnit || "kg")),
+  ];
+
+  return lines.join("\n");
+}
+
+function downloadAnalyticsReportSummary() {
   if (!_analyticsReportCache) {
     showToast("Report card is still loading", "info");
-    return;
+    return false;
+  }
+
+  const result = analyticsDownloadFile(
+    "fitone-report-" + today() + ".txt",
+    buildAnalyticsReportSummary(_analyticsReportCache),
+    "text/plain;charset=utf-8"
+  );
+  if (result && result.ok) {
+    showToast("Report summary download started", "success");
+    return true;
+  }
+
+  showToast("Report summary export failed", "error");
+  return false;
+}
+
+async function saveAnalyticsReportCardImage() {
+  if (!_analyticsReportCache) {
+    showToast("Report card is still loading", "info");
+    return false;
   }
 
   const report = _analyticsReportCache;
@@ -395,7 +493,10 @@ function saveAnalyticsReportCardImage() {
   canvas.width = 1200;
   canvas.height = 860;
   const ctx = canvas.getContext("2d");
-  if (!ctx) return;
+  if (!ctx) {
+    showToast("Report image is unavailable on this device", "error");
+    return false;
+  }
 
   const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
   grad.addColorStop(0, "#0d1222");
@@ -443,17 +544,52 @@ function saveAnalyticsReportCardImage() {
   ctx.font = "500 13px Space Grotesk, sans-serif";
   ctx.fillText("Generated " + new Date().toLocaleString(), 60, canvas.height - 30);
 
-  const link = document.createElement("a");
-  link.href = canvas.toDataURL("image/png");
-  link.download = "fitone-report-" + today() + ".png";
-  link.click();
+  const blob = await new Promise(function (resolve) {
+    canvas.toBlob(resolve, "image/png");
+  });
+  if (!blob || !blob.size) {
+    showToast("Could not generate report image", "error");
+    return false;
+  }
+
+  const result = analyticsDownloadFile("fitone-report-" + today() + ".png", blob, "image/png");
+  if (result && result.ok) {
+    showToast("Report image download started", "success");
+    return true;
+  }
+
+  showToast("Report image export failed", "error");
+  return false;
 }
 
 function bindReportCardActions() {
-  const btn = $("saveAnalyticsReportCardBtn");
-  if (!btn || btn.dataset.bound) return;
-  btn.dataset.bound = "1";
-  btn.addEventListener("click", saveAnalyticsReportCardImage);
+  const imageBtn = $("saveAnalyticsReportCardBtn");
+  if (imageBtn && !imageBtn.dataset.bound) {
+    imageBtn.dataset.bound = "1";
+    imageBtn.addEventListener("click", async function () {
+      const original = imageBtn.textContent;
+      imageBtn.disabled = true;
+      imageBtn.textContent = "Saving image...";
+      await saveAnalyticsReportCardImage();
+      imageBtn.disabled = false;
+      imageBtn.textContent = original;
+    });
+  }
+
+  const downloadBtn = $("statsDownloadReportBtn");
+  if (downloadBtn && !downloadBtn.dataset.bound) {
+    downloadBtn.dataset.bound = "1";
+    downloadBtn.addEventListener("click", function () {
+      const original = downloadBtn.textContent;
+      downloadBtn.disabled = true;
+      downloadBtn.textContent = "Preparing report...";
+      downloadAnalyticsReportSummary();
+      setTimeout(function () {
+        downloadBtn.disabled = false;
+        downloadBtn.textContent = original;
+      }, 600);
+    });
+  }
 }
 
 
@@ -474,12 +610,6 @@ function refreshAnalytics() {
   bindAnalyticsRangeControls();
   bindReportCardActions();
   renderAnalyticsReportCard();
-
-  const dlBtn = $("statsDownloadReportBtn");
-  if (dlBtn && !dlBtn.dataset.bound) {
-    dlBtn.dataset.bound = "true";
-    dlBtn.addEventListener("click", function () { window.print(); });
-  }
 }
 
 function refreshAnalyticsSubTab(sub) {

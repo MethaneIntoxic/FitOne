@@ -389,32 +389,83 @@ function refreshSubTab(subtabId) {
 }
 
 // ========== NAV HELPERS ==========
+function activatePanelSubTab(panelId, subtabId) {
+  const panel = $(panelId);
+  const targetPanel = $(subtabId);
+  if (!panel || !targetPanel) return false;
+
+  const targetBtn = panel.querySelector('[data-subtab="' + subtabId + '"]');
+  if (!targetBtn) return false;
+
+  panel.querySelectorAll(".sub-tab").forEach((btn) => btn.classList.remove("active"));
+  panel.querySelectorAll(".sub-panel").forEach((subPanel) => subPanel.classList.remove("active"));
+
+  targetBtn.classList.add("active");
+  targetPanel.classList.add("active");
+  refreshSubTab(subtabId);
+  return true;
+}
+
+function focusSoon(elementId, delay) {
+  setTimeout(() => {
+    const target = $(elementId);
+    if (target && typeof target.focus === "function") {
+      target.focus();
+    }
+  }, Number(delay) || 80);
+}
+
 function goToLog() {
-  activateMainTab("log");
-  setTimeout(() => { if ($("foodName")) $("foodName").focus(); }, 300);
+  activateMainTab("log", { scroll: false });
+  activatePanelSubTab("panel-log", "log-food");
+  focusSoon("foodName", 120);
 }
 
 function goToLogWorkout() {
-  goToLog();
-  document.querySelectorAll("#panel-log .sub-tab").forEach((b) => b.classList.remove("active"));
-  document.querySelectorAll("#panel-log .sub-panel").forEach((p) => p.classList.remove("active"));
-  document.querySelector('[data-subtab="log-workout"]').classList.add("active");
-  $("log-workout").classList.add("active");
-  setTimeout(() => { if ($("workoutName")) $("workoutName").focus(); }, 300);
+  activateMainTab("log", { scroll: false });
+  activatePanelSubTab("panel-log", "log-workout");
+  focusSoon("workoutName", 120);
 }
 
 function goToLogBody() {
   activateMainTab("log", { scroll: false });
-  document.querySelectorAll("#panel-log .sub-tab").forEach((s) => s.classList.remove("active"));
-  document.querySelectorAll("#panel-log .sub-panel").forEach((s) => s.classList.remove("active"));
-  const bodySub = document.querySelector('[data-subtab="log-body"]');
-  if (bodySub) bodySub.classList.add("active");
-  const bodyPanel = $("log-body");
-  if (bodyPanel) bodyPanel.classList.add("active");
+  activatePanelSubTab("panel-log", "log-body");
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+function goToWorkoutLibrary() {
+  activateMainTab("protocols", { scroll: false });
+  activatePanelSubTab("panel-protocols", "library-list");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function openProfileSettings() {
+  activateMainTab("settings", { scroll: false });
+  focusSoon("settingDisplayName", 120);
+}
+
+function bindDirectAction(controlId, handler) {
+  const control = $(controlId);
+  if (!control || control.dataset.bound) return;
+  control.dataset.bound = "1";
+  control.addEventListener("click", (event) => {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    handler();
+  });
+}
+
+function setAppInteractionReady(isReady) {
+  const app = $("app");
+  if (!app) return;
+  app.classList.toggle("app-loading", !isReady);
+  app.dataset.appReady = isReady ? "1" : "0";
+}
+
 window.activateMainTab = activateMainTab;
+window.goToWorkoutLibrary = goToWorkoutLibrary;
 
 // Set nav callbacks for todayView
 setNavCallbacks(goToLog, goToLogWorkout);
@@ -644,9 +695,9 @@ if (fabBackdropEl) fabBackdropEl.addEventListener("click", closeFabMenu);
 const fabMenu = $("fabMenu");
 if (fabMenu) {
   fabMenu.addEventListener("click", (e) => {
-    const btn = e.target.closest(".fab-option-btn");
-    if (!btn) return;
-    const action = btn.dataset.fabAction || mapLegacyFabLabelToAction(btn.getAttribute("aria-label"));
+    const option = e.target.closest(".fab-option[data-fab-action]");
+    if (!option) return;
+    const action = option.dataset.fabAction || mapLegacyFabLabelToAction(option.getAttribute("aria-label"));
     closeFabMenu();
     handleFabAction(action);
   });
@@ -760,6 +811,7 @@ function showWelcomeScreen() {
 }
 
 function init() {
+  setAppInteractionReady(false);
   $("headerDate").textContent = new Date().toLocaleDateString(undefined, {
     weekday: "long", month: "long", day: "numeric",
   });
@@ -775,6 +827,10 @@ function init() {
     bellBtn.dataset.bound = "1";
     bellBtn.addEventListener("click", openPulseCenter);
   }
+
+  bindDirectAction("headerAvatar", openProfileSettings);
+  bindDirectAction("igniteSessionBtn", goToLogWorkout);
+  bindDirectAction("viewAllRoutines", goToWorkoutLibrary);
 
   // Initialize events for each view
   initTodayEvents();
@@ -826,6 +882,8 @@ function init() {
   window.addEventListener("online", () => {
     if (typeof flushWebhookQueue === "function") flushWebhookQueue();
   });
+
+  setAppInteractionReady(true);
 
   // First-launch flow: welcome screen -> onboarding
   if (shouldShowWelcomeScreen()) {

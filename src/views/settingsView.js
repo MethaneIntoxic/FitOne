@@ -275,20 +275,60 @@ function updateRestTimeDisplay() {
 
 function renderProfileAvatar() {
   const avatarWrap = $("profileAvatarLarge");
-  const headerAvatar = $("headerAvatar");
   if (!avatarWrap) return;
 
   if (settings.avatar) {
     avatarWrap.innerHTML = '<img src="' + escAttr(settings.avatar) + '" alt="Profile avatar"><div class="profile-avatar-edit"><span class="material-symbols-outlined profile-avatar-edit-icon">edit</span></div>';
-    if (headerAvatar) {
-      headerAvatar.innerHTML = '<img class="header-avatar-img" src="' + escAttr(settings.avatar) + '" alt="Avatar">';
-    }
   } else {
     avatarWrap.innerHTML = '<span class="material-symbols-outlined">person</span><div class="profile-avatar-edit"><span class="material-symbols-outlined profile-avatar-edit-icon">edit</span></div>';
-    if (headerAvatar) {
-      headerAvatar.innerHTML = '<span class="material-symbols-outlined">person</span>';
-    }
   }
+}
+
+function getPwaInstallRuntimeState() {
+  const standalone = !!(window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
+  return {
+    available: !!window._deferredInstallPrompt,
+    standalone: standalone,
+    disabledInSettings: settings.pwaInstallPromptEnabled === false,
+  };
+}
+
+function syncPwaUtilityState() {
+  const installBtn = $("triggerPwaInstallBtn");
+  const statusText = $("pwaRuntimeStatus");
+  if (!installBtn && !statusText) return;
+
+  const runtime = getPwaInstallRuntimeState();
+  let status = "Install prompt not currently available.";
+  let buttonText = "Install Unavailable";
+  let disabled = true;
+
+  if (runtime.disabledInSettings) {
+    status = "Install prompts are disabled in settings.";
+    buttonText = "Install Disabled";
+  } else if (runtime.standalone) {
+    status = "App is already installed (standalone mode).";
+    buttonText = "App Installed";
+  } else if (runtime.available) {
+    status = "Install prompt is available for this device/browser.";
+    buttonText = "Install App";
+    disabled = false;
+  }
+
+  if (statusText) statusText.textContent = status;
+  if (installBtn) {
+    installBtn.textContent = buttonText;
+    installBtn.disabled = disabled;
+    installBtn.setAttribute("aria-disabled", disabled ? "true" : "false");
+  }
+}
+
+function bindPwaUtilityEvents() {
+  if (window._fitonePwaUtilityEventsBound) return;
+  window._fitonePwaUtilityEventsBound = true;
+  const refresh = () => syncPwaUtilityState();
+  window.addEventListener("fitone:pwaInstallAvailability", refresh);
+  window.addEventListener("appinstalled", refresh);
 }
 
 function handleAvatarUpload(file) {
@@ -731,24 +771,23 @@ function saveWorkoutSettingsSection() {
 }
 
 function resetWorkoutSettingsSection() {
-  const defaults = defaultSettings();
-  if ($("settingRestTimeRange")) $("settingRestTimeRange").value = String(defaults.defaultRestTime || 90);
-  if ($("settingRestTime")) $("settingRestTime").value = String(defaults.defaultRestTime || 90);
-  if ($("settingRestCompoundRange")) $("settingRestCompoundRange").value = String(defaults.defaultCompoundRestTime || 150);
-  if ($("settingRestCompound")) $("settingRestCompound").value = String(defaults.defaultCompoundRestTime || 150);
-  if ($("settingRestIsolationRange")) $("settingRestIsolationRange").value = String(defaults.defaultIsolationRestTime || 75);
-  if ($("settingRestIsolation")) $("settingRestIsolation").value = String(defaults.defaultIsolationRestTime || 75);
-  if ($("settingPlateSystem")) $("settingPlateSystem").value = defaults.plateSystem || "20kg";
-  if ($("settingAutoLock")) $("settingAutoLock").checked = !!defaults.autoLock;
-  if ($("settingAutoLockActiveOnly")) $("settingAutoLockActiveOnly").checked = !!defaults.autoLockActiveOnly;
-  if ($("settingAutoAdvance")) $("settingAutoAdvance").checked = !!defaults.autoAdvance;
-  if ($("settingFocusMode")) $("settingFocusMode").checked = !!defaults.focusMode;
-  if ($("settingVoiceCountdown")) $("settingVoiceCountdown").checked = !!defaults.voiceCountdown;
+  const persistedPlateSystem = normalizePlateSystem(settings.plateSystem || "kg");
+  if ($("settingRestTimeRange")) $("settingRestTimeRange").value = String(settings.defaultRestTime || 90);
+  if ($("settingRestTime")) $("settingRestTime").value = String(settings.defaultRestTime || 90);
+  if ($("settingRestCompoundRange")) $("settingRestCompoundRange").value = String(settings.defaultCompoundRestTime || 150);
+  if ($("settingRestCompound")) $("settingRestCompound").value = String(settings.defaultCompoundRestTime || 150);
+  if ($("settingRestIsolationRange")) $("settingRestIsolationRange").value = String(settings.defaultIsolationRestTime || 75);
+  if ($("settingRestIsolation")) $("settingRestIsolation").value = String(settings.defaultIsolationRestTime || 75);
+  if ($("settingPlateSystem")) $("settingPlateSystem").value = persistedPlateSystem;
+  if ($("settingAutoLock")) $("settingAutoLock").checked = !!settings.autoLock;
+  if ($("settingAutoLockActiveOnly")) $("settingAutoLockActiveOnly").checked = settings.autoLockActiveOnly !== false;
+  if ($("settingAutoAdvance")) $("settingAutoAdvance").checked = !!settings.autoAdvance;
+  if ($("settingFocusMode")) $("settingFocusMode").checked = !!settings.focusMode;
+  if ($("settingVoiceCountdown")) $("settingVoiceCountdown").checked = !!settings.voiceCountdown;
   updateRestTimeDisplay();
-  setSegmentedActive("plateSystemSegmented", ".segmented-btn", settingVal("settingPlateSystem", "kg"));
+  setSegmentedActive("plateSystemSegmented", ".segmented-btn", persistedPlateSystem);
   updatePlateSystemSubtitle();
-  saveSettingsFromUI();
-  showToast("Workout settings reset");
+  showToast("Workout settings reverted");
 }
 
 function requestPushPermissionIfNeeded() {
@@ -794,6 +833,7 @@ function renderAdvancedSettings() {
 
   const diagnostics = $("settingsDiagnosticsCard");
   if (diagnostics) {
+    bindPwaUtilityEvents();
     const online = navigator.onLine ? "Online" : "Offline";
     const localSize = estimateLocalStorageSize();
     const queuedOps = listPendingSyncOperations().length;
@@ -830,17 +870,7 @@ function renderAdvancedSettings() {
     } else if ($("swStatusText")) {
       $("swStatusText").textContent = "Unsupported";
     }
-
-    const pwaStatus = $("pwaRuntimeStatus");
-    if (pwaStatus) {
-      if (window._deferredInstallPrompt) {
-        pwaStatus.textContent = "Install prompt is available for this device/browser.";
-      } else if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) {
-        pwaStatus.textContent = "App is already installed (standalone mode).";
-      } else {
-        pwaStatus.textContent = "Install prompt not currently available.";
-      }
-    }
+    syncPwaUtilityState();
   }
 
   const telemetry = loadUXTelemetry();
@@ -895,7 +925,7 @@ function renderAdvancedSettings() {
           '<div><div class="text-sm"><strong>' + esc(vendor.name || vendor.id) + '</strong></div><div class="text-xs">' + esc(vendor.mode || "manual") + " • " + esc((vendor.capabilities || []).join(", ")) + '</div></div>' +
           '<div style="display:flex;gap:6px">' +
             '<button class="btn btn-outline btn-sm" data-wearable-toggle="' + escAttr(vendor.id) + '">' + (isConnected ? "Disconnect" : "Connect") + '</button>' +
-            '<button class="btn btn-outline btn-sm" data-wearable-sample="' + escAttr(vendor.id) + '">Sample Sync</button>' +
+            '<button class="btn btn-outline btn-sm" data-wearable-sample="' + escAttr(vendor.id) + '">Import Sample</button>' +
           '</div>' +
         '</div>'
       );
@@ -905,6 +935,7 @@ function renderAdvancedSettings() {
       '<div class="card-title">Wearables & Integrations</div>' +
       '<p class="text-sm">FitOne works fully without any wearable accounts. You can still connect export-based integrations below.</p>' +
       vendorRows +
+      '<p class="text-xs mt-8">Import Sample adds a local demo cardio session so you can verify the pipeline without contacting a vendor.</p>' +
       '<hr style="margin:12px 0;border:none;border-top:1px solid rgba(255,255,255,0.08)">' +
       '<div class="card-title" style="font-size:0.95rem">Peer-to-Peer Sync</div>' +
       '<p class="text-xs">Create a sync code on one device and paste it on another device. No server required.</p>' +
@@ -1162,6 +1193,7 @@ function bindDynamicSettingsEvents(panel) {
   const installBtn = $("triggerPwaInstallBtn");
   if (installBtn) {
     installBtn.addEventListener("click", async () => {
+      syncPwaUtilityState();
       if (typeof window.promptPwaInstall === "function") {
         const result = await window.promptPwaInstall();
         if (result && result.installed) showToast("App installed", "success");
@@ -1170,18 +1202,27 @@ function bindDynamicSettingsEvents(panel) {
       } else {
         showToast("Install prompt unavailable on this device", "warning");
       }
+      syncPwaUtilityState();
     });
   }
 
   const updateBtn = $("checkPwaUpdateBtn");
   if (updateBtn) {
     updateBtn.addEventListener("click", async () => {
-      if (typeof window.checkForAppUpdate === "function") {
-        const result = await window.checkForAppUpdate();
-        if (result && result.updated) showToast("Update ready. Reload to apply.", "success");
-        else showToast("No update found", "info");
-      } else {
-        showToast("Update check is unavailable", "warning");
+      const originalText = updateBtn.textContent;
+      updateBtn.disabled = true;
+      updateBtn.textContent = "Checking...";
+      try {
+        if (typeof window.checkForAppUpdate === "function") {
+          const result = await window.checkForAppUpdate();
+          if (result && result.updated) showToast("Update ready. Reload to apply.", "success");
+          else showToast("No update found", "info");
+        } else {
+          showToast("Update check is unavailable", "warning");
+        }
+      } finally {
+        updateBtn.disabled = false;
+        updateBtn.textContent = originalText;
       }
     });
   }
@@ -1204,9 +1245,11 @@ function bindDynamicSettingsEvents(panel) {
   panel.querySelectorAll("[data-wearable-sample]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const vendorId = btn.getAttribute("data-wearable-sample") || "";
+      const vendor = listSupportedVendors().find((item) => item.id === vendorId);
+      const vendorLabel = vendor ? vendor.name : "this wearable";
       const result = importWearableSample(vendorId);
-      if (result && result.imported) showToast("Sample wearable workout imported", "success");
-      else showToast("Connect vendor first", "warning");
+      if (result && result.imported) showToast("Imported sample workout for " + vendorLabel + ". Demo data only.", "success");
+      else showToast("Connect " + vendorLabel + " first to import demo data", "warning");
       renderAdvancedSettings();
     });
   });
@@ -1260,7 +1303,25 @@ function bindDynamicSettingsEvents(panel) {
         ts: Date.now(),
         source: "settings",
         user: settings.displayName || "Athlete",
-      }).then(() => showToast("Webhook test queued", "success")).catch(() => showToast("Webhook test failed", "error"));
+      }).then((result) => {
+        if (result && result.skipped) {
+          showToast("Enable webhooks and add a valid URL first", "warning");
+          return;
+        }
+        if (result && result.offline) {
+          showToast("Webhook queued until you're back online", "info");
+          return;
+        }
+        if (result && Number(result.sent || 0) > 0) {
+          showToast("Webhook test sent", "success");
+          return;
+        }
+        if (result && Number(result.pending || 0) > 0) {
+          showToast("Webhook queued. " + result.pending + " pending", "info");
+          return;
+        }
+        showToast("Webhook test completed", "success");
+      }).catch(() => showToast("Webhook test failed", "error"));
     });
   }
 
@@ -1268,7 +1329,13 @@ function bindDynamicSettingsEvents(panel) {
   if (flushWebhookBtn) {
     flushWebhookBtn.addEventListener("click", async () => {
       const result = await flushWebhookQueue();
-      showToast("Webhook flush: " + (result.sent || 0) + " sent, " + (result.pending || 0) + " pending", "info");
+      if (result && result.skipped) {
+        showToast("Enable webhooks and add a valid URL first", "warning");
+      } else if (result && result.offline) {
+        showToast("Offline. " + (result.pending || 0) + " webhook events still queued", "info");
+      } else {
+        showToast("Webhook flush: " + (result.sent || 0) + " sent, " + (result.pending || 0) + " pending", "info");
+      }
       renderAdvancedSettings();
     });
   }

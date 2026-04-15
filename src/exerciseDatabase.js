@@ -350,30 +350,10 @@ function loadExerciseCache() {
   }
 }
 
-async function fetchWgerExercises(limit) {
-  const url = 'https://wger.de/api/v2/exerciseinfo/?limit=' + encodeURIComponent(String(limit || 120)) + '&language=2';
-  const response = await fetch(url, { method: 'GET' });
-  if (!response.ok) throw new Error('Wger request failed: ' + response.status);
-  const payload = await response.json();
-  const results = Array.isArray(payload && payload.results) ? payload.results : [];
-  return results.map(toWgerExercise).filter(Boolean);
-}
-
 window.hydrateExerciseDatabase = async function () {
   const cached = loadExerciseCache();
   if (cached && cached.length) {
     mergeExercises(cached);
-  }
-  if (EXERCISE_DB.length >= TARGET_EXERCISE_COUNT) return;
-
-  try {
-    const needed = Math.max(120, TARGET_EXERCISE_COUNT - EXERCISE_DB.length + 40);
-    const fetched = await fetchWgerExercises(needed);
-    if (!fetched.length) return;
-    mergeExercises(fetched);
-    saveExerciseCache(fetched);
-  } catch (_err) {
-    // Keep bundled fallback only when offline or request fails.
   }
 };
 
@@ -563,7 +543,16 @@ function getMuscleExerciseCounts() {
 
 window.showExerciseBrowserModal = function (rowIndex) {
   const modalRoot = $('modalContainer');
-  if (!modalRoot) return;
+  if (!modalRoot) {
+    if (typeof showToast === 'function') showToast('Exercise browser is unavailable right now', 'error');
+    return;
+  }
+
+  const targetRowIndex = Math.max(0, Number(rowIndex) || 0);
+  if (!targetRowIndex) {
+    if (typeof showToast === 'function') showToast('Add an exercise row first', 'warning');
+    return;
+  }
 
   const counts = getMuscleExerciseCounts();
   const groups = getAllMuscleGroups();
@@ -688,7 +677,12 @@ window.showExerciseBrowserModal = function (rowIndex) {
       if (!insertBtn) return;
       const exName = insertBtn.getAttribute('data-exercise-insert');
       if (!exName) return;
-      setExerciseNameForRow(rowIndex, exName);
+      const nameInput = $('exname_' + targetRowIndex);
+      if (!nameInput) {
+        if (typeof showToast === 'function') showToast('Exercise row is no longer available', 'warning');
+        return;
+      }
+      setExerciseNameForRow(targetRowIndex, exName);
       closeModalInternal();
     });
   }
